@@ -26,6 +26,8 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
     ResponseEntity<ApiResponse<Object>> handlingRuntimeException(RuntimeException exception){
         ApiResponse<Object> apiResponse = new ApiResponse<>();
 
+        log.info("Unhandled Exception: {}",exception.getMessage());
+
         apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
         apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
         return ResponseEntity.badRequest().body(apiResponse);
@@ -87,19 +89,19 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
     /**
      * Xử lý các lỗi validation của @Validated (thường dùng với @RequestParam, @PathVariable)
      */
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(ConstraintViolationException ex) {
-        // Lấy thông báo lỗi đầu tiên trong danh sách các vi phạm
-        String message = ex.getConstraintViolations().stream()
-                .map(ConstraintViolation::getMessage)
-                .findFirst()
-                .orElse("VALIDATION_ERROR");
-
-        return ResponseEntity.badRequest().body(ApiResponse.builder()
-                .code(ErrorCode.INVALID_KEY.getCode())
-                .message(message)
-                .build());
-    }
+//    @ExceptionHandler(ConstraintViolationException.class)
+//    public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(ConstraintViolationException ex) {
+//        // Lấy thông báo lỗi đầu tiên trong danh sách các vi phạm
+//        String message = ex.getConstraintViolations().stream()
+//                .map(ConstraintViolation::getMessage)
+//                .findFirst()
+//                .orElse("VALIDATION_ERROR");
+//
+//        return ResponseEntity.badRequest().body(ApiResponse.builder()
+//                .code(ErrorCode.INVALID_KEY.getCode())
+//                .message(message)
+//                .build());
+//    }
 
     /**
      * Hàm thay thế biến trong message (ví dụ: {min}) bằng giá trị thực tế từ annotation

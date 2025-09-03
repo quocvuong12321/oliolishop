@@ -33,7 +33,9 @@ public class CategoryService {
     }
 
     public List<CategoryResponse> findChildren(String id){
-        List<CategoryResponse> lstChildren = categoryRepository.findChildren(id).stream().map(categoryMapper::toCategoryResponse).toList();
+        Category cate = categoryRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.CATEGORY_NOT_EXIST));
+
+        List<CategoryResponse> lstChildren = categoryRepository.findChildren(cate.getId()).stream().map(categoryMapper::toCategoryResponse).toList();
         lstChildren.forEach(c->c.setParent(id));
         return lstChildren;
     }

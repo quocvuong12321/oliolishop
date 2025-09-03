@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "product_spu")
@@ -61,6 +62,9 @@ public class ProductSpu {
     @Column(name = "update_date")
     LocalDateTime updateDate;
 
+    @Column(name = "sold")
+    Integer sold;
+
     @PrePersist
     protected void onCreate() {
         createDate = LocalDateTime.now();
@@ -79,4 +83,8 @@ public class ProductSpu {
     public enum DeleteStatus {
         Active, Deleted
     }
+
+    @OneToMany(mappedBy = "spu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductSku> productSkus;
+
 }

@@ -23,8 +23,9 @@ public class ProductSku {
     @Column(name = "sku_code", length = 100, nullable = false, unique = true)
     String skuCode;
 
-    @Column(name = "product_spu_id", length = 36, nullable = false)
-    String productSpuId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_spu_id")
+    private ProductSpu spu;
 
     @Column(name = "price", nullable = false)
     Double price;

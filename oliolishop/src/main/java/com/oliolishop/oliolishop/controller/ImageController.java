@@ -15,24 +15,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @RestController
-@RequestMapping(ApiPath.BASE+"/image")
+@RequestMapping(ApiPath.BASE + "/image")
 public class ImageController {
+
     @Value("${app.image-dir}")
-    protected String imagePath;
+    private String imageDir; // D:/HocTap/AI/crawl/images
 
     @GetMapping("/{folder}/{filename:.+}")
-    public ResponseEntity<org.springframework.core.io.Resource> getImage(
+    public ResponseEntity<Resource> getImage(
             @PathVariable String folder,
             @PathVariable String filename) {
         try {
-            // Nối base path + folder + filename
-            Path filePath = Paths.get(imagePath)
+            // Build đường dẫn tuyệt đối: baseDir/folder/filename
+            Path filePath = Paths.get(imageDir)
                     .resolve(folder)
                     .resolve(filename)
                     .normalize();
 
-            org.springframework.core.io.Resource resource = new UrlResource(filePath.toUri());
+            System.out.println("Full path: " + filePath.toAbsolutePath());
 
+            Resource resource = new UrlResource(filePath.toUri());
             if (!resource.exists() || !resource.isReadable()) {
                 return ResponseEntity.notFound().build();
             }

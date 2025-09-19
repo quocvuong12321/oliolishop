@@ -3,9 +3,11 @@ package com.oliolishop.oliolishop.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "product_spu")
@@ -24,8 +26,10 @@ public class ProductSpu {
     @Column(name = "name", columnDefinition = "TEXT", nullable = false)
     String name;
 
-    @Column(name = "brand_id", length = 36, nullable = false)
-    String brandId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    Brand brand;
 
     @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     String description;
@@ -33,13 +37,23 @@ public class ProductSpu {
     @Column(name = "short_description", columnDefinition = "TEXT", nullable = false)
     String shortDescription;
 
+    @OneToMany(mappedBy = "spu", fetch = FetchType.LAZY)
+    Set<DescriptionAttr> attrs;
+
+
+    @OneToMany(mappedBy = "spu", fetch = FetchType.LAZY)
+    Set<ProductSku> productSkus;
+
+    @OneToMany(mappedBy = "spu", fetch = FetchType.LAZY)
+    Set<ProductSkuAttr> skuAttrs;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "stock_status")
-    StockStatus stockStatus = StockStatus.InStock;
+    StockStatus stockStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "delete_status")
-    DeleteStatus deleteStatus = DeleteStatus.Active;
+    DeleteStatus deleteStatus;
 
     @Column(name = "sort")
     Integer sort;
@@ -53,8 +67,9 @@ public class ProductSpu {
     @Column(name = "`key`", length = 500, unique = true, nullable = false)
     String key;
 
-    @Column(name = "category_id", length = 36, nullable = false)
-    String categoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    Category category;
 
     @Column(name = "create_date")
     LocalDateTime createDate;
@@ -84,7 +99,7 @@ public class ProductSpu {
         Active, Deleted
     }
 
-    @OneToMany(mappedBy = "spu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductSku> productSkus;
+//    @Formula("(SELECT MIN(sku.original_price) FROM product_sku sku WHERE sku.product_spu_id = product_spu_id)")
+//    private Double minPrice;
 
 }

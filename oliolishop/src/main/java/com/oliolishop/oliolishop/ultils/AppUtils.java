@@ -1,8 +1,12 @@
 package com.oliolishop.oliolishop.ultils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.annotation.DeclareWarning;
 
 import java.text.Normalizer;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class AppUtils {
     public static String toSlug(String input){
@@ -33,5 +37,43 @@ public class AppUtils {
         return  slug+"/c"+id;
     }
 
+    public static String convertToSpuUrl(String slug, String spu_id){
+        return slug+"/p"+spu_id;
+    }
+
+
+    public static String[] parseStringToArray(String s) throws JsonProcessingException {
+        final ObjectMapper mapper = new ObjectMapper();
+        try {
+            // Thay ' thành " để JSON parse được
+            String json = s.replace("'", "\"");
+            return mapper.readValue(json, String[].class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new String[0];
+        }
+    }
+
+    public static String arrayToPythonList(String[] arr) {
+        if (arr == null || arr.length == 0) return "[]";
+
+        return "[" + Arrays.stream(arr)
+                .map(s -> "'" + s.replace("'", "\\'") + "'") // escape dấu '
+                .collect(Collectors.joining(", ")) + "]";
+    }
+
+    public static String generateId(long id) {
+        String idStr = String.valueOf(id);
+        int totalLength = 10;
+        int zerosToAdd = totalLength - idStr.length();
+
+        StringBuilder genId = new StringBuilder();
+        for (int i = 0; i < zerosToAdd; i++) {
+            genId.append("0");
+        }
+        genId.append(idStr);
+
+        return genId.toString();
+    }
 
 }

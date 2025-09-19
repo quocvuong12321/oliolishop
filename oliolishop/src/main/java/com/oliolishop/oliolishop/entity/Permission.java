@@ -1,38 +1,31 @@
 package com.oliolishop.oliolishop.entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "brand")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Table(name = "permission")
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Brand {
+public class Permission {
 
     @Id
-    @Column(name = "brand_id", length = 36)
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "permission_id")
     String id;
 
-    @Column(name = "name", columnDefinition = "TEXT")
     String name;
-
     @Column(name = "create_date")
     LocalDateTime createDate;
 
     @Column(name = "update_date")
     LocalDateTime updateDate;
-
-    @OneToMany( mappedBy = "brand", fetch = FetchType.LAZY)
-    List<ProductSpu> spu;
 
     @PrePersist
     protected void onCreate() {
@@ -44,4 +37,8 @@ public class Brand {
     protected void onUpdate() {
         updateDate = LocalDateTime.now();
     }
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    Role role;
 }

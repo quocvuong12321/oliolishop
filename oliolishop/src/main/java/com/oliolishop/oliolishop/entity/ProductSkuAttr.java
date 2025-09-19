@@ -20,8 +20,9 @@ public class ProductSkuAttr {
     @Column(name = "product_sku_attr_id", length = 36)
     String id;
 
-    @Column(name = "product_spu_id", length = 36, nullable = false)
-    String productSpuId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_spu_id")
+    ProductSpu spu;
 
     @Column(name = "name", length = 128, nullable = false)
     String name;

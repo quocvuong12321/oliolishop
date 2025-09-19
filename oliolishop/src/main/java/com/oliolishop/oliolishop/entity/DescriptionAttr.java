@@ -1,38 +1,38 @@
 package com.oliolishop.oliolishop.entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "brand")
+@Table(name = "description_attr")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Brand {
+public class DescriptionAttr {
 
     @Id
-    @Column(name = "brand_id", length = 36)
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "description_attr_id")
     String id;
 
-    @Column(name = "name", columnDefinition = "TEXT")
     String name;
+
+    String value;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "products_spu_id")
+    ProductSpu spu;
 
     @Column(name = "create_date")
     LocalDateTime createDate;
 
     @Column(name = "update_date")
     LocalDateTime updateDate;
-
-    @OneToMany( mappedBy = "brand", fetch = FetchType.LAZY)
-    List<ProductSpu> spu;
 
     @PrePersist
     protected void onCreate() {
@@ -44,4 +44,5 @@ public class Brand {
     protected void onUpdate() {
         updateDate = LocalDateTime.now();
     }
+
 }

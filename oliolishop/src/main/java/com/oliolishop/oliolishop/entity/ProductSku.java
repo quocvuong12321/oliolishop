@@ -25,16 +25,12 @@ public class ProductSku {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_spu_id")
-    private ProductSpu spu;
-
-    @Column(name = "price", nullable = false)
-    Double price;
+    ProductSpu spu;
 
     @Column(name = "original_price", nullable = false)
     Double originalPrice;
 
-    @Column(name = "discount_rate", nullable = false)
-    Double discountRate;
+
 
     @Column(name = "sku_stock")
     Integer skuStock;
@@ -54,6 +50,12 @@ public class ProductSku {
 
     @Column(name = "update_date")
     LocalDateTime updateDate;
+
+    double weight;
+
+    int minStock;
+
+    String restockStrategy;
 
     @PrePersist
     protected void onCreate() {

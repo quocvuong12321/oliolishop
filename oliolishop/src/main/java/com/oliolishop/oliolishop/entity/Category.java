@@ -38,6 +38,9 @@ public class Category {
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<Category> children;
 
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    List<ProductSpu> productSpus;
+
     @Column(name = "isleaf")
     Boolean isLeaf = false;
 

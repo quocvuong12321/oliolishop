@@ -1,19 +1,14 @@
-package com.oliolishop.oliolishop.dto.category;
-
+package com.oliolishop.oliolishop.dto.descriptionattr;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryResponse {
-    String id;
+public class DescriptionAttrRequest {
     String name;
-    boolean isLeaf;
-    String url;
+    String value;
 }

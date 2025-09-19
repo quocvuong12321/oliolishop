@@ -1,38 +1,37 @@
 package com.oliolishop.oliolishop.entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.boot.context.config.ConfigDataEnvironmentUpdateListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "brand")
+@Table(name = "role")
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Brand {
-
+public class Role {
     @Id
-    @Column(name = "brand_id", length = 36)
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "role_id")
     String id;
 
-    @Column(name = "name", columnDefinition = "TEXT")
+    @Column(name="name")
     String name;
+
+    @Column(name="description")
+    String description;
 
     @Column(name = "create_date")
     LocalDateTime createDate;
 
     @Column(name = "update_date")
     LocalDateTime updateDate;
-
-    @OneToMany( mappedBy = "brand", fetch = FetchType.LAZY)
-    List<ProductSpu> spu;
 
     @PrePersist
     protected void onCreate() {
@@ -44,4 +43,12 @@ public class Brand {
     protected void onUpdate() {
         updateDate = LocalDateTime.now();
     }
+
+
+    @OneToMany(mappedBy = "role",fetch = FetchType.LAZY)
+    List<Permission> permissions;
+
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    List<Account> accounts;
+
 }

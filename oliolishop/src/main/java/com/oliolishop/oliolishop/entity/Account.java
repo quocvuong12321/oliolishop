@@ -1,0 +1,46 @@
+package com.oliolishop.oliolishop.entity;
+
+
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class Account {
+    @Id
+    @Column(name = "account_id")
+    String id;
+
+    String username;
+    String email;
+    String password;
+    String provider;
+    String providerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    Role role;
+
+    LocalDateTime createDate;
+    LocalDateTime updateDate;
+
+    @PreUpdate
+    protected  void onCreate(){
+        createDate = LocalDateTime.now();
+        updateDate=LocalDateTime.now();
+    }
+    @PrePersist
+    protected void onUpdate(){updateDate=LocalDateTime.now();}
+
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    List<Customer> customers;
+
+}

@@ -1,19 +1,19 @@
-package com.oliolishop.oliolishop.dto.category;
+package com.oliolishop.oliolishop.dto.productskuattr;
 
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryResponse {
+public class ProductSkuAttrResponse {
     String id;
+//    String productSpuId;
     String name;
-    boolean isLeaf;
-    String url;
+    String value;
+    String image;
+    String showPreviewImage;
 }

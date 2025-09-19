@@ -28,6 +28,8 @@ public enum ErrorCode {
     BRAND_NOT_EXISTED(3004, "Brand does not exist",HttpStatus.NOT_ACCEPTABLE),
     BRAND_EXISTED(3005,"Brand existed",HttpStatus.CONFLICT),
     CATEGORY_NOT_EXIST(3006,"Category does not exist",HttpStatus.NOT_FOUND),
+    PRODUCT_NOT_EXIST(3007,"product does not exist", HttpStatus.NOT_FOUND),
+    ATTRIBUTE_EXISTED(3008, "Description Attribute does not exist", HttpStatus.NOT_FOUND),
     // 9xxx: system
     UNCATEGORIZED_EXCEPTION(9999,"Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
 

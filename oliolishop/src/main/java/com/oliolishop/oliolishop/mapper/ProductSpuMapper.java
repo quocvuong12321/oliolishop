@@ -1,21 +1,19 @@
 package com.oliolishop.oliolishop.mapper;
 
 
-import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateRequest;
-import com.oliolishop.oliolishop.dto.productspu.SpuCreateResponse;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
+import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateResponse;
 import com.oliolishop.oliolishop.entity.ProductSpu;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "Spring")
 public interface ProductSpuMapper {
-
-    @Mapping(target = "price", ignore = true)
-    @Mapping(target = "originalPrice", ignore = true)
-    @Mapping(target = "discountRate", ignore = true)
-    ProductSpuResponse toResponse(ProductSpu spu);
+//
+//    @Mapping(target = "price", ignore = true)
+//    @Mapping(target = "originalPrice", ignore = true)
+//    @Mapping(target = "discountRate", ignore = true)
+//    ProductSpuResponse toResponse(ProductSpu spu);
 
 
 //    // ---- custom helpers ----
@@ -35,7 +33,8 @@ public interface ProductSpuMapper {
 
 
     @Mapping(target = "media",ignore = true)
-    SpuCreateResponse toSpuCreateResponse(ProductSpu spu);
+    ProductSpuCreateResponse toSpuCreateResponse(ProductSpu spu);
     ProductSpu toProductSpu(ProductSpuCreateRequest request);
+
 
 }

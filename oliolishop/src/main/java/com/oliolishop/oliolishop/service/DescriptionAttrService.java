@@ -2,6 +2,7 @@ package com.oliolishop.oliolishop.service;
 
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrRequest;
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrResponse;
+import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrUpdateRequest;
 import com.oliolishop.oliolishop.entity.DescriptionAttr;
 import com.oliolishop.oliolishop.entity.ProductSpu;
 import com.oliolishop.oliolishop.exception.AppException;
@@ -14,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -77,5 +79,35 @@ public class DescriptionAttrService {
                 .toList();
     }
 
+    public List<DescriptionAttrResponse> updateDescriptionAttrs(List<DescriptionAttrUpdateRequest> requests, ProductSpu spu) {
+        Set<String> namesInRequest = new HashSet<>();
+
+        List<DescriptionAttr> entitiesToUpdate = new ArrayList<>();
+
+        for (DescriptionAttrUpdateRequest req : requests) {
+
+            // Tìm trong DB
+            DescriptionAttr existing = descriptionAttrRepository.findById(req.getId()).orElseThrow(()->new AppException(ErrorCode.ATTRIBUTE_NOT_EXIST));
+            // Kiểm tra trùng với DB
+            if (descriptionAttrRepository.existsByNameAndSpu_Id(req.getName(), spu.getId())) {
+                throw new AppException(ErrorCode.ATTRIBUTE_EXISTED);
+            }
+
+            // Map request → entity
+            existing.setName(req.getName());
+            existing.setValue(req.getValue());
+            entitiesToUpdate.add(existing);
+
+        }
+
+        // Lưu batch
+        List<DescriptionAttr> updated = descriptionAttrRepository.saveAll(entitiesToUpdate);
+
+        // Map entity → response
+        return updated.stream()
+                .map(descriptionAttrMapper::toResponse)
+                .toList();
+
+    }
 
 }

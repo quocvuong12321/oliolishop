@@ -1,5 +1,8 @@
 package com.oliolishop.oliolishop.service;
 
+import com.oliolishop.oliolishop.configuration.RedisConfig;
+import com.oliolishop.oliolishop.constant.RedisKey;
+import com.oliolishop.oliolishop.dto.category.CategoryAllResponse;
 import com.oliolishop.oliolishop.dto.category.CategoryRequest;
 import com.oliolishop.oliolishop.dto.category.CategoryResponse;
 import com.oliolishop.oliolishop.entity.Category;
@@ -27,17 +30,61 @@ import java.util.stream.Collectors;
 public class CategoryService {
     CategoryRepository categoryRepository;
     CategoryMapper categoryMapper;
+    RedisService redisService;
 
-    public List<CategoryResponse> loadParent() {
-        return categoryRepository.findByParentIsNull().stream().map(categoryMapper::toCategoryResponse).toList();
+    public Set<CategoryResponse> loadParent() {
+        Set<CategoryResponse> cached = redisService.get("categories:tree", Set.class);
+        if (cached != null) {
+            return cached;
+        }
+
+        List<Category> roots =  categoryRepository.findByParentIsNull().stream().toList();
+
+        Set<CategoryResponse> set= roots.stream().map(this::convertToResponse).collect(Collectors.toSet());
+
+        redisService.set(RedisKey.CATEGORY_TREE,set,900);
+
+        return  set;
     }
 
-    public List<CategoryResponse> findChildren(String id) {
+    private CategoryResponse convertToResponse(Category c){
+        CategoryResponse categoryResponse = categoryMapper.toCategoryResponse(c);
+
+        if(!c.getIsLeaf()){
+            categoryResponse.setChildren(
+                    c.getChildren().stream().map(this::convertToResponse).collect(Collectors.toSet())
+            );
+        }
+        return categoryResponse;
+
+    }
+
+
+    public Set<CategoryResponse> findChildren(String id) {
         Category cate = categoryRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST));
 
         //        lstChildren.forEach(c -> c.setParent(id));
-        return categoryRepository.findChildren(cate.getId()).stream().map(categoryMapper::toCategoryResponse).toList();
+        return categoryRepository.findChildren(cate.getId()).stream().map(categoryMapper::toCategoryResponse).collect(Collectors.toSet());
     }
+
+//    private void findAllCategory(CategoryResponse c){
+//        findChildren(c.getId());
+//        if (!c.isLeaf()){
+//            findAllCategory(c.get);
+//        }
+//    }
+
+
+//    public Set<CategoryAllResponse> findAll(){
+//        Set<CategoryAllResponse> set= new HashSet<>();
+//
+//
+//
+//
+//
+//    }
+
+
 
     public CategoryResponse createCategory(CategoryRequest request) {
         Category c = categoryMapper.toCategory(request);

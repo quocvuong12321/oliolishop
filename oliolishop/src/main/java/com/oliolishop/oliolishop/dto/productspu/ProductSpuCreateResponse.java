@@ -5,21 +5,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.oliolishop.oliolishop.dto.brand.BrandResponse;
 import com.oliolishop.oliolishop.dto.category.CategoryResponse;
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrResponse;
-import com.oliolishop.oliolishop.entity.DescriptionAttr;
 import com.oliolishop.oliolishop.ultils.AppUtils;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SpuCreateResponse {
+public class ProductSpuCreateResponse {
     String id;
     String name;
     String image;

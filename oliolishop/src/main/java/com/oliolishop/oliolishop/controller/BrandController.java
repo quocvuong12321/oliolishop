@@ -13,7 +13,7 @@ import java.security.PublicKey;
 
 
 @RestController
-@RequestMapping(ApiPath.BASE+"/brand")
+@RequestMapping(ApiPath.BASE+ApiPath.BRAND)
 @Slf4j
 public class BrandController {
     @Autowired

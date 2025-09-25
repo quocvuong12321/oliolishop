@@ -1,10 +1,8 @@
 package com.oliolishop.oliolishop.dto.category;
 
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
 import java.util.Set;
 
 @Data
@@ -12,10 +10,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryResponse {
-    String id;
-    String name;
-    boolean isLeaf;
-    String url;
+public class CategoryAllResponse {
+    CategoryResponse category;
     Set<CategoryResponse> children;
 }

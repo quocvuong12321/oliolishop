@@ -55,7 +55,7 @@ public class ProductSku {
 
     int minStock;
 
-    String restockStrategy;
+    RestockStrategy restockStrategy;
 
     @PrePersist
     protected void onCreate() {
@@ -70,5 +70,9 @@ public class ProductSku {
 
     public enum Status {
         Active, Inactive
+    }
+
+    public enum  RestockStrategy {
+    auto_reorder,stop_ordering
     }
 }

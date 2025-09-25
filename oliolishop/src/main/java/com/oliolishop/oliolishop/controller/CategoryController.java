@@ -12,25 +12,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
-@RequestMapping(ApiPath.BASE + "/category")
+@RequestMapping(ApiPath.BASE + ApiPath.CATEGORY)
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
     @GetMapping
-    public ApiResponse<List<CategoryResponse>> getCategories() throws JsonProcessingException {
+    public ApiResponse<Set<CategoryResponse>> getCategories() throws JsonProcessingException {
         log.info("you are in controller ");
-        return ApiResponse.<List<CategoryResponse>>builder()
+        return ApiResponse.<Set<CategoryResponse>>builder()
                 .result(categoryService.loadParent())
                 .build();
     }
 
     @GetMapping(ApiPath.BY_ID)
-    public ApiResponse<List<CategoryResponse>> getCategoryById(@PathVariable(name = "id") String id) {
-        return ApiResponse.<List<CategoryResponse>>builder()
+    public ApiResponse<Set<CategoryResponse>> getCategoryById(@PathVariable(name = "id") String id) {
+        return ApiResponse.<Set<CategoryResponse>>builder()
                 .result(categoryService.findChildren(id))
                 .build();
     }

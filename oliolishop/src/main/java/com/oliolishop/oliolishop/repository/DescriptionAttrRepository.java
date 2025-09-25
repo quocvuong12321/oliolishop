@@ -12,4 +12,6 @@ public interface DescriptionAttrRepository extends JpaRepository<DescriptionAttr
     List<DescriptionAttr> findBySpu_Id(String spuId);
 
     boolean existsByNameAndSpu_Id(String name, String spu_id);
+
+    boolean existsByNameAndSpu_IdAndIdNot(String name, String spuId, String id);
 }

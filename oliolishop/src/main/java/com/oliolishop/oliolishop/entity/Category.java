@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -36,13 +37,13 @@ public class Category {
     Category parent;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Category> children;
+    Set<Category> children;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     List<ProductSpu> productSpus;
 
-    @Column(name = "isleaf")
-    Boolean isLeaf = false;
+    @Column(name = "is_leaf")
+    Boolean isLeaf;
 
     @Column(name = "create_date")
     LocalDateTime createDate;

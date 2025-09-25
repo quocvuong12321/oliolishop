@@ -7,10 +7,7 @@ import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrRequest;
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrResponse;
 import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
 import com.oliolishop.oliolishop.dto.productskuattr.ProductSkuAttrResponse;
-import com.oliolishop.oliolishop.dto.productspu.ProductDetailResponse;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateRequest;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
-import com.oliolishop.oliolishop.dto.productspu.SpuCreateResponse;
+import com.oliolishop.oliolishop.dto.productspu.*;
 import com.oliolishop.oliolishop.entity.Brand;
 import com.oliolishop.oliolishop.entity.Category;
 import com.oliolishop.oliolishop.entity.ProductSku;
@@ -20,26 +17,18 @@ import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.*;
 import com.oliolishop.oliolishop.repository.*;
 import com.oliolishop.oliolishop.ultils.AppUtils;
-import jakarta.persistence.GeneratedValue;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,6 +41,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 //@RequiredArgsConstructor
 public class ProductSpuService {
+    private final ProductSkuRepository productSkuRepository;
     private final DescriptionAttrRepository descriptionAttrRepository;
     BrandRepository brandRepository;
     CategoryRepository categoryRepository;
@@ -63,40 +53,33 @@ public class ProductSpuService {
     ProductSkuAttrMapper productSkuAttrMapper;
     DescriptionAttrMapper descriptionAttrMapper;
     DescriptionAttrService descriptionAttrService;
+    RedisService redisService;
 
-    public Page<ProductSpuResponse> getProducts(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-//        return productSpuRepository.findProducts(pageable).map(p -> ProductSpuResponse.builder()
-//                .id(p.getId())
-//                .name(p.getName())
-//                .price(p.getProductSkus().getFirst().getPrice())
-//                .image(p.getImage())
-//                .sold(p.getSold())
-//                .originalPrice(p.getProductSkus().getFirst().getOriginalPrice())
-//                .discountRate((int) (p.getProductSkus().getFirst().getDiscountRate() * 100))
-//                .build());
 
-        return productSpuRepository.findProducts(pageable).map(productSpuMapper::toResponse);
+    public List<ProductSpuResponse> getProducts(String categoryId,  String brandId ,double minPrice, double maxPrice, int page, int size) {
+        List<ProductSpuProjection> query = productSpuRepository.findProducts(categoryId,brandId,minPrice,maxPrice, page, size);
+        List<ProductSpuResponse> lstResponse = new ArrayList<>();
+
+        query.forEach(s->lstResponse.add(ProductSpuResponse.builder()
+                        .id(s.getProductSpuId())
+                        .brandId(s.getBrandId())
+                        .categoryId(s.getCategoryId())
+                        .maxPrice(s.getMaxPrice())
+                        .minPrice(s.getMinPrice())
+                        .image(s.getImage())
+                        .name(s.getName())
+                .build()));
+
+        return  lstResponse;
     }
 
-    public Page<ProductSpuResponse> getProductsByCategory(String categoryId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-//        return productSpuRepository.findByCategory(categoryId, pageable).map(p -> ProductSpuResponse.builder()
-//                .id(p.getId())
-//                .name(p.getName())
-//                .originalPrice(p.getProductSkus().getFirst().getOriginalPrice())
-//                .price(p.getProductSkus().getFirst().getPrice())
-//                .discountRate((int) (p.getProductSkus().getFirst().getDiscountRate() * 100))
-//                .sold(p.getSold())
-//                .image(p.getImage())
-//                .build());
 
-        return productSpuRepository.findByCategory(categoryId,pageable).map(productSpuMapper::toResponse);
-
+    public Integer getTotalElements(String categoryId, String brandId, double minPrice, double maxPrice){
+        return productSpuRepository.getTotalElements(categoryId,brandId,minPrice,maxPrice);
     }
 
     public ProductDetailResponse detailProduct(String id) {
-        ProductSpu spu = productSpuRepository.findDetailById(id)
+        ProductSpu spu = productSpuRepository.findDetailById(id, ProductSku.Status.Active)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
 
         // lấy 1 lần để tránh gọi nhiều
@@ -159,26 +142,37 @@ public class ProductSpuService {
 
 
     private List<ProductSpuResponse> productsSameBrand(String brandId) {
+        List<ProductSpuResponse> lstResponse = new ArrayList<>();
 
+        productSpuRepository.findProducts(null,brandId,0,9999999,0,20).forEach(
+                s->lstResponse.add(ProductSpuResponse.builder()
+                        .id(s.getProductSpuId())
+                        .brandId(s.getBrandId())
+                        .categoryId(s.getCategoryId())
+                        .maxPrice(s.getMaxPrice())
+                        .minPrice(s.getMinPrice())
+                        .image(s.getImage())
+                        .name(s.getName())
+                        .build()));
+        return  lstResponse;
 
-
-
-
-        return productSpuRepository.findRandom20ByBrandId(brandId).stream().map(spu -> {
-            ProductSpuResponse spuResponse = productSpuMapper.toResponse(spu);
-            spuResponse.setOriginalPrice(findMinPriceSpuId(spu.getProductSkus()));
-            return spuResponse;
-        }).toList();
     }
 
     private List<ProductSpuResponse> productsSameCategory(String categoryId){
 
-        return productSpuRepository.findRandom20ByCategoryId(categoryId)
-                .stream().map(spu -> {
-                    ProductSpuResponse spuResponse = productSpuMapper.toResponse(spu);
-                    spuResponse.setOriginalPrice(findMinPriceSpuId(spu.getProductSkus()));
-                    return spuResponse;
-                }).toList();
+        List<ProductSpuResponse> lstResponse = new ArrayList<>();
+
+        productSpuRepository.findProducts(categoryId,null,0,9999999,0,20).forEach(
+                s->lstResponse.add(ProductSpuResponse.builder()
+                        .id(s.getProductSpuId())
+                        .brandId(s.getBrandId())
+                        .categoryId(s.getCategoryId())
+                        .maxPrice(s.getMaxPrice())
+                        .minPrice(s.getMinPrice())
+                        .image(s.getImage())
+                        .name(s.getName())
+                        .build()));
+        return  lstResponse;
 
     }
 
@@ -188,7 +182,7 @@ public class ProductSpuService {
         return setSkus.stream().map(ProductSku::getOriginalPrice).min(Double::compareTo).orElse(0.0);
     }
 
-    public SpuCreateResponse createProductSpu(ProductSpuCreateRequest request, List<MultipartFile> files, String imageDir) throws IOException {
+    public ProductSpuCreateResponse createProductSpu(ProductSpuCreateRequest request, List<MultipartFile> files, String imageDir) throws IOException {
         ProductSpu spu = productSpuMapper.toProductSpu(request);
 
         String spu_id = UUID.randomUUID().toString();
@@ -208,7 +202,9 @@ public class ProductSpuService {
 
         String key = c.getKey();
 
-        List<String> lstMedia = saveProductImages(key,spu_id,files,imageDir);
+        int count = 0;
+
+        List<String> lstMedia = saveProductImages(key,spu_id,files,imageDir,count);
 
         String[] media =  lstMedia.toArray(new String[0]);
         spu.setMedia(AppUtils.arrayToPythonList(media));
@@ -223,7 +219,7 @@ public class ProductSpuService {
 
         spu.setSold(0);
 
-        SpuCreateResponse resp = productSpuMapper.toSpuCreateResponse(productSpuRepository.save(spu));
+        ProductSpuCreateResponse resp = productSpuMapper.toSpuCreateResponse(productSpuRepository.save(spu));
 
         resp.setMedia(media);
 
@@ -234,7 +230,8 @@ public class ProductSpuService {
     }
 
 
-    public List<String> saveProductImages(String key, String spuId, List<MultipartFile> files, String imageDir) {
+
+    public List<String> saveProductImages(String key, String spuId, List<MultipartFile> files, String imageDir, int index) {
         List<String> mediaUrls = new ArrayList<>();
         Path uploadDirPath = Paths.get(imageDir, key);
 
@@ -244,43 +241,97 @@ public class ProductSpuService {
         } catch (IOException e) {
             throw new RuntimeException("Không thể tạo thư mục upload: " + uploadDirPath, e);
         }
-
-        int index = 0;
+//
+//        int index = 0;
         for (MultipartFile file : files) {
             String originalName = file.getOriginalFilename();
             if (originalName == null) originalName = "unknown.jpg";
 
             try {
-                // Đọc ảnh từ MultipartFile
-                BufferedImage image = ImageIO.read(file.getInputStream());
-                if (image == null) {
-                    System.err.println("File upload không hợp lệ (không phải ảnh): " + originalName);
-                    continue; // bỏ qua file này
-                }
-
-                // Lấy định dạng gốc nếu muốn giữ
-                String ext = "jpg"; // mặc định chuyển về jpg
-                String fileName = spuId + "_" + index++ + "." + ext;
-                Path targetPath = uploadDirPath.resolve(fileName);
-
-                // Resize 550x550 và lưu
-                Thumbnails.of(image)
-                        .size(550, 550)
-                        .outputFormat(ext)
-                        .toFile(targetPath.toFile());
-
-                mediaUrls.add("/" + key + "/" + fileName);
+                String fileName = spuId + "_" + index++;
+                String url = AppUtils.saveImage(file, imageDir, key, fileName);
+                mediaUrls.add(url);
 
                 System.out.println("Lưu thành công file: " + fileName + " (" + file.getContentType() + ", " + file.getSize() + " bytes)");
-
             } catch (IOException e) {
                 System.err.println("Lỗi khi xử lý file: " + originalName);
                 e.printStackTrace();
             }
         }
-
         return mediaUrls;
     }
+    @Transactional
+    public ProductSpuCreateResponse updateProductSpu(ProductSpuCreateRequest request, String id){
+        ProductSpu spu = productSpuRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        spu.setName(request.getName());
+        spu.setKey(AppUtils.convertToSpuUrl(AppUtils.toSlug(request.getName()),id));
+        spu.setDescription(request.getDescription());
+        spu.setShortDescription(request.getShortDescription());
+
+        return productSpuMapper.toSpuCreateResponse(productSpuRepository.save(spu));
+    }
+
+    @Transactional
+    public ProductSpuCreateResponse updateProductSpuImages(
+            String spuId,
+            List<String> existingImages,     // ảnh cũ user giữ lại
+            List<MultipartFile> newFiles,    // ảnh mới user upload
+            String imageDir,
+            int thumbnailIndex) throws IOException {
+
+        ProductSpu spu = productSpuRepository.findById(spuId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        String key = spu.getCategory().getKey();
+
+        if (existingImages == null) {
+            existingImages = new ArrayList<>();
+        }
+
+        // Ảnh hiện tại trong DB (mutable list để remove được)
+        List<String> oldImages = new ArrayList<>(Arrays.asList(AppUtils.parseStringToArray(spu.getMedia())));
+
+        // Tìm ảnh bị xoá (có trong DB nhưng không nằm trong existingImages)
+        List<String> finalExistingImages = existingImages;
+        List<String> deleted = oldImages.stream()
+                .filter(img -> !finalExistingImages.contains(img))
+                .toList();
+
+        // Xoá file vật lý trên disk + remove khỏi list
+        for (String url : deleted) {
+            Path path = Paths.get(imageDir, url);
+            Files.deleteIfExists(path);
+            oldImages.remove(url);   // ✅ giờ remove được vì oldImages là ArrayList
+        }
+
+        int count = oldImages.size();
+
+        // Lưu ảnh mới upload
+        List<String> newUrls = saveProductImages(key, spuId, newFiles, imageDir, count);
+
+        // Ghép lại final list: ảnh còn giữ + ảnh mới
+        List<String> finalImages = new ArrayList<>(existingImages);
+        finalImages.addAll(newUrls);
+
+        // Cập nhật DB
+        String[] updatedMedia = finalImages.toArray(new String[0]);
+        spu.setMedia(AppUtils.arrayToPythonList(updatedMedia));
+        if (thumbnailIndex >= 0 && thumbnailIndex < finalImages.size()) {
+            spu.setImage(finalImages.get(thumbnailIndex));
+        } else if (!finalImages.isEmpty()) {
+            spu.setImage(finalImages.getFirst());
+        }
+
+        ProductSpu saved = productSpuRepository.save(spu);
+
+        // Trả về response
+        ProductSpuCreateResponse resp = productSpuMapper.toSpuCreateResponse(saved);
+        resp.setMedia(updatedMedia);
+        return resp;
+    }
+
+
 
 
 

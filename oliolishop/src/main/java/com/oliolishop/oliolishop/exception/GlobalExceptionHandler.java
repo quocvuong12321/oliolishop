@@ -6,12 +6,12 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @ControllerAdvice // Đánh dấu class này là global exception handler cho toàn bộ controller
@@ -30,6 +30,7 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
 
         apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
         apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        apiResponse.setStatus(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode().value());
         return ResponseEntity.badRequest().body(apiResponse);
     }
 
@@ -39,10 +40,12 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
     @ExceptionHandler(value = AppException.class)
     ResponseEntity<ApiResponse<Object>> handlingAppException(AppException exception){
         ErrorCode errorCode=exception.getErrorCode();
-        ApiResponse<Object> apiResponse = new ApiResponse<>();
+        ApiResponse<Object> apiResponse = ApiResponse.builder()
+                .code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .status(errorCode.getStatusCode().value())
+                .build();
 
-        apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(errorCode.getMessage());
         return ResponseEntity
                 .status(errorCode.getStatusCode())
                 .body(apiResponse);
@@ -51,40 +54,80 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
     /**
      * Xử lý các lỗi validation khi sử dụng @Valid (dành cho object trong request body)
      */
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    ResponseEntity<ApiResponse<Object>> handlingValidation(MethodArgumentNotValidException exception){
-        String enumKey = null;
+//    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+//    ResponseEntity<ApiResponse<Object>> handlingValidation(MethodArgumentNotValidException exception){
+//        String enumKey = null;
+//
+//        // Lấy defaultMessage từ field lỗi (được dùng như key để tra ErrorCode)
+//        if (exception.getFieldError() != null) {
+//            enumKey = exception.getFieldError().getDefaultMessage();
+//        }
+//        ErrorCode errorCode=ErrorCode.INVALID_KEY;
+//        Map<String,Object> attributes = null;
+//
+//        try {
+//            // Nếu tìm được key hợp lệ thì lấy ErrorCode tương ứng
+//            if (enumKey != null) {
+//                errorCode = ErrorCode.valueOf(enumKey);
+//                // Lấy thông tin constraint (ví dụ min=18) để format message
+//                var constraintViolation = exception.getBindingResult().getAllErrors()
+//                        .getFirst().unwrap(ConstraintViolation.class);
+//                attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+//
+//                log.info(attributes.toString());
+//            }
+//        } catch (IllegalArgumentException e) {
+//            // Không tìm thấy enum, giữ nguyên INVALID_KEY
+//        }
+//        ApiResponse<Object> apiResponse = new ApiResponse<>();
+//
+//        // Nếu có thông tin thuộc tính (min/max) thì thay vào message
+//        apiResponse.setCode(errorCode.getCode());
+//        apiResponse.setMessage(Objects.nonNull(attributes)
+//                ?mapAttributes(errorCode.getMessage(),attributes)
+//                :errorCode.getMessage());
+//        return  ResponseEntity.badRequest().body(apiResponse);
+//    }
 
-        // Lấy defaultMessage từ field lỗi (được dùng như key để tra ErrorCode)
-        if (exception.getFieldError() != null) {
-            enumKey = exception.getFieldError().getDefaultMessage();
-        }
-        ErrorCode errorCode=ErrorCode.INVALID_KEY;
-        Map<String,Object> attributes = null;
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<ApiResponse<Object>> handlingValidation(MethodArgumentNotValidException exception) {
+        List<Map<String, Object>> errors = new ArrayList<>();
 
-        try {
-            // Nếu tìm được key hợp lệ thì lấy ErrorCode tương ứng
-            if (enumKey != null) {
-                errorCode = ErrorCode.valueOf(enumKey);
-                // Lấy thông tin constraint (ví dụ min=18) để format message
-                var constraintViolation = exception.getBindingResult().getAllErrors()
-                        .getFirst().unwrap(ConstraintViolation.class);
-                attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+        for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
+            String enumKey = fieldError.getDefaultMessage();
+            ErrorCode errorCode = ErrorCode.INVALID_KEY;
+            Map<String, Object> attributes = null;
 
-                log.info(attributes.toString());
+            try {
+                if (enumKey != null) {
+                    errorCode = ErrorCode.valueOf(enumKey);
+
+                    var constraintViolation = fieldError.unwrap(ConstraintViolation.class);
+                    attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+                }
+            } catch (Exception e) {
+                // giữ nguyên INVALID_KEY nếu không map được
             }
-        } catch (IllegalArgumentException e) {
-            // Không tìm thấy enum, giữ nguyên INVALID_KEY
-        }
-        ApiResponse<Object> apiResponse = new ApiResponse<>();
 
-        // Nếu có thông tin thuộc tính (min/max) thì thay vào message
-        apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(Objects.nonNull(attributes)
-                ?mapAttributes(errorCode.getMessage(),attributes)
-                :errorCode.getMessage());
-        return  ResponseEntity.badRequest().body(apiResponse);
+            Map<String, Object> errorDetail = new HashMap<>();
+            errorDetail.put("field", fieldError.getField());
+            errorDetail.put("code", errorCode.getCode());
+            errorDetail.put("message",
+                    attributes != null
+                            ? mapAttributes(errorCode.getMessage(), attributes)
+                            : errorCode.getMessage());
+
+            errors.add(errorDetail);
+        }
+
+        ApiResponse<Object> apiResponse = new ApiResponse<>();
+        apiResponse.setCode(ErrorCode.INVALID_KEY.getCode());
+        apiResponse.setMessage("Validation failed");
+        apiResponse.setResult(errors);
+
+        return ResponseEntity.badRequest().body(apiResponse);
     }
+
 
     /**
      * Xử lý các lỗi validation của @Validated (thường dùng với @RequestParam, @PathVariable)

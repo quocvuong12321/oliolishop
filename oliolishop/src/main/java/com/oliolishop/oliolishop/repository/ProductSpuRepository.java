@@ -1,12 +1,15 @@
 package com.oliolishop.oliolishop.repository;
 
+import com.oliolishop.oliolishop.dto.productspu.ProductSpuProjection;
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
+import com.oliolishop.oliolishop.entity.ProductSku;
 import com.oliolishop.oliolishop.entity.ProductSpu;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,13 +19,30 @@ import java.util.Optional;
 @Repository
 public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> {
 
-    @Query("""
-                SELECT spu
-                FROM ProductSpu spu
-                JOIN FETCH spu.productSkus sku
-                WHERE sku.sort = 0
-            """)
-    Page<ProductSpu> findProducts(Pageable pageable);
+
+    @Query(
+            value = "CALL GetProductList(:categoryId, :brandId, :minPrice, :maxPrice, :page, :size)",
+            nativeQuery = true
+    )
+    List<ProductSpuProjection> findProducts(
+            @Param("categoryId") String categoryId,
+            @Param("brandId") String brandId,
+            @Param("minPrice") double minPrice,
+            @Param("maxPrice") double maxPrice,
+            @Param("page") int page,
+            @Param("size") int size
+    );
+
+    @Query(
+            value = "CALL GetTotalElements(:categoryId, :brandId, :minPrice, :maxPrice)",
+            nativeQuery = true
+    )
+    Integer getTotalElements(
+            @Param("categoryId") String categoryId,
+            @Param("brandId") String brandId,
+            @Param("minPrice") double minPrice,
+            @Param("maxPrice") double maxPrice
+    );
 
     @Query(value =
             """
@@ -54,9 +74,9 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
         LEFT JOIN FETCH spu.skuAttrs skuAttrs
         LEFT JOIN FETCH spu.category category
         LEFT JOIN FETCH spu.brand brand
-        WHERE spu.id = :id
+        WHERE spu.id = :id and skus.status = :status
     """)
-    Optional<ProductSpu> findDetailById(@Param("id") String id);
+    Optional<ProductSpu> findDetailById(@Param("id") String id, @Param("status")ProductSku.Status status);
 
 
     @Query(value = """

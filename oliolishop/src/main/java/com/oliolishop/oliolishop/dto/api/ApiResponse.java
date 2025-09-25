@@ -16,6 +16,8 @@ public class ApiResponse<T> {
     @Builder.Default
     String message = "Successfully";
     T result;
+    @Builder.Default
+    int status = 200;
 
 //    public static <T> ApiResponse<T> success(T result) {
 //        return ApiResponse.<T>builder()

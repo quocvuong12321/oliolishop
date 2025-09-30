@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @AllArgsConstructor
@@ -38,5 +39,20 @@ public class RedisService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error deserializing object", e);
         }
+    }
+    public long getTTL(String key) {
+        try {
+            Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+            return ttl != null ? ttl : -2; // -2 = key không tồn tại
+        } catch (Exception e) {
+            return -1; // -1 = có lỗi
+        }
+    }
+
+    public boolean delete(String key){
+        if(key==null)
+            return false;
+
+        return redisTemplate.delete(key);
     }
 }

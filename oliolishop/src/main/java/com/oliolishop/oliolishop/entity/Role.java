@@ -8,6 +8,7 @@ import org.springframework.boot.context.config.ConfigDataEnvironmentUpdateListen
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "role")
@@ -45,10 +46,13 @@ public class Role {
     }
 
 
-    @OneToMany(mappedBy = "role",fetch = FetchType.LAZY)
-    List<Permission> permissions;
+    @ManyToMany
+    @JoinTable(
+            name = "role_permission", // tên bảng đúng trong DB
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "permission_id")
+    )
+    Set<Permission> permissions;
 
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
-    List<Account> accounts;
 
 }

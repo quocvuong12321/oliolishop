@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Customer {
     @Id
-    @Column(name = "column_id")
+    @Column(name = "customer_id")
     String id;
 
     @Column(name = "name")
@@ -25,11 +26,12 @@ public class Customer {
     @Column(name = "image")
     String image;
 
-    @Column(name="dob")
-    LocalDateTime dob;
+    @Column(name = "dob")
+    LocalDate dob;
 
     @Column(name = "gender")
-    String gender;
+    @Enumerated(EnumType.STRING)
+    Gender gender;
 
     int loyaltyPoints;
 
@@ -39,13 +41,23 @@ public class Customer {
     @Column(name = "update_date")
     LocalDateTime updateDate;
 
+
     @PrePersist
     protected void onCreate() {
         createDate = LocalDateTime.now();
         updateDate = LocalDateTime.now();
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @PreUpdate
+    protected void onUpdate() {
+        updateDate = LocalDateTime.now();
+    }
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Account_id")
     Account account;
+
+    public enum Gender {
+        Nam, Nữ
+    }
 }

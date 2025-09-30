@@ -21,6 +21,8 @@ public class ApiPath {
 
     public static final String IMAGE = "/image";
 
+    public static final String ACCOUNT = "/account";
 
+    public static final String AUTHENTICATION = "/auth";
 
 }

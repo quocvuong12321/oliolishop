@@ -4,6 +4,7 @@ package com.oliolishop.oliolishop.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.UUID;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,29 +19,32 @@ public class Account {
     @Id
     @Column(name = "account_id")
     String id;
-
     String username;
     String email;
     String password;
     String provider;
     String providerId;
+    String phoneNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
-    Role role;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "role_id")
+//    Role role;
 
+    @Column(name = "create_date")
     LocalDateTime createDate;
+
+    @Column(name = "update_date")
     LocalDateTime updateDate;
 
-    @PreUpdate
-    protected  void onCreate(){
-        createDate = LocalDateTime.now();
-        updateDate=LocalDateTime.now();
-    }
     @PrePersist
+    protected void onCreate() {
+        createDate = LocalDateTime.now();
+        updateDate = LocalDateTime.now();
+    }
+    @PreUpdate
     protected void onUpdate(){updateDate=LocalDateTime.now();}
 
-    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
-    List<Customer> customers;
+    @OneToOne(mappedBy = "account")
+    Customer customer;
 
 }

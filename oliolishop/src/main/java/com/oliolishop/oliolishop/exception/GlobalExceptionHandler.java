@@ -10,11 +10,13 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.*;
 
 @Slf4j
-@ControllerAdvice // Đánh dấu class này là global exception handler cho toàn bộ controller
+@RestControllerAdvice // Thêm khoảng trắng ở đây
 public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exception
     // Key dùng để lấy giá trị ràng buộc "min" từ annotation @Min
     private static final String MIN_ATTRIBUTES = "min";
@@ -90,69 +92,98 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
 //    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseBody
     ResponseEntity<ApiResponse<Object>> handlingValidation(MethodArgumentNotValidException exception) {
-        List<Map<String, Object>> errors = new ArrayList<>();
+        try {
+            log.info("Handling validation exception: {}", exception.getMessage());
 
-        for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
-            String enumKey = fieldError.getDefaultMessage();
-            ErrorCode errorCode = ErrorCode.INVALID_KEY;
-            Map<String, Object> attributes = null;
+            List<Map<String, Object>> errors = new ArrayList<>();
 
-            try {
-                if (enumKey != null) {
-                    errorCode = ErrorCode.valueOf(enumKey);
+            for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
+                String enumKey = fieldError.getDefaultMessage();
+                ErrorCode errorCode = ErrorCode.INVALID_KEY;
+                Map<String, Object> attributes = null;
 
-                    var constraintViolation = fieldError.unwrap(ConstraintViolation.class);
-                    attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+                try {
+                    if (enumKey != null) {
+                        errorCode = ErrorCode.valueOf(enumKey);
+
+                        var constraintViolation = fieldError.unwrap(ConstraintViolation.class);
+                        attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+                    }
+                } catch (Exception e) {
+                    // giữ nguyên INVALID_KEY nếu không map được
                 }
-            } catch (Exception e) {
-                // giữ nguyên INVALID_KEY nếu không map được
+
+                Map<String, Object> errorDetail = new HashMap<>();
+                errorDetail.put("field", fieldError.getField());
+                errorDetail.put("code", errorCode.getCode());
+                errorDetail.put("message",
+                        attributes != null
+                                ? mapAttributes(errorCode.getMessage(), attributes)
+                                : errorCode.getMessage());
+
+                errors.add(errorDetail);
             }
 
-            Map<String, Object> errorDetail = new HashMap<>();
-            errorDetail.put("field", fieldError.getField());
-            errorDetail.put("code", errorCode.getCode());
-            errorDetail.put("message",
-                    attributes != null
-                            ? mapAttributes(errorCode.getMessage(), attributes)
-                            : errorCode.getMessage());
+            ApiResponse<Object> apiResponse = new ApiResponse<>();
+            apiResponse.setCode(ErrorCode.INVALID_KEY.getCode());
+            apiResponse.setMessage("Validation failed");
+            apiResponse.setResult(errors);
+            apiResponse.setStatus(400); // Đặt status code rõ ràng
 
-            errors.add(errorDetail);
+            return ResponseEntity.status(400).body(apiResponse); // Đặt status code tường minh
+        } catch (Exception e) {
+            log.error("Error in exception handler", e);
+            ApiResponse<Object> fallbackResponse = new ApiResponse<>();
+            fallbackResponse.setCode(9999);
+            fallbackResponse.setMessage("Unexpected error in validation: " + e.getMessage());
+            fallbackResponse.setStatus(400); // Đặt status code rõ ràng
+            return ResponseEntity.status(400).body(fallbackResponse);
         }
-
-        ApiResponse<Object> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.INVALID_KEY.getCode());
-        apiResponse.setMessage("Validation failed");
-        apiResponse.setResult(errors);
-
-        return ResponseEntity.badRequest().body(apiResponse);
     }
 
 
     /**
      * Xử lý các lỗi validation của @Validated (thường dùng với @RequestParam, @PathVariable)
      */
-//    @ExceptionHandler(ConstraintViolationException.class)
-//    public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(ConstraintViolationException ex) {
-//        // Lấy thông báo lỗi đầu tiên trong danh sách các vi phạm
-//        String message = ex.getConstraintViolations().stream()
-//                .map(ConstraintViolation::getMessage)
-//                .findFirst()
-//                .orElse("VALIDATION_ERROR");
-//
-//        return ResponseEntity.badRequest().body(ApiResponse.builder()
-//                .code(ErrorCode.INVALID_KEY.getCode())
-//                .message(message)
-//                .build());
-//    }
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(ConstraintViolationException ex) {
+        // Lấy thông báo lỗi đầu tiên
+        String enumKey = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .findFirst()
+                .orElse("VALIDATION_ERROR");
+
+        // Thử chuyển đổi message thành ErrorCode
+        ErrorCode errorCode = ErrorCode.INVALID_KEY;
+        try {
+            errorCode = ErrorCode.valueOf(enumKey);
+        } catch (IllegalArgumentException e) {
+            // Giữ nguyên INVALID_KEY nếu không map được
+        }
+
+        return ResponseEntity.badRequest().body(ApiResponse.builder()
+                .code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .build());
+    }
 
     /**
      * Hàm thay thế biến trong message (ví dụ: {min}) bằng giá trị thực tế từ annotation
      */
-    private String mapAttributes(String message, Map<String,Object> attributes){
-        String minValue = attributes.get(MIN_ATTRIBUTES).toString();
+    private String mapAttributes(String message, Map<String, Object> attributes) {
+        if (attributes == null || !attributes.containsKey(MIN_ATTRIBUTES)) {
+            return message; // Trả về message gốc nếu không có thuộc tính min
+        }
 
-        return message.replace("{"+MIN_ATTRIBUTES+"}", minValue);
+        try {
+            String minValue = attributes.get(MIN_ATTRIBUTES).toString();
+            return message.replace("{" + MIN_ATTRIBUTES + "}", minValue);
+        } catch (Exception e) {
+            log.error("Error mapping attribute: {}", e.getMessage());
+            return message;
+        }
     }
 
     /**

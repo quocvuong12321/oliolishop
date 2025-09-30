@@ -38,7 +38,4 @@ public class Permission {
         updateDate = LocalDateTime.now();
     }
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    Role role;
 }

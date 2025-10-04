@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.3.0
+    container_name: mysql_olioli
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: olioli
+    ports:
+      - '3306:3306'
+    networks:
+      - olioli-net
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:latest
+    container_name: redis_olioli
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    networks:
+      - olioli-net
+
+  olioli-service:
+    container_name: olioli-service
+    restart: unless-stopped
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - '8080:8080'
+    networks:
+      - olioli-net
+    volumes:
+      - /mnt/d/HocTap/AI/crawl/images:/app/images
+
+networks:
+  olioli-net:
+    driver: bridge
+
+volumes:
+  mysql_data:

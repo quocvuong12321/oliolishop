@@ -1,15 +1,20 @@
 # 🚀 OLioliShop - Local Setup
 
-## 1. Prerequisites
-- Java 17
-- MySQL
-- Redis
+## Header 2
 
-## 2. Setup
-```bash
-# Clone project
-git clone [your-github-url]
-cd oliolishop
+### Header 3
 
-# Chạy ứng dụng
-./mvnw spring-boot:run
+**In đậm**
+_In nghiên_
+
+[link](http://localhost:8080)
+
+`docker ps -a`
+
+Các bước để build code
+1. pull code 
+2. truy cập vào project
+3. chạy lệnh 
+   + Nếu chạy lần đầu: `docker compose up -d`
+   + Nếu đã có thì chạy lần lượt các lệnh dưới đây:
+     + `docker compose up --build -d`

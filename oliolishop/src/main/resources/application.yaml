@@ -8,49 +8,22 @@ server:
       max-request-size: 20MB
 
 spring:
-  profiles:
-    active: local
-#  datasource:
-#    url: jdbc:mysql://localhost:3306/olioli
-#    username: root
-#    password: 12345
-#  jpa:
-#    hibernate:
-#      ddl-auto: none
-#    show-sql: true
-#  data:
-#    redis:
-#      host: localhost
-#      port: 6379
-#  mail:
-#    host: smtp.gmail.com
-#    port: 587
-#    username: nguyenquocvuong12321@gmail.com
-#    password: ugpk bfcy qodk dsqm
-#    properties:
-#      mail:
-#        smtp:
-#          auth: true
-#          starttls:
-#            enable: true
-
-datasource:
-  url: jdbc:mysql://localhost:3306/olioli
-  username: root
-  password: 12345
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/olioli
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345}
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   mail:
     host: smtp.gmail.com
     port: 587
-    username: nguyenquocvuong12321@gmail.com
-    password: ugpk bfcy qodk dsqm
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -58,9 +31,8 @@ datasource:
           starttls:
             enable: true
 
-
 app:
   image-dir: D:/HocTap/AI/crawl/images
 
 jwt:
-  signerKey: "c248f3c5b1e84f8d1198d01488ee23a18360ce904c9eae484072de278cf2b6cc"
+  signerKey: ${JWT_PRIVATE_KEY:c248f3c5b1e84f8d1198d01488ee23a18360ce904c9eae484072de278cf2b6cc}

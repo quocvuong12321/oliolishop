@@ -21,18 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController {
     @Autowired
     AccountService accountService;
-    @Autowired
-    CustomerService customerService;
-    @PostMapping
-    public ApiResponse<AccountResponse> createAccount(@Valid @RequestBody AccountRequest request){
 
-        AccountResponse response = accountService.createAccount(request);
-
-
-        return  ApiResponse.<AccountResponse>builder()
-                .result(response)
-                .build();
-    }
 
 
 }

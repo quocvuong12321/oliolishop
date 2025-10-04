@@ -28,7 +28,7 @@ public class ProductSkuAttrController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<?> createSkuAttr(
-            @RequestPart("request") ProductSkuGenerateRequest request,
+            @RequestPart(value = "request") ProductSkuGenerateRequest request,
             @RequestPart(value = "files",required = false) List<MultipartFile> files
     ) throws IOException {
         String folder = ApiPath.FOLDER_IMAGE_ATTR;

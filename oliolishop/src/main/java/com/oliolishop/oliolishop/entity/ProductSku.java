@@ -55,7 +55,9 @@ public class ProductSku {
 
     int minStock;
 
-    RestockStrategy restockStrategy;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "restock_strategy")
+    RestockStrategy restockStrategy = RestockStrategy.auto_reorder;
 
     @PrePersist
     protected void onCreate() {
@@ -75,4 +77,6 @@ public class ProductSku {
     public enum  RestockStrategy {
     auto_reorder,stop_ordering
     }
+
+
 }

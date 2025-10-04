@@ -20,6 +20,5 @@ public class AccountRequest {
     @StrongPasswordConstraint(message ="PASSWORD_INVALID")
     String password;
     CustomerRequest customerRequest;
-    Role roleId;
     String phoneNumber;
 }

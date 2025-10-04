@@ -47,29 +47,6 @@ public class AccountService {
     CustomerService customerService;
     private final CustomerMapper customerMapper;
 
-    public AccountResponse createAccount(AccountRequest request){
-        boolean existedUsername = accountRepository.existsByUsername(request.getUsername());
-        if(existedUsername){
-            throw new AppException(ErrorCode.ACCOUNT_EXISTED);
-        }
-        boolean existedEmail = accountRepository.existsByEmail(request.getEmail());
-        if(existedEmail){
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
 
-
-        Account account = accountMapper.toAccount(request);
-        String id = UUID.randomUUID().toString();
-        String password = passwordEncoder.encode(request.getPassword());
-        account.setId(id);
-        account.setPassword(password);
-        CustomerRequest customer = request.getCustomerRequest();
-
-        AccountResponse result = accountMapper.toAccountResponse(accountRepository.save(account));
-
-        result.setCustomerResponse(customerService.createCustomer(customer,id));
-
-        return result;
-    }
 
 }

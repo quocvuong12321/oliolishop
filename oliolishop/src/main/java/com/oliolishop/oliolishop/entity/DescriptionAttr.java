@@ -34,6 +34,7 @@ public class DescriptionAttr {
     @Column(name = "update_date")
     LocalDateTime updateDate;
 
+
     @PrePersist
     protected void onCreate() {
         createDate = LocalDateTime.now();
@@ -44,5 +45,6 @@ public class DescriptionAttr {
     protected void onUpdate() {
         updateDate = LocalDateTime.now();
     }
+
 
 }

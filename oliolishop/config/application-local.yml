@@ -1,0 +1,19 @@
+# File này ghi đè các giá trị trong application.yml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/my_custom_database  # Người dùng sửa
+    username: root                                # Người dùng sửa
+    password: 12345                                # Người dùng sửa
+  data:
+    redis:
+      host: localhost                                    # Người dùng sửa nếu cần
+      port: 6379
+  mail:
+    username: nguyenquocvuong12321@gmail.com                         # Người dùng sửa
+    password: ugpk bfcy qodk dsqm                            # Người dùng sửa
+
+app:
+  image-dir: D:/my/custom/images/folder              # Người dùng sửa
+
+jwt:
+  signerKey: "c248f3c5b1e84f8d1198d01488ee23a18360ce904c9eae484072de278cf2b6cc"                      # Người dùng sửa

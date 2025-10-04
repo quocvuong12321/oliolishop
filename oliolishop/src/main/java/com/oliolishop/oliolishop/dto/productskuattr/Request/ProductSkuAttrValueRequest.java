@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 public class ProductSkuAttrValueRequest {
     @NotNull(message = "VALUE_REQUIRED")
     String value;
-    String image;
     boolean showPreviewImage;
     Integer fileIndex;
+    String image;
 }

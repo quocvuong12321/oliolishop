@@ -103,8 +103,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.11.0</version>
 				<configuration>
-					<source>${java.version}</source> <!-- depending on your project -->
-					<target>${java.version}</target> <!-- depending on your project -->
+					<source>21</source> <!-- depending on your project -->
+					<target>21</target> <!-- depending on your project -->
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
@@ -123,7 +123,8 @@
 						</path>
 						<!-- other annotation processors -->
 					</annotationProcessorPaths>
-				</configuration>
+                    <compilerArgs>--enable-preview</compilerArgs>
+                </configuration>
 			</plugin>
 		</plugins>
 	</build>

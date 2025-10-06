@@ -35,4 +35,4 @@ app:
   image-dir: D:/HocTap/AI/crawl/images
 
 jwt:
-  signerKey: ${JWT_PRIVATE_KEY:c248f3c5b1e84f8d1198d01488ee23a18360ce904c9eae484072de278cf2b6cc}
+  signerKey: ${JWT_PRIVATE_KEY}

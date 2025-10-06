@@ -87,5 +87,20 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
     Double findMinPriceBySpuId(@Param("spu_id") String spu_id);
 
 
+    @Query("""
+        SELECT spu
+        FROM ProductSpu spu
+        JOIN spu.productSkus sku
+        WHERE sku.id = :skuId
+    """)
+    ProductSpu findBySkuId(@Param("skuId") String skuId);
+
+    @Query("""
+    SELECT DISTINCT spu
+    FROM ProductSpu spu
+    JOIN spu.productSkus sku
+    WHERE sku.id IN :skuIds
+    """)
+    List<ProductSpu> findAllBySkuIds(@Param("skuIds") List<String> skuIds);
 }
 

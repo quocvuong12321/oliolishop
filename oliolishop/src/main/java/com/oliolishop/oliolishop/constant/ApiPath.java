@@ -25,4 +25,7 @@ public class ApiPath {
 
     public static final String AUTHENTICATION = "/auth";
 
+    public static final String DISCOUNT_RULE= "/discount-rule";
+
+    public static final String CART="/cart";
 }

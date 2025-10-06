@@ -19,6 +19,8 @@ public enum ErrorCode {
     VALUE_REQUIRED(1006, "Value is required", HttpStatus.BAD_REQUEST),
     NAME_REQUIRED(1007,"Name is required",HttpStatus.BAD_REQUEST),
     PASSWORD_NOT_MATCH(1008, "Password and re-entered password do not match", HttpStatus.BAD_REQUEST),
+    QUANTITY_POSITIVE(1009,"Quantity must be greater than 0",HttpStatus.BAD_REQUEST),
+    PRICE_POSITIVE(1010,"Price must be greater than 0",HttpStatus.BAD_REQUEST),
     // 2xxx: auth
     UNAUTHENTICATED(2001,"Unauthenticated",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002,"You do not have permission",HttpStatus.FORBIDDEN),
@@ -40,6 +42,9 @@ public enum ErrorCode {
     EMPTY_PRODUCT_SKU(3012,"List Product Sku is empty",HttpStatus.BAD_REQUEST),
     ROLE_NOT_EXIST(3011,"Role does not exist",HttpStatus.NOT_FOUND),
     CUSTOMER_NOT_EXISTED(3012,"Customer does not exist",HttpStatus.NOT_FOUND),
+    DISCOUNT_RULE_NOT_EXISTED(3013,"Discount rule does not exist",HttpStatus.NOT_FOUND),
+    CART_EXISTED(3014,"Cart existed",HttpStatus.CONFLICT),
+    CART_NOT_EXISTED(3015,"Cart does not exist",HttpStatus.NOT_FOUND),
     // 9xxx: system
     UNCATEGORIZED_EXCEPTION(9999,"Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
 

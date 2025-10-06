@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductSkuRepository extends JpaRepository<ProductSku,String> {
@@ -16,6 +17,6 @@ public interface ProductSkuRepository extends JpaRepository<ProductSku,String> {
             from ProductSku sku
             where sku.id = :id
             """)
-    List<ProductSku> findByProductSkuId(@Param("id") String id);
+    Optional<ProductSku> findByProductSkuId(@Param("id") String id);
 
 }

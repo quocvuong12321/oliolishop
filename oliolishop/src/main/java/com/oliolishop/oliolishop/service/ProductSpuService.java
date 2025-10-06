@@ -21,13 +21,10 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -141,7 +138,7 @@ public class ProductSpuService {
     }
 
 
-    private List<ProductSpuResponse> productsSameBrand(String brandId) {
+    protected List<ProductSpuResponse> productsSameBrand(String brandId) {
         List<ProductSpuResponse> lstResponse = new ArrayList<>();
 
         productSpuRepository.findProducts(null,brandId,0,9999999,0,20).forEach(
@@ -158,7 +155,7 @@ public class ProductSpuService {
 
     }
 
-    private List<ProductSpuResponse> productsSameCategory(String categoryId){
+    protected List<ProductSpuResponse> productsSameCategory(String categoryId){
 
         List<ProductSpuResponse> lstResponse = new ArrayList<>();
 

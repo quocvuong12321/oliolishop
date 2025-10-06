@@ -107,6 +107,7 @@ public class AuthenticationService {
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope",buildScope(account))
                 .claim("type",tokenType)
+                .claim("customerId", account.getCustomer().getId())
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -232,7 +233,7 @@ public class AuthenticationService {
         if (match) redisService.delete(key);
         return match;
     }
-    private Authentication getAuthentication(){
+    protected static Authentication getAuthentication(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);

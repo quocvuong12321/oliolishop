@@ -7,6 +7,7 @@ import com.oliolishop.oliolishop.entity.ProductSkuAttr;
 import com.oliolishop.oliolishop.entity.ProductSpu;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
+import com.oliolishop.oliolishop.mapper.ProductSkuMapper;
 import com.oliolishop.oliolishop.repository.ProductSkuAttrRepository;
 import com.oliolishop.oliolishop.repository.ProductSkuRepository;
 import com.oliolishop.oliolishop.repository.ProductSpuRepository;
@@ -16,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,21 +28,13 @@ public class ProductSkuService {
     ProductSkuRepository productSkuRepository;
     private final ProductSpuRepository productSpuRepository;
     private final ProductSkuAttrRepository productSkuAttrRepository;
+    private final ProductSkuMapper productSkuMapper;
 
-    public List<ProductSkuResponse> getSkus(String id){
-        List<ProductSku> lst = productSkuRepository.findByProductSkuId(id);
+    public ProductSkuResponse getSkus(String id){
+        ProductSku sku = productSkuRepository.findByProductSkuId(id).orElseThrow(()->new AppException(ErrorCode.PRODUCT_NOT_EXIST));
 
-        List<ProductSkuResponse> l = new ArrayList<>();
-        lst.forEach(s -> l.add(ProductSkuResponse.builder()
-                .id(s.getId())
-                .skuCode(s.getSkuCode())
-                .image(s.getImage())
-                .product_spu_id(s.getSpu().getId())
-                .originalPrice(s.getOriginalPrice())
-                .sort(s.getSort())
-                .build()
-        ));
-        return l;
+        return productSkuMapper.toResponse(sku);
+
     }
 
     @Transactional

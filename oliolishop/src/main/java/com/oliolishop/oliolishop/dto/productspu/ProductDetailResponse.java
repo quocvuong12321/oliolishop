@@ -11,6 +11,7 @@ import com.oliolishop.oliolishop.ultils.AppUtils;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

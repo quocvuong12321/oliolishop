@@ -1,6 +1,5 @@
 package com.oliolishop.oliolishop.dto.authenticate;
 
-
 import com.oliolishop.oliolishop.dto.account.AccountRequest;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

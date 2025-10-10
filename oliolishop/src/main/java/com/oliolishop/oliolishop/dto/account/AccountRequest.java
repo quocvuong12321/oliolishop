@@ -1,8 +1,6 @@
 package com.oliolishop.oliolishop.dto.account;
 
 
-import com.oliolishop.oliolishop.dto.customer.CustomerRequest;
-import com.oliolishop.oliolishop.enums.Role;
 import com.oliolishop.oliolishop.validator.StrongPasswordConstraint;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -19,6 +17,5 @@ public class AccountRequest {
     String email;
     @StrongPasswordConstraint(message ="PASSWORD_INVALID")
     String password;
-    CustomerRequest customerRequest;
     String phoneNumber;
 }

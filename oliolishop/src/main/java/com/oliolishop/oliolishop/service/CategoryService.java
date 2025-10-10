@@ -1,8 +1,6 @@
 package com.oliolishop.oliolishop.service;
 
-import com.oliolishop.oliolishop.configuration.RedisConfig;
 import com.oliolishop.oliolishop.constant.RedisKey;
-import com.oliolishop.oliolishop.dto.category.CategoryAllResponse;
 import com.oliolishop.oliolishop.dto.category.CategoryRequest;
 import com.oliolishop.oliolishop.dto.category.CategoryResponse;
 import com.oliolishop.oliolishop.entity.Category;
@@ -10,17 +8,14 @@ import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.CategoryMapper;
 import com.oliolishop.oliolishop.repository.CategoryRepository;
-import com.oliolishop.oliolishop.ultils.AppUtils;
-import jakarta.validation.constraints.Null;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j

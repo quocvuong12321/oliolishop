@@ -15,15 +15,11 @@ import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -134,7 +130,7 @@ public class CartService {
     }
 
     protected static String getCustomerIdByJwt() {
-        Authentication authentication = AuthenticationService.getAuthentication();
+        Authentication authentication = CustomerAuthenticationService.getAuthentication();
 
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {

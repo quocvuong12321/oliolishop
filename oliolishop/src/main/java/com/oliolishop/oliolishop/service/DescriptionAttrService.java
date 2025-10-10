@@ -9,13 +9,12 @@ import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.DescriptionAttrMapper;
 import com.oliolishop.oliolishop.repository.DescriptionAttrRepository;
-import com.oliolishop.oliolishop.ultils.AppUtils;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

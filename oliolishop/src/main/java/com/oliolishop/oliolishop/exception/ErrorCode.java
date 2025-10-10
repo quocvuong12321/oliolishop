@@ -27,7 +27,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_EXPIRED(2003,"Refresh token has expired",HttpStatus.FORBIDDEN),
     INVALID_TOKEN(2004,"Token is invalid", HttpStatus.UNAUTHORIZED),
     INVALID_OTP(2005, "Mã OTP không hợp lệ",HttpStatus.FORBIDDEN),
-
+    OTP_EXPIRED(2006,"Mã Otp đã hết hạn",HttpStatus.FORBIDDEN),
     // 3xxx: business logic
     ACCOUNT_EXISTED(3001,"Account existed",HttpStatus.CONFLICT),
     ACCOUNT_NOT_EXISTED(3002, "Account does not exist",HttpStatus.NOT_FOUND),
@@ -45,6 +45,8 @@ public enum ErrorCode {
     DISCOUNT_RULE_NOT_EXISTED(3013,"Discount rule does not exist",HttpStatus.NOT_FOUND),
     CART_EXISTED(3014,"Cart existed",HttpStatus.CONFLICT),
     CART_NOT_EXISTED(3015,"Cart does not exist",HttpStatus.NOT_FOUND),
+    INVALID_REQUEST(3016, "Request không hợp lệ",HttpStatus.BAD_REQUEST),
+    PHONE_EXISTED(3017,"Phone has existed",HttpStatus.CONFLICT),
     // 9xxx: system
     UNCATEGORIZED_EXCEPTION(9999,"Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
 

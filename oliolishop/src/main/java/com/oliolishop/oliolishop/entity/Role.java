@@ -54,5 +54,7 @@ public class Role {
     )
     Set<Permission> permissions;
 
+    @OneToMany(mappedBy = "role", orphanRemoval = true,cascade = CascadeType.REMOVE)
+    List<Employee> employees;
 
 }

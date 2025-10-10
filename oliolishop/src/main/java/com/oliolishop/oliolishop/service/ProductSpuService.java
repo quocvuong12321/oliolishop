@@ -16,7 +16,7 @@ import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.*;
 import com.oliolishop.oliolishop.repository.*;
-import com.oliolishop.oliolishop.ultils.AppUtils;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;

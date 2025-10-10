@@ -1,5 +1,8 @@
 package com.oliolishop.oliolishop.constant;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ApiPath {
     public static final String BASE = "/api";
     public static final String BY_ID = "/{id}";
@@ -28,4 +31,13 @@ public class ApiPath {
     public static final String DISCOUNT_RULE= "/discount-rule";
 
     public static final String CART="/cart";
+
+    public static final class Employee {
+        public static final String ROOT = BASE + "/employee";
+        public static final String LOGIN = "/login";
+        public static final String PROFILE = "/profile";
+        public static final String CREATE = "/create";
+        public static final String UPDATE = "/update";
+        public static final String LOGOUT = "/logout";
+    }
 }

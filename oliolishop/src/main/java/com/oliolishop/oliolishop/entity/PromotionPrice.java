@@ -1,6 +1,6 @@
 package com.oliolishop.oliolishop.entity;
 
-import com.oliolishop.oliolishop.ultils.AppUtils;
+import com.oliolishop.oliolishop.util.AppUtils;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

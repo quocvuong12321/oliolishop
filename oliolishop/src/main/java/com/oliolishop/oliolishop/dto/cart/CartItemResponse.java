@@ -1,17 +1,9 @@
 package com.oliolishop.oliolishop.dto.cart;
 
 
-import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
-import com.oliolishop.oliolishop.dto.productskuattr.ProductSkuAttrResponse;
-import com.oliolishop.oliolishop.dto.productskuattr.Response.ProductSkuAttrCreateResponse;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
-import com.oliolishop.oliolishop.entity.ProductSkuAttr;
-import com.oliolishop.oliolishop.ultils.AppUtils;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor

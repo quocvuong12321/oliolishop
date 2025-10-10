@@ -49,7 +49,7 @@ public class RefreshTokenService {
         long remainingTTL  = getRefreshTokenTTL(username);
 
         if (remainingTTL <= 0) {
-            remainingTTL = AuthenticationService.TIME_REFRESH * 60 * 60; // 24 giờ
+            remainingTTL = BaseAuthenticationService.TIME_REFRESH * 60 * 60; // 24 giờ
         }
 
         redisService.set(BLACKLIST_REFRESH_TOKEN_KEY + hashedToken, "blacklisted", remainingTTL);

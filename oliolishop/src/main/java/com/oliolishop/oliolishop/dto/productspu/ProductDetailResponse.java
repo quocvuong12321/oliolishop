@@ -3,17 +3,14 @@ package com.oliolishop.oliolishop.dto.productspu;
 
 import com.oliolishop.oliolishop.dto.BreadCrumbResponse;
 import com.oliolishop.oliolishop.dto.brand.BrandResponse;
-import com.oliolishop.oliolishop.dto.category.CategoryResponse;
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrResponse;
 import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
 import com.oliolishop.oliolishop.dto.productskuattr.ProductSkuAttrResponse;
-import com.oliolishop.oliolishop.ultils.AppUtils;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Data

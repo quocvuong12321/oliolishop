@@ -12,12 +12,10 @@ import com.oliolishop.oliolishop.dto.account.AccountUpdateRequest;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.authenticate.*;
 import com.oliolishop.oliolishop.dto.customer.CustomerResponse;
-import com.oliolishop.oliolishop.entity.Account;
 import com.oliolishop.oliolishop.enums.OtpType;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
-import com.oliolishop.oliolishop.service.AuthenticationService;
-import com.oliolishop.oliolishop.service.CustomerService;
+import com.oliolishop.oliolishop.service.CustomerAuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +27,7 @@ import java.text.ParseException;
 @RequestMapping(ApiPath.BASE+ApiPath.AUTHENTICATION)
 public class AuthenticationController {
     @Autowired
-    private AuthenticationService authenticationService;
+    private CustomerAuthenticationService authenticationService;
 
 
     @PostMapping
@@ -53,23 +51,33 @@ public class AuthenticationController {
     }
 
     @GetMapping("/profile")
-    public ApiResponse<CustomerResponse> getMyInfor(){
-        return ApiResponse.<CustomerResponse>builder()
+    public ApiResponse<AccountResponse> getMyInfor(){
+        return ApiResponse.<AccountResponse>builder()
                 .result(authenticationService.getInfor())
                 .build();
     }
 
     @PostMapping("/register")
-    public ApiResponse<AccountResponse> createAccount(@Valid @RequestBody RegisterRequest request){
+    public ApiResponse<AccountResponse> verifyCreateAccount(@Valid @RequestBody VerifyOtpRequest request){
 
-        boolean valid = authenticationService.verifyOtp(request.getOtp(),request.getAccountRequest().getEmail(),OtpType.REGISTER);
-        if(!valid)
+        if(!request.getType().equals(OtpType.REGISTER))
             throw new AppException(ErrorCode.INVALID_OTP);
-        AccountResponse response = authenticationService.createAccount(request.getAccountRequest());
+        AccountRequest account = authenticationService.verifyRegisterOtp(request.getOtp(),request.getEmail());
+        if(account == null)
+            throw new AppException(ErrorCode.INVALID_OTP);
         return  ApiResponse.<AccountResponse>builder()
-                .result(response)
+                .result(authenticationService.createAccount(account))
                 .build();
     }
+    @PostMapping("/register/send-otp")
+    public ApiResponse<String> createAccount(@Valid @RequestBody AccountRequest request){
+        authenticationService.handleRegisterOtp(request);
+
+        return ApiResponse.<String>builder()
+                .result(String.format(MessageConstants.OTP_SENT,request.getEmail()))
+                .build();
+    }
+
     @PostMapping("/change-password")
     public ApiResponse<ChangePasswordResponse> changePassword(@RequestBody ChangePasswordRequest request) throws ParseException, JOSEException {
         return ApiResponse.<ChangePasswordResponse>builder()
@@ -77,28 +85,34 @@ public class AuthenticationController {
                 .build();
     }
 
+
+
     @PostMapping("/send-otp")
-    public ApiResponse<String> sendOtp(@RequestParam String email, @RequestParam OtpType type) {
-        authenticationService.sendOtp(email, type);
+    public ApiResponse<String> sendOtp(@RequestBody SendOtpRequest request){
+
+        authenticationService.handleOtp(request);
+
         return ApiResponse.<String>builder()
-                .result(String.format(MessageConstants.OTP_SENT,email))
+                .result(String.format(MessageConstants.OTP_SENT,request.getEmail()))
                 .build();
     }
 
-    @PostMapping("/reset-password")
-    public ApiResponse<String> resetPassword(@RequestBody ForgetPasswordRequest request){
-        boolean check = request.getNewPassword().equals(request.getReNewPassword());
-        if(!check){
-            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
-        }
-        boolean verify = authenticationService.verifyOtp(request.getOtp(),request.getEmail(),OtpType.RESET_PASSWORD);
+    @PostMapping("/verify-otp")
+    public ApiResponse<Boolean> verifyOtp(@RequestBody VerifyOtpRequest request){
+        Boolean verify = authenticationService.verifyOtp(request);
         if(!verify)
-        {
             throw new AppException(ErrorCode.INVALID_OTP);
-        }
+        return ApiResponse.<Boolean>builder()
+                .result(verify)
+                .build();
+    }
+
+
+    @PostMapping("/reset-password")
+    public ApiResponse<String> resetPassword(@Valid @RequestBody ForgetPasswordRequest request){
         authenticationService.resetPassword(request.getNewPassword(), request.getEmail());
-        return ApiResponse.<String>builder()
-                .result(MessageConstants.PASSWORD_RESET_SUCCESS)
+        return  ApiResponse.<String>builder()
+                .result(String.format(MessageConstants.PASSWORD_RESET_SUCCESS))
                 .build();
     }
 

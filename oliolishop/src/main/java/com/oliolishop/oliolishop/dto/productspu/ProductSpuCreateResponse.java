@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.oliolishop.oliolishop.dto.brand.BrandResponse;
 import com.oliolishop.oliolishop.dto.category.CategoryResponse;
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrResponse;
-import com.oliolishop.oliolishop.ultils.AppUtils;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

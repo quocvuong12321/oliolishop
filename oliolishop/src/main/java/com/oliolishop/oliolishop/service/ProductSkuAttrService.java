@@ -13,7 +13,7 @@ import com.oliolishop.oliolishop.mapper.ProductSkuAttrMapper;
 import com.oliolishop.oliolishop.repository.DescriptionAttrRepository;
 import com.oliolishop.oliolishop.repository.ProductSkuAttrRepository;
 import com.oliolishop.oliolishop.repository.ProductSpuRepository;
-import com.oliolishop.oliolishop.ultils.AppUtils;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;

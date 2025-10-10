@@ -1,9 +1,8 @@
-package com.oliolishop.oliolishop.ultils;
+package com.oliolishop.oliolishop.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.coobird.thumbnailator.Thumbnails;
-import org.aspectj.lang.annotation.DeclareWarning;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;

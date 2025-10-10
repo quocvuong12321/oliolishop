@@ -44,9 +44,10 @@ public enum ErrorCode {
     CUSTOMER_NOT_EXISTED(3012,"Customer does not exist",HttpStatus.NOT_FOUND),
     DISCOUNT_RULE_NOT_EXISTED(3013,"Discount rule does not exist",HttpStatus.NOT_FOUND),
     CART_EXISTED(3014,"Cart existed",HttpStatus.CONFLICT),
-    CART_NOT_EXISTED(3015,"Cart does not exist",HttpStatus.NOT_FOUND),
+    CART_NOT_EXISTED(3015,"Giỏ hàng của bạn còn trống",HttpStatus.NOT_FOUND),
     INVALID_REQUEST(3016, "Request không hợp lệ",HttpStatus.BAD_REQUEST),
     PHONE_EXISTED(3017,"Phone has existed",HttpStatus.CONFLICT),
+    ADDRESS_NOT_EXIST(3018, "Địa chỉ không tồn tại",HttpStatus.NOT_FOUND),
     // 9xxx: system
     UNCATEGORIZED_EXCEPTION(9999,"Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
 

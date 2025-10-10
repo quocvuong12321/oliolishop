@@ -40,4 +40,8 @@ public class ApiPath {
         public static final String UPDATE = "/update";
         public static final String LOGOUT = "/logout";
     }
+
+    public static final class Customer{
+        public static final String ROOT = BASE+"/customer/address";
+    }
 }

@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.service;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.oliolishop.oliolishop.constant.TokenType;
 import com.oliolishop.oliolishop.dto.account.AccountRequest;
 import com.oliolishop.oliolishop.dto.account.AccountResponse;
@@ -58,6 +59,12 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
         this.customerRepository = customerRepository;
     }
 
+
+    @Override
+    protected void addCustomClaims(JWTClaimsSet.Builder builder, Account user) {
+
+        builder.claim("customerId",user.getCustomer().getId());
+    }
 
     @Override
     protected Account findUserByUsername(String username) {

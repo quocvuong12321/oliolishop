@@ -23,8 +23,21 @@ docker build -f Dockerfile -t oliolishop:0.0.1 .
 
 ### 3. Chạy container
 #### -  Nếu chạy lần đầu
+### Với Window
 ```bash
-docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -p 8080:8080 oliolishop:0.0.1
+
+docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -e IMAGE_DIR=/images -p 8080:8080 -v d:/HocTap/AI/crawl/images:/images oliolishop:0.0.1
+
+```
+## Với Ubuntu
+```bash
+docker run -d --name olioli-service \
+  -e DB_HOST=172.19.240.57 \
+  -e REDIS_HOST=172.19.240.57 \
+  -e IMAGE_DIR=/images \
+  -p 8080:8080 \
+  -v /mnt/d/HocTap/AI/crawl/images:/images \
+  oliolishop:0.0.1
 ```
 
 #### - Nếu đã chạy trước đó và vừa pull code mới:
@@ -32,13 +45,14 @@ docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddr
 docker stop olioli-service
 docker rm olioli-service
 docker build -t oliolishop:0.0.1 .
-docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -p 8080:8080 oliolishop:0.0.1
+docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -e IMAGE_DIR=/images -p 8080:8080 -v d:/HocTap/AI/crawl/images:/images oliolishop:0.0.1
 
 ```
 
 ### 5. Ghi chú
-#### - {ipaddress} là địa chỉ IP của database (MongoDB hoặc MySQL) và Redis container/server.
+#### - {ipaddress} là địa chỉ IP của database (MySQL) và Redis container/server. (Nếu chạy docker bằng window thì nó là ip address của mạng wifi)
 #### - Image oliolishop:0.0.1 sẽ được ghi đè khi build lại.
 #### - Không cần xóa image thủ công — chỉ cần stop và rm container cũ trước khi chạy lại.
 #### - Để xem log container:
 #### - docker logs -f olioli-service
+

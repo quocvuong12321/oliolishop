@@ -20,5 +20,8 @@ FROM amazoncorretto:21
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
+# Tạo thư mục cho images
+RUN mkdir -p /images
+
 # Command to run the application
 ENTRYPOINT ["java","-jar","app.jar"]

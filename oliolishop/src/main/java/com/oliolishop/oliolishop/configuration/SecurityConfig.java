@@ -84,36 +84,15 @@ public class SecurityConfig {
     // Bean cấu hình CORS
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Thêm tất cả các origin bạn cần
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "http://localhost:5500",
-                "http://127.0.0.1:5500"
-        ));
-
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"
-        ));
-
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "Origin",
-                "X-Requested-With",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
-
-        configuration.setExposedHeaders(Arrays.asList(
-                "Access-Control-Allow-Origin",
-                "Access-Control-Allow-Credentials"
-        ));
-
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // 1 hour
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(false); // Phải là false khi dùng "*"
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

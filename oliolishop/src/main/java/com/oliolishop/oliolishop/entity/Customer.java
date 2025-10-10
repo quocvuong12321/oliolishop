@@ -7,7 +7,9 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
+@Builder
 @Entity
 @Table(name = "customer")
 @Getter
@@ -22,6 +24,12 @@ public class Customer {
 
     @Column(name = "name")
     String name;
+
+    @OneToMany(fetch = FetchType.LAZY,mappedBy = "customer",orphanRemoval = true,cascade = CascadeType.ALL)
+    List<Address> addresses;
+
+    @OneToMany(fetch = FetchType.LAZY,mappedBy = "customer")
+    List<Order> orders;
 
     @Column(name = "image")
     String image;
@@ -56,6 +64,7 @@ public class Customer {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Account_id")
     Account account;
+
 
     public enum Gender {
         Nam, Nữ

@@ -117,7 +117,7 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
         return response;
     }
 
-    protected static Authentication getAuthentication() {
+    public static Authentication getAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);

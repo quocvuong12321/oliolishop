@@ -3,6 +3,7 @@ package com.oliolishop.oliolishop.exception;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
@@ -48,6 +49,8 @@ public enum ErrorCode {
     INVALID_REQUEST(3016, "Request không hợp lệ",HttpStatus.BAD_REQUEST),
     PHONE_EXISTED(3017,"Phone has existed",HttpStatus.CONFLICT),
     ADDRESS_NOT_EXIST(3018, "Địa chỉ không tồn tại",HttpStatus.NOT_FOUND),
+    VOUCHER_NOT_EXISTED(3019,"Voucher không hợp lệ", HttpStatus.NOT_FOUND),
+    NOT_ENOUGH_STOCK(3020,"Số lượng sản phẩm trong kho không đủ",HttpStatus.NOT_ACCEPTABLE),
     // 9xxx: system
     UNCATEGORIZED_EXCEPTION(9999,"Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
 

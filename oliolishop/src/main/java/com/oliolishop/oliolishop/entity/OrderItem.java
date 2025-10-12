@@ -5,8 +5,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "order_item")
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,7 +32,7 @@ public class OrderItem {
 
     int returnQuantity;
 
-    double unitPrice;
+    BigDecimal unitPrice;
 
     boolean allowReturn;
 }

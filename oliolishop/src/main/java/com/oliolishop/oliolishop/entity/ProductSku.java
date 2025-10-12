@@ -29,7 +29,7 @@ public class ProductSku {
     ProductSpu spu;
 
     @Column(name = "original_price", nullable = false)
-    double originalPrice;
+    BigDecimal originalPrice;
 
 
 

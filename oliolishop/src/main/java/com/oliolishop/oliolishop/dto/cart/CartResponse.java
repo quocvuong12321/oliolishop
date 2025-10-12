@@ -3,6 +3,8 @@ package com.oliolishop.oliolishop.dto.cart;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Set;
 @Data
@@ -16,13 +18,17 @@ public class CartResponse {
 
     int distinctProductCount;
 
-    double totalAmount;
+    BigDecimal totalAmount;
 
-    double totalQuantity;
+    int totalQuantity;
 
-    public double getTotalAmount()
+    public BigDecimal getTotalAmount()
     {
-        return cartItems.stream().mapToDouble(CartItemResponse::getTotalPrice).sum();
+        if (cartItems == null || cartItems.isEmpty()) return BigDecimal.ZERO;
+        return cartItems.stream()
+                .map(CartItemResponse::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     public int getTotalQuantity() {

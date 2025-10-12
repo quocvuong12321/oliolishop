@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -81,7 +82,7 @@ public class ProductSpuService {
 
         // lấy 1 lần để tránh gọi nhiều
         Set<ProductSku> skus = spu.getProductSkus();
-        double minPrice = findMinPriceSpuId(skus);
+        BigDecimal minPrice = findMinPriceSpuId(skus);
 
         Set<ProductSkuResponse> setSku = skus.stream()
                 .map(s -> ProductSkuResponse.builder()
@@ -174,9 +175,9 @@ public class ProductSpuService {
     }
 
 
-    private double findMinPriceSpuId(Set<ProductSku> setSkus){
+    private BigDecimal findMinPriceSpuId(Set<ProductSku> setSkus){
 
-        return setSkus.stream().map(ProductSku::getOriginalPrice).min(Double::compareTo).orElse(0.0);
+        return setSkus.stream().map(ProductSku::getOriginalPrice).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
     }
 
     public ProductSpuCreateResponse createProductSpu(ProductSpuCreateRequest request, List<MultipartFile> files, String imageDir) throws IOException {

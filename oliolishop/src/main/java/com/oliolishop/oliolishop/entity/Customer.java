@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,7 +42,7 @@ public class Customer {
     @Enumerated(EnumType.STRING)
     Gender gender;
 
-    int loyaltyPoints;
+    BigDecimal loyaltyPoints;
 
     @Column(name = "create_date")
     LocalDateTime createDate;

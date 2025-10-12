@@ -9,11 +9,12 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "order")
+@Table(name = "`order`")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,28 +38,41 @@ public class Order {
     @JoinColumn(name = "voucher_id")
     Voucher voucher;
 
-
+    @Column(name = "order_status")
+    @Enumerated(EnumType.STRING) // hoặc không dùng EnumType nếu custom
     OrderStatus orderStatus;
 
     String voucherCode;
 
-    double feeShip;
+    BigDecimal feeShip;
 
-    double totalAmount;
+    BigDecimal totalAmount;
 
-    double discountAmount;
+    BigDecimal discountAmount;
 
-    double voucherDiscountAmount;
+    BigDecimal voucherDiscountAmount;
 
-    double finalAmount;
+    BigDecimal finalAmount;
 
     String shippingAddress;
 
-    @CreationTimestamp
+    @Column(name = "create_date")
     LocalDateTime createDate;
 
-    @UpdateTimestamp
+    @Column(name = "update_date")
     LocalDateTime updateDate;
+
+
+    @PrePersist
+    protected void onCreate() {
+        createDate = LocalDateTime.now();
+        updateDate = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updateDate = LocalDateTime.now();
+    }
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY,orphanRemoval = true,cascade = CascadeType.ALL)
     List<OrderItem> orderItems;

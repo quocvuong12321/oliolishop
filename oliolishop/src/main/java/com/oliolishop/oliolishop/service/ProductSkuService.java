@@ -67,7 +67,7 @@ public class ProductSkuService {
             sku.setSkuCode(skuCode);
 
             sku.setSpu(spu);
-            sku.setOriginalPrice(0.0); // hoặc mặc định 0
+            sku.setOriginalPrice(BigDecimal.ZERO); // hoặc mặc định 0
             sku.setSkuStock(0);
             sku.setRestockStrategy(ProductSku.RestockStrategy.stop_ordering);
             sku.setStatus(ProductSku.Status.Inactive);

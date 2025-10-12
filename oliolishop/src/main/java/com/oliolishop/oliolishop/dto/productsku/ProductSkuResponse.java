@@ -17,8 +17,8 @@ public class ProductSkuResponse {
     String skuCode;
     String image;
     String product_spu_id;
-    double price;
-    double originalPrice;
-    double discountRate;
+//    double price;
+    BigDecimal originalPrice;
+//    double discountRate;
     int sort;
 }

@@ -10,9 +10,13 @@ import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.CartItemMapper;
 import com.oliolishop.oliolishop.mapper.CartMapper;
 import com.oliolishop.oliolishop.repository.*;
+import com.oliolishop.oliolishop.util.AppUtils;
+import com.oliolishop.oliolishop.util.ProductSkuUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -30,15 +34,15 @@ public class CartService {
     CartItemRepository cartItemRepository;
     ProductSkuService productSkuService;
     private final CartMapper cartMapper;
-    private final ProductSkuAttrRepository productSkuAttrRepository;
     ProductSpuService productSpuService;
+    private final ProductSkuUtils productSkuUtils;
     private final ProductSkuRepository productSkuRepository;
     private final ProductSpuRepository productSpuRepository;
 
     public void createCart() {
 
 
-        String customerId = getCustomerIdByJwt();
+        String customerId = AppUtils.getCustomerIdByJwt();
 
         Cart cart = Cart.builder()
                 .customerId(customerId)
@@ -49,7 +53,7 @@ public class CartService {
 
     public void addCartItem(CartItemRequest request) {
 
-        String customerId = getCustomerIdByJwt();
+        String customerId = AppUtils.getCustomerIdByJwt();
 
         boolean existed = cartRepository.existsByCustomerId(customerId);
         if (!existed) {
@@ -70,7 +74,7 @@ public class CartService {
         } else {
             CartItem cartItem = cartItemMapper.toCartItem(request);
             cartItem.setThumbnail(p.getImage());
-            cartItem.setVariant(getVariant(p));
+            cartItem.setVariant(productSkuUtils.getVariant(p));
             cartItem.setCart(cart);
             cartItem.setPrice(p.getOriginalPrice());
             cartItem.setProductSku(p);
@@ -101,7 +105,7 @@ public class CartService {
 
     public CartResponse getCart() {
 
-        String customerId = getCustomerIdByJwt();
+        String customerId = AppUtils.getCustomerIdByJwt();
         Cart hadCart = cartRepository.findByCustomerId(customerId).orElseThrow(() -> new AppException(ErrorCode.CART_NOT_EXISTED));
 
         List<CartItem> cartItems = hadCart.getCartItems();
@@ -120,6 +124,7 @@ public class CartService {
             ProductSpu spu = productSpuRepository.findBySkuId(item.getProductSku().getId());
             cartItemResponse.setName(spu.getName());
             cartItemResponse.setProductSpuId(spu.getId());
+            cartItemResponse.setProductSkuId(item.getProductSku().getId());
             cartItemResponses.add(cartItemResponse);
                 }
         );
@@ -129,37 +134,27 @@ public class CartService {
                 .build();
     }
 
-    protected static String getCustomerIdByJwt() {
-        Authentication authentication = CustomerAuthenticationService.getAuthentication();
-
-
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaim("customerId");
-        }
-        throw new AppException(ErrorCode.UNAUTHENTICATED);
-    }
-
-    protected String getVariant(ProductSku sku) {
-
-        String[] attrIds = sku.getSkuCode().split("/");
-
-        // Lấy tất cả attributes trong 1 lần query
-        List<ProductSkuAttr> attrs = productSkuAttrRepository.findAllById(Arrays.asList(attrIds));
-
-        // Map theo đúng thứ tự attrIds
-        List<String> variants = Arrays.stream(attrIds)
-                .map(id -> attrs.stream()
-                        .filter(a -> a.getId().equals(id))
-                        .findFirst()
-                        .map(ProductSkuAttr::getValue)
-                        .orElse("N/A"))
-                .toList();
-
-        return String.join(", ", variants);
-    }
+//    protected String getVariant(ProductSku sku) {
+//
+//        String[] attrIds = sku.getSkuCode().split("/");
+//
+//        // Lấy tất cả attributes trong 1 lần query
+//        List<ProductSkuAttr> attrs = productSkuAttrRepository.findAllById(Arrays.asList(attrIds));
+//
+//        // Map theo đúng thứ tự attrIds
+//        List<String> variants = Arrays.stream(attrIds)
+//                .map(id -> attrs.stream()
+//                        .filter(a -> a.getId().equals(id))
+//                        .findFirst()
+//                        .map(ProductSkuAttr::getValue)
+//                        .orElse("N/A"))
+//                .toList();
+//
+//        return String.join(", ", variants);
+//    }
 
     public void deleteCart(){
-        String customerId = getCustomerIdByJwt();
+        String customerId = AppUtils.getCustomerIdByJwt();
 
         Cart c = cartRepository.findByCustomerId(customerId).orElseThrow(()->new AppException(ErrorCode.CART_NOT_EXISTED));
 

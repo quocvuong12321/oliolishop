@@ -10,6 +10,7 @@ import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -30,9 +31,9 @@ public class ProductDetailResponse {
     List<BreadCrumbResponse> breadCrumb;
     String shortDescription;
     String description;
-    double originalPrice;
-    double Price;
-    double discountRate;
+    BigDecimal originalPrice;
+    BigDecimal Price;
+    BigDecimal discountRate;
     Set<ProductSkuResponse> skus;
     Set<ProductSkuAttrResponse> skuAttrs;
     Set<DescriptionAttrResponse> desAttrs;

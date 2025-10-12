@@ -2,7 +2,12 @@ package com.oliolishop.oliolishop.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oliolishop.oliolishop.exception.AppException;
+import com.oliolishop.oliolishop.exception.ErrorCode;
+import com.oliolishop.oliolishop.service.CustomerAuthenticationService;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -117,4 +122,18 @@ public class AppUtils {
         long tmp = Math.round(value);
         return (double) tmp / factor;
     }
+
+    public static String getCustomerIdByJwt() {
+        Authentication authentication = CustomerAuthenticationService.getAuthentication();
+
+
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getClaim("customerId");
+        }
+        throw new AppException(ErrorCode.UNAUTHENTICATED);
+    }
+
+
+
+
 }

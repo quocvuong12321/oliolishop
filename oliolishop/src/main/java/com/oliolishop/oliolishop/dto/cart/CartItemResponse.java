@@ -5,6 +5,9 @@ import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,15 +21,13 @@ public class CartItemResponse {
     String name;
     String thumbnail;
     String variant;
-    double price;
+    BigDecimal price;
 
     int quantity;
 
-    double totalPrice;
+    BigDecimal totalPrice;
 
-
-
-    public double getTotalPrice(){
-        return AppUtils.round(price*quantity,2);
+    public BigDecimal getTotalPrice(){
+        return price.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP);
     }
 }

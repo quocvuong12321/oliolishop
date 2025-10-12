@@ -44,4 +44,8 @@ public class ApiPath {
     public static final class Customer{
         public static final String ROOT = BASE+"/customer/address";
     }
+
+    public static final class Order{
+        public static final String ROOT = BASE+"/order";
+    }
 }

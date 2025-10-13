@@ -11,7 +11,7 @@ public interface AccountMapper {
 
     AccountResponse toAccountResponse(Account account);
 
-    @Mapping(ignore = true,target = "password")
+//    @Mapping(ignore = true,target = "password")
     Account toAccount(AccountRequest request);
 
 }

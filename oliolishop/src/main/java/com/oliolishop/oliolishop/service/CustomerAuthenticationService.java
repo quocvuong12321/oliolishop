@@ -137,9 +137,19 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
 
         Account account = accountMapper.toAccount(request);
         account.setId(UUID.randomUUID().toString());
-        account.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        return accountMapper.toAccountResponse(accountRepository.save(account));
+        String customerId = UUID.randomUUID().toString();
+        Customer customer = Customer.builder()
+                .id(customerId)
+                .account(account)
+                .build();
+
+
+        Account response = accountRepository.save(account);
+        customerRepository.save(customer);
+
+
+        return accountMapper.toAccountResponse(response);
     }
 
     public ChangePasswordResponse changePassword(ChangePasswordRequest request) throws ParseException, JOSEException {

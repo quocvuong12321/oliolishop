@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.transaction.annotation.TransactionAnnotationParser;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 public class Transaction {
     @Id
     @Column(name = "transaction_id")
@@ -31,7 +33,7 @@ public class Transaction {
     @JoinColumn(name= "payment_method_id")
     PaymentMethod paymentMethod;
 
-    double amount;
+    BigDecimal amount;
 
     @Column(name = "transaction_type", columnDefinition = "ENUM('PAYMENT','REFUND','CANCEL')")
     @Enumerated(EnumType.STRING)
@@ -46,9 +48,5 @@ public class Transaction {
 
     @CreationTimestamp
     LocalDateTime createDate;
-
-
-
-
 
 }

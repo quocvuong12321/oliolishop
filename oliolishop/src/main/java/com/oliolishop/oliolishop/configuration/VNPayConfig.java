@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.configuration;
 
+import com.oliolishop.oliolishop.constant.ApiPath;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,8 @@ import java.util.*;
 @Component
 public class VNPayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_Returnurl = "/vnpay-payment";
+    public static String vnp_Returnurl =  ApiPath.Payment.VNPAY_RETURN;
+//            "/vnpay-payment";
     public static String vnp_TmnCode = "QCD4Z43K";
     public static String vnp_HashSecret = "KKTNNFCZLHQF579TO2UEGFLZL6SGEB3N";
     public static String vnp_apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";

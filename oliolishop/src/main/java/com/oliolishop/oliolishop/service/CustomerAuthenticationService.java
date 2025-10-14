@@ -61,7 +61,7 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
 
 
     @Override
-    protected void addCustomClaims(JWTClaimsSet.Builder builder, Account user) {
+    protected void addIdClaims(JWTClaimsSet.Builder builder, Account user) {
 
         builder.claim("customerId",user.getCustomer().getId());
     }

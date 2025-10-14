@@ -4,9 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ApiPath {
-    public static final String BASE = "/api";
-    public static final String BY_ID = "/{id}";
 
+
+    public static final String BASE = "/api";
+    public static final String FULLURL = "http://localhost:8080/oliolishop";
+
+    public static final String BY_ID = "/{id}";
     //Folder lưu ảnh attribute
     public static final String FOLDER_IMAGE_ATTR = "images_attr";
 
@@ -47,5 +50,13 @@ public class ApiPath {
 
     public static final class Order{
         public static final String ROOT = BASE+"/order";
+        public static final String CONFIRM = "/confirm";
     }
+
+    public static final class Payment{
+        public static final String ROOT = BASE+"/payment";
+        public static final String VNPAY = "/vnpay";
+        public static final String VNPAY_RETURN = VNPAY+"/return";
+    }
+
 }

@@ -125,15 +125,16 @@ public class AppUtils {
 
     public static String getCustomerIdByJwt() {
         Authentication authentication = CustomerAuthenticationService.getAuthentication();
-
-
         if (authentication.getPrincipal() instanceof Jwt jwt) {
             return jwt.getClaim("customerId");
         }
         throw new AppException(ErrorCode.UNAUTHENTICATED);
     }
-
-
-
-
+    public static String getEmployeeIdByJwt() {
+        Authentication authentication = CustomerAuthenticationService.getAuthentication();
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getClaim("employeeId");
+        }
+        throw new AppException(ErrorCode.UNAUTHENTICATED);
+    }
 }

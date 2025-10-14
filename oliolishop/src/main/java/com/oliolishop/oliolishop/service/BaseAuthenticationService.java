@@ -10,6 +10,7 @@ import com.oliolishop.oliolishop.dto.Token.AccessTokenResponse;
 import com.oliolishop.oliolishop.dto.Token.RefreshTokenRequest;
 import com.oliolishop.oliolishop.dto.authenticate.AuthenticateRequest;
 import com.oliolishop.oliolishop.dto.authenticate.AuthenticateResponse;
+import com.oliolishop.oliolishop.entity.Account;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,8 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     protected  String SIGNER_KEY;
     protected static final long TIME_ACCESS = 15;       // 15 phút
     protected static final long TIME_REFRESH = 60 * 24; // 24 giờ
+
+
     protected abstract T findUserByUsername(String username);
     protected abstract String getUsername(T user);
     protected abstract String getPassword(T user);
@@ -75,7 +78,7 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
                 .claim("scope", buildScope(user))
                 .claim("type", tokenType);
         // 👉 Cho phép class con thêm claim tùy chỉnh ở đây
-        addCustomClaims(claimsBuilder,user);
+        addIdClaims(claimsBuilder,user);
         JWTClaimsSet claims = claimsBuilder.build();
         try {
             JWSObject jwsObject = new JWSObject(header, new Payload(claims.toJSONObject()));
@@ -87,7 +90,7 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     }
 
     // 👇 Hook method để class con override nếu muốn thêm payload
-    protected void addCustomClaims(JWTClaimsSet.Builder builder, T user) {}
+    protected abstract void addIdClaims(JWTClaimsSet.Builder builder, T user);
 
     public AccessTokenResponse generateNewAccessToken(RefreshTokenRequest refreshToken)
             throws ParseException, JOSEException {

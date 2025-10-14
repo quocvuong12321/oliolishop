@@ -266,6 +266,8 @@ public class ProductSpuService {
         spu.setKey(AppUtils.convertToSpuUrl(AppUtils.toSlug(request.getName()),id));
         spu.setDescription(request.getDescription());
         spu.setShortDescription(request.getShortDescription());
+        spu.setBrand(Brand.builder().id(request.getBrandId()).build());
+        spu.setCategory(Category.builder().id(request.getCategoryId()).build());
 
         return productSpuMapper.toSpuCreateResponse(productSpuRepository.save(spu));
     }

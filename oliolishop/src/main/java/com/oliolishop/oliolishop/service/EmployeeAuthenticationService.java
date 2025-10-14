@@ -1,11 +1,12 @@
 package com.oliolishop.oliolishop.service;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.oliolishop.oliolishop.entity.Account;
 import com.oliolishop.oliolishop.entity.Employee;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.repository.EmployeeRepository;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,11 @@ public class EmployeeAuthenticationService extends BaseAuthenticationService<Emp
     ) {
         super(refreshTokenService);
         this.employeeRepository=employeeRepository;
+    }
+
+    @Override
+    protected void addIdClaims(JWTClaimsSet.Builder builder, Employee employee) {
+        builder.claim("employeeId",employee.getId());
     }
 
     @Override

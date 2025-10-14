@@ -61,8 +61,8 @@ public class ProductSkuService {
             sku.setId(UUID.randomUUID().toString());
 
             // Tạo sku_code dựa trên SPU + các giá trị attribute
-            String skuCode = spu.getKey() + "/" + combo.stream()
-                    .map(ProductSkuAttr::getValue)
+            String skuCode =  combo.stream()
+                    .map(ProductSkuAttr::getId)
                     .collect(Collectors.joining("/")).toUpperCase();
             sku.setSkuCode(skuCode);
 
@@ -72,6 +72,8 @@ public class ProductSkuService {
             sku.setRestockStrategy(ProductSku.RestockStrategy.stop_ordering);
             sku.setStatus(ProductSku.Status.Inactive);
             sku.setWeight(0.0000001);
+            sku.setStatus(ProductSku.Status.Active);
+            sku.setSort(1);
 
             // Chọn ảnh từ attribute nếu có, ưu tiên giá trị có showPreviewImage=true
             Optional<ProductSkuAttr> preview = combo.stream()

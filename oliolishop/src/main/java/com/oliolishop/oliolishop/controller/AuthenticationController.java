@@ -15,8 +15,14 @@ import com.oliolishop.oliolishop.dto.customer.CustomerResponse;
 import com.oliolishop.oliolishop.enums.OtpType;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
+import com.oliolishop.oliolishop.service.BaseAuthenticationService;
 import com.oliolishop.oliolishop.service.CustomerAuthenticationService;
+import jakarta.mail.Message;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.apache.catalina.authenticator.AuthenticatorBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,23 +30,69 @@ import org.springframework.web.bind.annotation.*;
 import java.text.ParseException;
 
 @RestController
-@RequestMapping(ApiPath.BASE+ApiPath.AUTHENTICATION)
+@RequestMapping(ApiPath.BASE + ApiPath.AUTHENTICATION)
 public class AuthenticationController {
     @Autowired
     private CustomerAuthenticationService authenticationService;
 
 
     @PostMapping
-    public ApiResponse<AuthenticateResponse> authenticate(@RequestBody @Valid AuthenticateRequest request){
+    public ApiResponse<AuthenticateResponse> authenticate(@RequestBody @Valid AuthenticateRequest request,
+                                                          HttpServletResponse response) {
+
+        AuthenticateResponse responseAuth = authenticationService.authenticate(request);
+
+        Cookie cookie = new Cookie("refreshToken", responseAuth.getRefreshToken());
+        cookie.setHttpOnly(true);          // JS không đọc được
+        cookie.setSecure(true);            // HTTPS
+        cookie.setPath("/");               // Phạm vi cookie
+        cookie.setMaxAge((int) (BaseAuthenticationService.TIME_REFRESH * 60)); // 1 ngày
+        response.addCookie(cookie);
+
         return ApiResponse.<AuthenticateResponse>builder()
-                .result(authenticationService.authenticate(request))
+                .result(
+                        AuthenticateResponse.builder()
+                                .authenticated(true)
+                                .accessToken(responseAuth.getAccessToken())
+                                .refreshToken(MessageConstants.REFRESH_TOKE_SAVED)
+                                .build()
+                )
                 .build();
     }
 
+    //    @PostMapping("/refresh")
+//    public ApiResponse<AccessTokenResponse> refresh(@RequestBody RefreshTokenRequest request) throws ParseException, JOSEException {
+//        return ApiResponse.<AccessTokenResponse>builder()
+//                .result(authenticationService.generateNewAccessToken(request))
+//                .build();
+//    }
     @PostMapping("/refresh")
-    public ApiResponse<AccessTokenResponse> refresh(@RequestBody RefreshTokenRequest request) throws ParseException, JOSEException {
+    public ApiResponse<AccessTokenResponse> refresh(HttpServletRequest request) throws ParseException, JOSEException {
+        // Lấy cookie refreshToken
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String refreshToken = null;
+        for (Cookie cookie : cookies) {
+            if ("refreshToken".equals(cookie.getName())) {
+                refreshToken = cookie.getValue();
+                break;
+            }
+        }
+
+        if (refreshToken == null) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // Sinh access token mới
+        AccessTokenResponse newAccessToken = authenticationService.generateNewAccessToken(
+                new RefreshTokenRequest(refreshToken)
+        );
+
         return ApiResponse.<AccessTokenResponse>builder()
-                .result(authenticationService.generateNewAccessToken(request))
+                .result(newAccessToken)
                 .build();
     }
 
@@ -51,30 +103,31 @@ public class AuthenticationController {
     }
 
     @GetMapping("/profile")
-    public ApiResponse<AccountResponse> getMyInfor(){
+    public ApiResponse<AccountResponse> getMyInfor() {
         return ApiResponse.<AccountResponse>builder()
                 .result(authenticationService.getInfor())
                 .build();
     }
 
     @PostMapping("/register")
-    public ApiResponse<AccountResponse> verifyCreateAccount(@Valid @RequestBody VerifyOtpRequest request){
+    public ApiResponse<AccountResponse> verifyCreateAccount(@Valid @RequestBody VerifyOtpRequest request) {
 
-        if(!request.getType().equals(OtpType.REGISTER))
+        if (!request.getType().equals(OtpType.REGISTER))
             throw new AppException(ErrorCode.INVALID_OTP);
-        AccountRequest account = authenticationService.verifyRegisterOtp(request.getOtp(),request.getEmail());
-        if(account == null)
+        AccountRequest account = authenticationService.verifyRegisterOtp(request.getOtp(), request.getEmail());
+        if (account == null)
             throw new AppException(ErrorCode.INVALID_OTP);
-        return  ApiResponse.<AccountResponse>builder()
+        return ApiResponse.<AccountResponse>builder()
                 .result(authenticationService.createAccount(account))
                 .build();
     }
+
     @PostMapping("/register/send-otp")
-    public ApiResponse<String> createAccount(@Valid @RequestBody AccountRequest request){
+    public ApiResponse<String> createAccount(@Valid @RequestBody AccountRequest request) {
         authenticationService.handleRegisterOtp(request);
 
         return ApiResponse.<String>builder()
-                .result(String.format(MessageConstants.OTP_SENT,request.getEmail()))
+                .result(String.format(MessageConstants.OTP_SENT, request.getEmail()))
                 .build();
     }
 
@@ -86,21 +139,20 @@ public class AuthenticationController {
     }
 
 
-
     @PostMapping("/send-otp")
-    public ApiResponse<String> sendOtp(@RequestBody SendOtpRequest request){
+    public ApiResponse<String> sendOtp(@RequestBody SendOtpRequest request) {
 
         authenticationService.handleOtp(request);
 
         return ApiResponse.<String>builder()
-                .result(String.format(MessageConstants.OTP_SENT,request.getEmail()))
+                .result(String.format(MessageConstants.OTP_SENT, request.getEmail()))
                 .build();
     }
 
     @PostMapping("/verify-otp")
-    public ApiResponse<Boolean> verifyOtp(@RequestBody VerifyOtpRequest request){
+    public ApiResponse<Boolean> verifyOtp(@RequestBody VerifyOtpRequest request) {
         Boolean verify = authenticationService.verifyOtp(request);
-        if(!verify)
+        if (!verify)
             throw new AppException(ErrorCode.INVALID_OTP);
         return ApiResponse.<Boolean>builder()
                 .result(verify)
@@ -109,15 +161,15 @@ public class AuthenticationController {
 
 
     @PostMapping("/reset-password")
-    public ApiResponse<String> resetPassword(@Valid @RequestBody ForgetPasswordRequest request){
+    public ApiResponse<String> resetPassword(@Valid @RequestBody ForgetPasswordRequest request) {
         authenticationService.resetPassword(request.getNewPassword(), request.getEmail());
-        return  ApiResponse.<String>builder()
+        return ApiResponse.<String>builder()
                 .result(String.format(MessageConstants.PASSWORD_RESET_SUCCESS))
                 .build();
     }
 
     @PostMapping("/update-account")
-    public ApiResponse<AccountResponse> updateAccount(@RequestBody AccountUpdateRequest request){
+    public ApiResponse<AccountResponse> updateAccount(@RequestBody AccountUpdateRequest request) {
 
         return ApiResponse.<AccountResponse>builder()
                 .result(authenticationService.updateAccount(request))

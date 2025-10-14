@@ -3,6 +3,7 @@ package com.oliolishop.oliolishop.service;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
+import jakarta.servlet.http.Cookie;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.oliolishop.oliolishop.constant.TokenType;
@@ -35,8 +36,8 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     @NonFinal
     @Value("${jwt.signerKey}")
     protected  String SIGNER_KEY;
-    protected static final long TIME_ACCESS = 15;       // 15 phút
-    protected static final long TIME_REFRESH = 60 * 24; // 24 giờ
+    public static final long TIME_ACCESS = 15;       // 15 phút
+    public static final long TIME_REFRESH = 15 * 24 * 60; // 24 giờ
 
 
     protected abstract T findUserByUsername(String username);
@@ -59,6 +60,8 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
         String refreshToken = generateToken(user, TIME_REFRESH, TokenType.REFRESHTYPE);
 
         refreshTokenService.storeRefreshToken(getUsername(user), refreshToken, (int)TIME_REFRESH);
+
+
 
         return AuthenticateResponse.builder()
                 .authenticated(true)

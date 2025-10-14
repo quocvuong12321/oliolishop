@@ -135,7 +135,11 @@ public class OrderService {
 
         BigDecimal loyalPoint = finalAmount.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        customer.setLoyaltyPoints(customer.getLoyaltyPoints().add(loyalPoint));
+        if(customer.getLoyaltyPoints() != null)
+            customer.setLoyaltyPoints(customer.getLoyaltyPoints().add(loyalPoint));
+        else
+            customer.setLoyaltyPoints(loyalPoint);
+
 
         OrderResponse response = orderMapper.toResponse(orderRepository.save(order));
         response.setId(order.getId());

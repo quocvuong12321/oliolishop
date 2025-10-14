@@ -15,4 +15,6 @@ public class MessageConstants {
     public static final String PAYMENT_INVALID = "Chữ ký không hợp lệ";
 
     public static final String ORDER_CONFIRM_SUCCESSFULLY="Xác nhận đơn hàng thành công";
+
+    public static final String REFRESH_TOKE_SAVED = "Refresh token đã được lưu vào cookie";
 }

@@ -42,6 +42,7 @@ public class ApiPath {
         public static final String CREATE = "/create";
         public static final String UPDATE = "/update";
         public static final String LOGOUT = "/logout";
+        public static final String REFRESH = "/refresh";
     }
 
     public static final class Customer{

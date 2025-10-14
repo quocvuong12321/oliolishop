@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.mapper;
 
 import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
+import com.oliolishop.oliolishop.dto.productsku.ProductSkuUpdateResponse;
 import com.oliolishop.oliolishop.entity.ProductSku;
 import com.oliolishop.oliolishop.entity.ProductSpu;
 import org.mapstruct.Mapper;
@@ -9,4 +10,5 @@ import org.mapstruct.Mapper;
 public interface ProductSkuMapper {
 
     ProductSkuResponse toResponse(ProductSku productSku);
+    ProductSkuUpdateResponse toUpdateResponse(ProductSku productsku);
 }

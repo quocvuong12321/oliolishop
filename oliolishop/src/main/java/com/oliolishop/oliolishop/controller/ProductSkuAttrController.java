@@ -19,7 +19,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RestController
-@RequestMapping(ApiPath.BASE + ApiPath.SKU_ATTR)
+@RequestMapping(ApiPath.SkuAttr.ROOT)
 public class ProductSkuAttrController {
     @Autowired
     private ProductSkuAttrService productSkuAttrService;
@@ -34,6 +34,14 @@ public class ProductSkuAttrController {
         String folder = ApiPath.FOLDER_IMAGE_ATTR;
         return  ApiResponse.<ProductSkuAttrCreateResponse>builder()
                 .result(productSkuAttrService.createAttributes(request,files,imageDir,folder))
+                .build();
+    }
+
+    @GetMapping(ApiPath.BY_ID)
+    public ApiResponse<?> findBySpuId(@PathVariable("id") String spuId){
+
+        return ApiResponse.builder()
+                .result(productSkuAttrService.findSkuAttrBySpuId(spuId))
                 .build();
     }
 }

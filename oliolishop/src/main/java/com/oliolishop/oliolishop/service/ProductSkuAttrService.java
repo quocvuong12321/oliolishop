@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.service;
 
 
+import com.oliolishop.oliolishop.dto.productskuattr.ProductSkuAttrResponse;
 import com.oliolishop.oliolishop.dto.productskuattr.Request.ProductSkuAttrValueRequest;
 import com.oliolishop.oliolishop.dto.productskuattr.Request.ProductSkuGenerateRequest;
 import com.oliolishop.oliolishop.dto.productskuattr.Response.ProductSkuAttrCreateResponse;
@@ -100,5 +101,13 @@ public class ProductSkuAttrService {
 
         productSkuAttrRepository.saveAll(datas);
         return attributesResponse;
+    }
+
+    public List<ProductSkuAttrResponse> findSkuAttrBySpuId(String spuId){
+        ProductSpu spu = productSpuRepository.findById(spuId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        List<ProductSkuAttr> attrs =spu.getSkuAttrs().stream().toList();
+
+        return attrs.stream().map(productSkuAttrMapper::toResponse).toList();
     }
 }

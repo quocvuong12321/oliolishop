@@ -17,4 +17,5 @@ public interface ProductSkuAttrMapper {
     ProductSkuAttr toProductSku(ProductSkuAttrValueRequest request);
 
     ProductSkuAttrValueRequest toCreateResponse(ProductSkuAttr productSkuAttr);
+
 }

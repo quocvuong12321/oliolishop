@@ -87,7 +87,7 @@ public class ProductSpuService {
         Set<ProductSkuResponse> setSku = skus.stream()
                 .map(s -> ProductSkuResponse.builder()
                         .id(s.getId())
-                        .product_spu_id(spu.getId())
+                        .productSpuId(spu.getId())
                         .skuCode(s.getSkuCode())
                         .sort(s.getSort())
                         .originalPrice(s.getOriginalPrice())

@@ -3,22 +3,17 @@ package com.oliolishop.oliolishop.dto.productsku;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.parameters.P;
 
 import java.math.BigDecimal;
 
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductSkuResponse {
-
-    String id;
-    String skuCode;
-    String image;
-    String productSpuId;
-//    double price;
+@Data
+public class ProductUpdateRequest {
     BigDecimal originalPrice;
-//    double discountRate;
-    int sort;
+    double weight;
+    int skuStock;
 }

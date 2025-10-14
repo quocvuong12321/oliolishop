@@ -1,6 +1,5 @@
 package com.oliolishop.oliolishop.dto.productsku;
 
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,14 +10,10 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductSkuResponse {
-
+public class ProductSkuUpdateResponse {
     String id;
-    String skuCode;
-    String image;
-    String productSpuId;
-//    double price;
     BigDecimal originalPrice;
-//    double discountRate;
-    int sort;
+    int skuStock;
+    double weight;
+    String variant;
 }

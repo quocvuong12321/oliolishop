@@ -17,9 +17,15 @@ public class ApiPath {
     //Endpoint cho api
     public static final String SPU = "/spu";
 
-    public static final String SKU = "/sku";
 
-    public static final String SKU_ATTR = "/sku-attr";
+    public static final class ProductSku{
+        public static final String ROOT = BASE +"/sku";
+    }
+
+    public static final class SkuAttr{
+        public static final String ROOT = BASE + "/sku-attr";
+    }
+
 
     public static final String CATEGORY = "/category";
 

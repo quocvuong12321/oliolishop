@@ -2,6 +2,8 @@ package com.oliolishop.oliolishop.service;
 
 import com.oliolishop.oliolishop.dto.productsku.ProductSkuDeleteRequest;
 import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
+import com.oliolishop.oliolishop.dto.productsku.ProductSkuUpdateResponse;
+import com.oliolishop.oliolishop.dto.productsku.ProductUpdateRequest;
 import com.oliolishop.oliolishop.entity.ProductSku;
 import com.oliolishop.oliolishop.entity.ProductSkuAttr;
 import com.oliolishop.oliolishop.entity.ProductSpu;
@@ -11,6 +13,7 @@ import com.oliolishop.oliolishop.mapper.ProductSkuMapper;
 import com.oliolishop.oliolishop.repository.ProductSkuAttrRepository;
 import com.oliolishop.oliolishop.repository.ProductSkuRepository;
 import com.oliolishop.oliolishop.repository.ProductSpuRepository;
+import com.oliolishop.oliolishop.util.ProductSkuUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,15 +26,16 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-@FieldDefaults(makeFinal = true,level = AccessLevel.PRIVATE)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ProductSkuService {
     ProductSkuRepository productSkuRepository;
     private final ProductSpuRepository productSpuRepository;
     private final ProductSkuAttrRepository productSkuAttrRepository;
     private final ProductSkuMapper productSkuMapper;
+    ProductSkuUtils productSkuUtils;
 
-    public ProductSkuResponse getSkus(String id){
-        ProductSku sku = productSkuRepository.findByProductSkuId(id).orElseThrow(()->new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+    public ProductSkuResponse getSkus(String id) {
+        ProductSku sku = productSkuRepository.findByProductSkuId(id).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
 
         return productSkuMapper.toResponse(sku);
 
@@ -61,9 +65,9 @@ public class ProductSkuService {
             sku.setId(UUID.randomUUID().toString());
 
             // Tạo sku_code dựa trên SPU + các giá trị attribute
-            String skuCode =  combo.stream()
+            String skuCode = combo.stream()
                     .map(ProductSkuAttr::getId)
-                    .collect(Collectors.joining("/")).toUpperCase();
+                    .collect(Collectors.joining("/"));
             sku.setSkuCode(skuCode);
 
             sku.setSpu(spu);
@@ -113,14 +117,42 @@ public class ProductSkuService {
         List<ProductSku> lst = productSkuRepository.findAllById(request.getLstSkuId());
 
 
-        if(!lst.isEmpty()){
-            for(var item:lst){
+        if (!lst.isEmpty()) {
+            for (var item : lst) {
                 item.setStatus(ProductSku.Status.Inactive);
             }
             productSkuRepository.saveAll(lst);
             return true;
-        }
-        else throw new AppException(ErrorCode.EMPTY_PRODUCT_SKU);
+        } else throw new AppException(ErrorCode.EMPTY_PRODUCT_SKU);
 
+    }
+
+    public Boolean updateStockPriceWeight(ProductUpdateRequest request, String skuId) {
+
+        ProductSku sku = productSkuRepository.findById(skuId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        sku.setSkuStock(request.getSkuStock());
+        sku.setWeight(request.getWeight());
+        sku.setOriginalPrice(request.getOriginalPrice());
+
+        productSkuRepository.save(sku);
+
+        return true;
+    }
+
+    public List<ProductSkuUpdateResponse> getProductSkuBySpuId(String spuId) {
+        ProductSpu spu = productSpuRepository.findById(spuId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        return spu.getProductSkus().stream()
+                .map(sku -> {
+                    // Biến đổi ProductSku thành ProductSkuUpdateResponse
+                    ProductSkuUpdateResponse response = productSkuMapper.toUpdateResponse(sku);
+
+                    // Thêm thông tin variant
+                    response.setVariant(productSkuUtils.getVariant(sku));
+
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 }

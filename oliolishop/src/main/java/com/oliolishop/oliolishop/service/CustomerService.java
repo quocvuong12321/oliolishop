@@ -16,14 +16,22 @@ import com.oliolishop.oliolishop.mapper.CustomerMapper;
 import com.oliolishop.oliolishop.repository.AccountRepository;
 import com.oliolishop.oliolishop.repository.AddressRepository;
 import com.oliolishop.oliolishop.repository.CustomerRepository;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -92,5 +100,56 @@ public class CustomerService {
         Address address = addressRepository.findById(addressId).orElseThrow(()->new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         addressRepository.delete(address);
+    }
+
+    public CustomerResponse updateCustomer(CustomerRequest request,MultipartFile file, String imageDir, String folderName ) throws IOException {
+        String customerId = AppUtils.getCustomerIdByJwt();
+
+        Customer customer = customerRepository.findById(customerId).orElseThrow(()->new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
+
+        customer.setDob(request.getDob());
+
+        customer.setGender(Customer.Gender.valueOf(request.getGender()));
+
+        customer.setName(request.getName());
+
+        String avatarUrl = saveAvatar(customerId,file,imageDir,folderName);
+
+        customer.setImage(avatarUrl);
+
+        return customerMapper.toResponse(customerRepository.save(customer));
+
+    }
+
+
+    // Hàm này nên nằm trong FileService hoặc ImageUtils
+    private String saveAvatar(String customerId, MultipartFile file, String imageDir, String folderName) throws IOException {
+
+        // 1. Tạo đường dẫn tuyệt đối để lưu
+        Path uploadPath = Paths.get(imageDir, folderName);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath); // Đảm bảo thư mục tồn tại
+        }
+        // 2. Định nghĩa tên file: uniqueId + timestamp + extension
+        String originalFilename = file.getOriginalFilename();
+        String fileExtension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+        String newFileName = customerId + "-" + fileExtension;
+        File outputFile = uploadPath.resolve(newFileName).toFile();
+
+        // 3. Xử lý ảnh bằng Thumbnails: Cắt và Resize
+        try {
+            Thumbnails.of(file.getInputStream())
+                    // Cắt xén (Crop): Cắt ảnh thành hình vuông từ tâm
+                    .crop(net.coobird.thumbnailator.geometry.Positions.CENTER)
+                    .size(500, 500)
+                    .outputQuality(1)
+                    .toFile(outputFile);
+        } catch (IOException e) {
+            // Log lỗi
+            throw new IOException("Failed to process and save avatar file.", e);
+        }
+
+        // 4. Trả về đường dẫn để lưu vào Database
+        return folderName + "/" + newFileName; // Trả về URL tương đối
     }
 }

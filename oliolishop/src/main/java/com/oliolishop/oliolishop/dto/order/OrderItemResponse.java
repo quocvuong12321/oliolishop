@@ -21,4 +21,5 @@ public class OrderItemResponse {
     int returnQuantity;
     BigDecimal unitPrice;
     boolean allowReturn;
+    boolean isRated;
 }

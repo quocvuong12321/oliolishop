@@ -86,32 +86,77 @@ public class AppUtils {
         return genId.toString();
     }
 
+//    public static String saveImage(MultipartFile file,
+//                            String imageDir,
+//                            String folder,
+//                            String fileName) throws IOException {
+//        Path uploadDirPath = Paths.get(imageDir, folder);
+//        Files.createDirectories(uploadDirPath);
+//
+//        BufferedImage image = ImageIO.read(file.getInputStream());
+//        if (image == null) {
+//            throw new IOException("File upload không hợp lệ (không phải ảnh): " + file.getOriginalFilename());
+//        }
+//
+//        // Luôn convert sang jpg
+//        String ext = "jpg";
+//        if (!fileName.endsWith("." + ext)) {
+//            fileName = fileName + "." + ext;
+//        }
+//        Path targetPath = uploadDirPath.resolve(fileName);
+//
+//        // Resize 500x500 và lưu
+//        Thumbnails.of(image)
+//                .size(500, 500)
+//                .outputFormat(ext)
+//                .toFile(targetPath.toFile());
+//
+//        return folder + "/" + fileName;
+//    }
+
     public static String saveImage(MultipartFile file,
-                            String imageDir,
-                            String folder,
-                            String fileName) throws IOException {
+                                   String imageDir,
+                                   String folder,
+                                   String fileNameBase) throws IOException { // Đổi tên fileName thành fileNameBase cho rõ ràng
+
+        // 1. Tạo thư mục upload nếu chưa tồn tại
         Path uploadDirPath = Paths.get(imageDir, folder);
         Files.createDirectories(uploadDirPath);
 
-        BufferedImage image = ImageIO.read(file.getInputStream());
-        if (image == null) {
-            throw new IOException("File upload không hợp lệ (không phải ảnh): " + file.getOriginalFilename());
+        // 2. Xác định định dạng (Extension) và Tên file cuối cùng
+        String originalFilename = file.getOriginalFilename();
+        String contentType = file.getContentType();
+
+        // Ưu tiên PNG nếu nội dung là PNG (để giữ nền trong suốt), nếu không thì dùng JPG
+        String outputExt = "jpg";
+        if (contentType != null && contentType.toLowerCase().contains("png")) {
+            outputExt = "png";
         }
 
-        // Luôn convert sang jpg
-        String ext = "jpg";
-        if (!fileName.endsWith("." + ext)) {
-            fileName = fileName + "." + ext;
+        // Tên file cuối cùng (baseName + .ext)
+        String finalFileName = fileNameBase + "." + outputExt;
+        Path targetPath = uploadDirPath.resolve(finalFileName);
+
+        // 3. Xử lý ảnh bằng Thumbnailator (Tối ưu đọc/ghi)
+        try {
+            Thumbnails.of(file.getInputStream())
+                    // Giữ tỷ lệ ảnh (Aspect Ratio), giới hạn tối đa 800x800.
+                    // Nếu ảnh nhỏ hơn, nó sẽ không phóng to.
+                    .size(500, 500)
+                    .keepAspectRatio(true) // Rất quan trọng: GIỮ TỶ LỆ GỐC
+
+                    // Chất lượng (Chỉ áp dụng cho JPG)
+                    .outputQuality(0.9)
+
+                    // Định dạng đầu ra
+                    .outputFormat(outputExt)
+                    .toFile(targetPath.toFile());
+        } catch (IOException e) {
+            throw new IOException("Lỗi khi xử lý và lưu file ảnh: " + file.getOriginalFilename(), e);
         }
-        Path targetPath = uploadDirPath.resolve(fileName);
 
-        // Resize 500x500 và lưu
-        Thumbnails.of(image)
-                .size(500, 500)
-                .outputFormat(ext)
-                .toFile(targetPath.toFile());
-
-        return folder + "/" + fileName;
+        // 4. Trả về URL tương đối
+        return folder + "/" + finalFileName;
     }
 
     public static double round(double value, int places) {
@@ -125,15 +170,49 @@ public class AppUtils {
 
     public static String getCustomerIdByJwt() {
         Authentication authentication = CustomerAuthenticationService.getAuthentication();
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaim("customerId");
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED); // Ném lỗi nếu chưa đăng nhập
         }
+
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            String customerId = jwt.getClaim("customerId");
+            if (customerId == null) {
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            }
+            return customerId;
+        }
+
         throw new AppException(ErrorCode.UNAUTHENTICATED);
     }
+
+    public static String getOptionalCustomerId() {
+        Authentication authentication = CustomerAuthenticationService.getAuthentication();
+
+        // Nếu không được xác thực hoặc là anonymous, trả về null
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            return null;
+        }
+
+        // Lấy Customer ID từ JWT
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getClaim("customerId"); // Có thể là null nếu claim không có, nhưng đã qua kiểm tra is-authenticated
+        }
+
+        return null; // Trường hợp không xác định
+    }
+
     public static String getEmployeeIdByJwt() {
         Authentication authentication = CustomerAuthenticationService.getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED); // Ném lỗi nếu chưa đăng nhập
+        }
+
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaim("employeeId");
+            String employeeId = jwt.getClaim("employeeId");
+            if(employeeId == null) throw new AppException(ErrorCode.UNAUTHENTICATED);
+            return employeeId;
         }
         throw new AppException(ErrorCode.UNAUTHENTICATED);
     }

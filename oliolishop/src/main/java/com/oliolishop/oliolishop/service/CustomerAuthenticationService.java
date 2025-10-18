@@ -18,10 +18,17 @@ import com.oliolishop.oliolishop.repository.AccountRepository;
 import com.oliolishop.oliolishop.repository.CustomerRepository;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.UUID;
 
@@ -118,16 +125,21 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
     }
 
     public static Authentication getAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
-        if (authentication.getPrincipal() instanceof String principalStr &&
-                "anonymousUser".equals(principalStr)) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
-        }
-        return authentication;
+        // Chỉ lấy đối tượng Authentication, không kiểm tra isAuthenticated() hay ném lỗi.
+        return SecurityContextHolder.getContext().getAuthentication();
     }
+
+//    public static Authentication getAuthentication() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new AppException(ErrorCode.UNAUTHENTICATED);
+//        }
+//        if (authentication.getPrincipal() instanceof String principalStr &&
+//                "anonymousUser".equals(principalStr)) {
+//            throw new AppException(ErrorCode.INVALID_TOKEN);
+//        }
+//        return authentication;
+//    }
 
     public AccountResponse createAccount(AccountRequest request) {
         if (accountRepository.existsByUsername(request.getUsername()))
@@ -180,24 +192,62 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
                 .build();
     }
 
-    public AccountResponse updateAccount(AccountUpdateRequest request) {
+    public AccountResponse updateAccount(AccountUpdateRequest request,MultipartFile file, String imageDir, String folderName) throws IOException {
         Authentication authentication = getAuthentication();
         String username = authentication.getName();
 
         Account existAccount = accountRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_EXISTED));
 
-        Customer existCustomer = customerRepository.findByAccountId(existAccount.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
+        Customer existCustomer = existAccount.getCustomer();
 
         existAccount.setPhoneNumber(request.getPhoneNumber());
         existCustomer.setName(request.getName());
         existCustomer.setDob(request.getDob());
         existCustomer.setGender(request.getGender());
 
-        AccountResponse response = accountMapper.toAccountResponse(accountRepository.save(existAccount));
-        response.setCustomerResponse(customerMapper.toResponse(customerRepository.save(existCustomer)));
+        if(!file.isEmpty()){
+            String avatarUrl = saveAvatar(existCustomer.getId(), file,imageDir,folderName);
+            existCustomer.setImage(avatarUrl);
+        }
+
+        Account savedAccount = accountRepository.save(existAccount);
+
+        AccountResponse response = accountMapper.toAccountResponse(savedAccount);
+        response.setCustomerResponse(customerMapper.toResponse(savedAccount.getCustomer()));
+
         return response;
+    }
+
+    // Hàm này nên nằm trong FileService hoặc ImageUtils
+    private String saveAvatar(String customerId, MultipartFile file, String imageDir, String folderName) throws IOException {
+
+        // 1. Tạo đường dẫn tuyệt đối để lưu
+        Path uploadPath = Paths.get(imageDir, folderName);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath); // Đảm bảo thư mục tồn tại
+        }
+        // 2. Định nghĩa tên file: uniqueId + timestamp + extension
+        String originalFilename = file.getOriginalFilename();
+        String fileExtension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+        String newFileName = customerId + fileExtension;
+        File outputFile = uploadPath.resolve(newFileName).toFile();
+
+        // 3. Xử lý ảnh bằng Thumbnails: Cắt và Resize
+        try {
+            Thumbnails.of(file.getInputStream())
+                    // Cắt xén (Crop): Cắt ảnh thành hình vuông từ tâm
+                    .crop(net.coobird.thumbnailator.geometry.Positions.CENTER)
+                    .size(500, 500)
+                    .outputQuality(1)
+                    .toFile(outputFile);
+        } catch (IOException e) {
+            // Log lỗi
+            throw new IOException("Failed to process and save avatar file.", e);
+        }
+
+        // 4. Trả về đường dẫn để lưu vào Database
+        return folderName + "/" + newFileName; // Trả về URL tương đối
     }
 
     // ========================

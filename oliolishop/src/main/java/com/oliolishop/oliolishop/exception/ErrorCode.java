@@ -22,7 +22,7 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(1008, "Mật khẩu và mật khẩu nhập lại không khớp", HttpStatus.BAD_REQUEST),
     QUANTITY_POSITIVE(1009,"Số lượng phải lớn hơn 0",HttpStatus.BAD_REQUEST),
     PRICE_POSITIVE(1010,"Giá phải lớn hơn 0",HttpStatus.BAD_REQUEST),
-
+    PHONE_NUMBER_INVALID_FORMAT(1011,"Số điện thoại không đúng định dạng",HttpStatus.BAD_REQUEST),
     // 2xxx: auth (Lỗi xác thực và ủy quyền)
     UNAUTHENTICATED(2001,"Chưa được xác thực/Đăng nhập",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),
@@ -58,6 +58,13 @@ public enum ErrorCode {
     TRANSACTION_NOT_EXIST(3024,"Giao dịch thanh toán không hợp lệ hoặc không tồn tại",HttpStatus.NOT_FOUND),
     ORDER_PAID(3025,"Đơn hàng đã được thanh toán",HttpStatus.FORBIDDEN),
     ORDER_STATUS_INVALID(3026,"Trạng thái đơn hàng không hợp lệ",HttpStatus.BAD_REQUEST),
+    RATED(3027,"Bạn đã đánh giá đơn hàng này rồi",HttpStatus.CONFLICT),
+    // Lỗi chung khi vi phạm ràng buộc DB (ví dụ: để fallback)
+    DATABASE_INTEGRITY_VIOLATION(4000, "Vi phạm ràng buộc dữ liệu cơ sở. Vui lòng kiểm tra lại.", HttpStatus.CONFLICT),
+    FOREIGN_KEY_VIOLATION(4001, "Không thể thực hiện do có dữ liệu liên quan đang sử dụng.", HttpStatus.CONFLICT),
+    NOT_NULL_VIOLATION(4002, "Thiếu giá trị bắt buộc cho trường dữ liệu.", HttpStatus.BAD_REQUEST),
+    DATA_TOO_LONG(4003, "Dữ liệu nhập vào quá dài so với quy định.", HttpStatus.BAD_REQUEST),
+    CHECK_CONSTRAINT_VIOLATION(4004, "Dữ liệu không thỏa mãn điều kiện ràng buộc.", HttpStatus.BAD_REQUEST),
     // 9xxx: system (Lỗi hệ thống)
     UNCATEGORIZED_EXCEPTION(9999,"Lỗi không xác định/Lỗi hệ thống vui lòng báo Dev", HttpStatus.INTERNAL_SERVER_ERROR),
     ;

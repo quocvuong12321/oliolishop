@@ -64,34 +64,49 @@ public class ProductSkuAttrService {
         Map<String, Set<ProductSkuAttrValueResponse>> attributesResponse = new HashMap<>();
         List<ProductSkuAttr> datas = new ArrayList<>();
 
-        AtomicInteger fileIndex = new AtomicInteger(0);
-
+        // 1. Lặp qua các thuộc tính
         for (String key : attributes.keySet()) {
             Set<ProductSkuAttrValueRequest> setAttr = attributes.get(key);
             Set<ProductSkuAttrValueResponse> setAttrResponse = new HashSet<>();
+
             for (ProductSkuAttrValueRequest attr : setAttr) {
                 ProductSkuAttr data = productSkuAttrMapper.toProductSku(attr);
+                // Thiết lập các trường cơ bản
                 data.setName(key);
                 data.setId(UUID.randomUUID().toString());
-                data.setValue(attr.getValue());
                 data.setSpu(spu);
-                data.setShowPreviewImage(attr.isShowPreviewImage());
 
-                // Nếu có file & showPreviewImage=true → lưu ảnh
-                if (attr.isShowPreviewImage() && attr.getFileIndex() != null && files != null && attr.getFileIndex() < files.size()) {
-                    MultipartFile file = files.get(attr.getFileIndex());
-                    String fileName = data.getId(); // tên file = id của attr
-                    String imageUrl = AppUtils.saveImage(file, imageDir, folder, fileName);
-                    attr.setImage(imageUrl);
-                    data.setImage(imageUrl);
+                // 2. Xử lý logic lưu ảnh thuộc tính
+                if (attr.isShowPreviewImage() && attr.getFileIndex() != null && files != null) {
+
+                    int fileIndex = attr.getFileIndex();
+                    // Đảm bảo chỉ mục hợp lệ và file không rỗng
+                    if (fileIndex < files.size() && !files.get(fileIndex).isEmpty()) {
+                        MultipartFile file = files.get(fileIndex);
+
+                        // Tên file cơ sở là ID của thuộc tính SKU (đã là unique)
+                        String fileNameBase = data.getId();
+
+                        // GỌI HÀM LƯU ẢNH CHUẨN
+                        String imageUrl = AppUtils.saveImage(file, imageDir, folder, fileNameBase);
+
+                        data.setImage(imageUrl); // Cập nhật URL mới sau khi lưu
+                    } else {
+                        // Nếu index không hợp lệ hoặc file rỗng nhưng vẫn showPreviewImage=true
+                        // Cần xử lý: có thể giữ nguyên URL ảnh cũ nếu có (attr.getImage()) hoặc set null
+                        data.setImage(attr.getImage()); // Giữ nguyên ảnh cũ (hoặc null)
+                    }
                 } else {
-                    data.setImage(attr.getImage()); // giữ nguyên nếu đã có
+                    // Nếu không showPreviewImage hoặc không upload file mới, giữ nguyên URL ảnh cũ
+                    data.setImage(attr.getImage());
                 }
+
+                // 3. Chuẩn bị Response và Save list
                 setAttrResponse.add(ProductSkuAttrValueResponse.builder()
-                                .id(data.getId())
-                                .image(data.getImage())
-                                .value(data.getValue())
-                                .showPreviewImage(data.getShowPreviewImage())
+                        .id(data.getId())
+                        .image(data.getImage())
+                        .value(data.getValue())
+                        .showPreviewImage(data.getShowPreviewImage())
                         .build());
                 datas.add(data);
             }
@@ -99,7 +114,7 @@ public class ProductSkuAttrService {
             attributesResponse.put(key, setAttrResponse);
         }
 
-        productSkuAttrRepository.saveAll(datas);
+        productSkuAttrRepository.saveAll(datas); // Lưu tất cả các thuộc tính SKU vào DB
         return attributesResponse;
     }
 

@@ -1,5 +1,7 @@
 package com.oliolishop.oliolishop.constant;
 
+import com.oliolishop.oliolishop.entity.Rating;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,12 +12,19 @@ public class ApiPath {
     public static final String FULLURL = "http://localhost:8080/oliolishop";
 
     public static final String BY_ID = "/{id}";
-    //Folder lưu ảnh attribute
+    //Folder lưu ảnh
     public static final String FOLDER_IMAGE_ATTR = "images_attr";
+    public static final String FOLDER_IMAGE_AVATAR = "images_avatar";
+    public static final String FOLDER_IMAGE_RATING = "images_rating";
 
 
     //Endpoint cho api
-    public static final String SPU = "/spu";
+    public static final class Spu{
+        public static final String ROOT = BASE + "/spu";
+        public static final String DETAIL = "/detail"+BY_ID;
+        public static final String RATING = DETAIL+"/ratings";
+        public static final String LIKE_RATING = RATING+"/like";
+    }
 
 
     public static final class ProductSku{
@@ -58,6 +67,7 @@ public class ApiPath {
     public static final class Order{
         public static final String ROOT = BASE+"/order";
         public static final String CONFIRM = "/confirm";
+        public static final String RATING = "/rating";
     }
 
     public static final class Payment{

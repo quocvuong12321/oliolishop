@@ -24,9 +24,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.apache.catalina.authenticator.AuthenticatorBase;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.ParseException;
 
 @RestController
@@ -34,7 +37,8 @@ import java.text.ParseException;
 public class AuthenticationController {
     @Autowired
     private CustomerAuthenticationService authenticationService;
-
+    @Value("${app.image-dir}")
+    private String imageDir;
 
     @PostMapping
     public ApiResponse<AuthenticateResponse> authenticate(@RequestBody @Valid AuthenticateRequest request,
@@ -168,11 +172,15 @@ public class AuthenticationController {
                 .build();
     }
 
-    @PostMapping("/update-account")
-    public ApiResponse<AccountResponse> updateAccount(@RequestBody AccountUpdateRequest request) {
+    @PutMapping("/update-account")
+    public ApiResponse<AccountResponse> updateAccount(
+            @RequestPart(value = "request") AccountUpdateRequest request,
+            @RequestPart(value = "file", required = false) MultipartFile file
+            ) throws IOException {
 
+        String folderName = ApiPath.FOLDER_IMAGE_AVATAR;
         return ApiResponse.<AccountResponse>builder()
-                .result(authenticationService.updateAccount(request))
+                .result(authenticationService.updateAccount(request,file,imageDir,folderName))
                 .build();
     }
 }

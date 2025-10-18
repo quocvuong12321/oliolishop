@@ -35,4 +35,7 @@ public class OrderItem {
     BigDecimal unitPrice;
 
     boolean allowReturn;
+
+    @OneToOne(mappedBy = "orderItem")
+    Rating rating;
 }

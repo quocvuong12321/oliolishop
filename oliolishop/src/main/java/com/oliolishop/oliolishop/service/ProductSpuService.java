@@ -92,6 +92,7 @@ public class ProductSpuService {
                         .sort(s.getSort())
                         .originalPrice(s.getOriginalPrice())
                         .image(s.getImage())
+                        .skuStock(s.getSkuStock())
                         .build())
                 .sorted(Comparator.comparing(ProductSkuResponse::getSort))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -128,10 +129,10 @@ public class ProductSpuService {
 //                .originalPrice(spu.getMinPrice())
                 .desAttrs(setAttrs)
                 .skuAttrs(skuAttrs)
-                .breadCrumb(breadCrumbs)
                 .brand(brandMapper.toResponse(spu.getBrand()))
                 .productSameBrand(productsSameBrand(spu.getBrand().getId()))
                 .productsSameCategory(productsSameCategory(category.getId()))
+                .breadCrumb(breadCrumbs)
                 .build();
 
         detail.setMedia(spu.getMedia());
@@ -200,9 +201,8 @@ public class ProductSpuService {
 
         String key = c.getKey();
 
-        int count = 0;
 
-        List<String> lstMedia = saveProductImages(key,spu_id,files,imageDir,count);
+        List<String> lstMedia = saveProductImages(key,spu_id,files,imageDir);
 
         String[] media =  lstMedia.toArray(new String[0]);
         spu.setMedia(AppUtils.arrayToPythonList(media));
@@ -229,31 +229,29 @@ public class ProductSpuService {
 
 
 
-    public List<String> saveProductImages(String key, String spuId, List<MultipartFile> files, String imageDir, int index) {
+    public List<String> saveProductImages(String key, String spuId, List<MultipartFile> files, String imageDir) {
         List<String> mediaUrls = new ArrayList<>();
-        Path uploadDirPath = Paths.get(imageDir, key);
 
-        // Tạo thư mục upload nếu chưa tồn tại
-        try {
-            Files.createDirectories(uploadDirPath);
-        } catch (IOException e) {
-            throw new RuntimeException("Không thể tạo thư mục upload: " + uploadDirPath, e);
-        }
-//
-//        int index = 0;
+        // 1. Tạo thư mục upload nếu chưa tồn tại (Đã có logic trong AppUtils.saveImage, nhưng giữ ở đây cũng được)
+        // Tuy nhiên, việc tạo thư mục nên nằm trong hàm saveImage để cô đọng logic file I/O
+
         for (MultipartFile file : files) {
-            String originalName = file.getOriginalFilename();
-            if (originalName == null) originalName = "unknown.jpg";
+            if (file.isEmpty()) continue; // Bỏ qua file rỗng
 
             try {
-                String fileName = spuId + "_" + index++;
-                String url = AppUtils.saveImage(file, imageDir, key, fileName);
+                // Tên file cơ sở: SPU_ID + index (không có đuôi)
+                String fileNameBase = spuId + "_" + System.currentTimeMillis();
+
+                // GỌI HÀM LƯU ẢNH CHUẨN
+                // AppUtils.saveImage sẽ tự lo về: Tạo thư mục, Cắt/Resize (nếu cần), Đuôi file (.jpg/.png), và trả về URL tương đối.
+                String url = AppUtils.saveImage(file, imageDir, key, fileNameBase);
                 mediaUrls.add(url);
 
-                System.out.println("Lưu thành công file: " + fileName + " (" + file.getContentType() + ", " + file.getSize() + " bytes)");
+                log.info("Lưu thành công Product Image: {}", url);
             } catch (IOException e) {
-                System.err.println("Lỗi khi xử lý file: " + originalName);
-                e.printStackTrace();
+                // Log lỗi và TIẾP TỤC xử lý các file khác
+                log.error("Lỗi khi xử lý file ảnh sản phẩm {}: {}", file.getOriginalFilename(), e.getMessage());
+                // KHÔNG THROW RuntimeException ở đây trừ khi bạn muốn hủy toàn bộ request
             }
         }
         return mediaUrls;
@@ -302,13 +300,10 @@ public class ProductSpuService {
         for (String url : deleted) {
             Path path = Paths.get(imageDir, url);
             Files.deleteIfExists(path);
-            oldImages.remove(url);   // ✅ giờ remove được vì oldImages là ArrayList
         }
 
-        int count = oldImages.size();
-
         // Lưu ảnh mới upload
-        List<String> newUrls = saveProductImages(key, spuId, newFiles, imageDir, count);
+        List<String> newUrls = saveProductImages(key, spuId, newFiles, imageDir);
 
         // Ghép lại final list: ảnh còn giữ + ảnh mới
         List<String> finalImages = new ArrayList<>(existingImages);

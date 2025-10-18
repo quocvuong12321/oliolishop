@@ -158,6 +158,7 @@ public class OrderService {
             itemResponse.setName(spu.getName());
             itemResponse.setThumbnail(spu.getImage());
             itemResponse.setVariant(productSkuUtils.getVariant(sku));
+            itemResponse.setRated(false);
             orderItemResponses.add(itemResponse);
         });
 

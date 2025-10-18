@@ -2,14 +2,17 @@ package com.oliolishop.oliolishop.controller;
 
 
 import com.oliolishop.oliolishop.constant.ApiPath;
+import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.productspu.ProductDetailResponse;
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateRequest;
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateResponse;
+import com.oliolishop.oliolishop.dto.rating.RatingResponse;
 import com.oliolishop.oliolishop.repository.ProductSpuRepository;
 import com.oliolishop.oliolishop.service.ProductSpuService;
+import com.oliolishop.oliolishop.service.RatingService;
 import jakarta.websocket.server.PathParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +29,15 @@ import java.util.UUID;
 @Component
 @Slf4j
 @RestController
-@RequestMapping(ApiPath.BASE + ApiPath.SPU)
+@RequestMapping(ApiPath.Spu.ROOT)
 public class ProductSpuController {
     @Autowired
     private ProductSpuService productSpuService;
+    @Autowired
+    private RatingService ratingService;
     @Value("${app.image-dir}")
     private String imageDir;
+
 
     @GetMapping
     public ApiResponse<?> getProductsSpu(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "30") int size, @RequestParam(required = false) String categoryId, @RequestParam(defaultValue = "0") double minPrice, @RequestParam(defaultValue = "99999999") double maxPrice, @RequestParam(required = false) String brandId) {
@@ -54,7 +60,7 @@ public class ProductSpuController {
 
     }
 
-    @GetMapping("/detail" + ApiPath.BY_ID )
+    @GetMapping(ApiPath.Spu.DETAIL)
     public ApiResponse<ProductDetailResponse> detailProduct(@PathVariable(name ="id") String id) {
 
         return ApiResponse.<ProductDetailResponse>builder()
@@ -83,7 +89,33 @@ public class ProductSpuController {
                 .build();
     }
 
+    @GetMapping(ApiPath.Spu.RATING)
+    public ApiResponse<List<RatingResponse>> getProductRatings(
+            @PathVariable(value = "id") String spuId,
+            @RequestParam(defaultValue = "0") int page, // Tham số phân trang (page)
+            @RequestParam(defaultValue = "10") int size // Tham số phân trang (size)
+    ){
+        // Gọi RatingService để lấy danh sách đã phân trang
+        List<RatingResponse> ratings = ratingService.getRatingForDetailProduct(spuId, page, size);
 
+        return ApiResponse.<List<RatingResponse>>builder()
+                .result(ratings)
+                .build();
+    }
 
+    @PostMapping(ApiPath.Spu.LIKE_RATING)
+    public ApiResponse<String> likeRating(@RequestParam(value = "ratingId") String ratingId){
+        ratingService.likeRating(ratingId);
+        return ApiResponse.<String>builder()
+                .result("")
+                .build();
+    }
 
+    @DeleteMapping(ApiPath.Spu.LIKE_RATING)
+    public ApiResponse<String> cancelLikeRating(@RequestParam(value = "ratingId") String ratingId){
+        ratingService.cancelLikeRating(ratingId);
+        return ApiResponse.<String>builder()
+                .result("")
+                .build();
+    }
 }

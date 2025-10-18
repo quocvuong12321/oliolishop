@@ -12,6 +12,4 @@ public class CustomerController {
     @Autowired
     CustomerService customerService;
 
-
-
 }

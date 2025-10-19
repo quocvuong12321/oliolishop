@@ -10,12 +10,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AddressResponse {
-    String addressId;
+    String id;
     String name;
     String phoneNumber;
     String detailAddress;
-    String wardName;   // Lấy từ join
-    String districtName;
-    String provinceName;
-    Boolean isDefault;
+    boolean isDefault;
 }

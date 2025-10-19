@@ -12,4 +12,8 @@ public interface AddressRepository extends JpaRepository<Address,String> {
 
     Optional<List<Address>> findByCustomerId(String customerId);
 
+    Address findByIsDefault(boolean isDefault);
+
+
+
 }

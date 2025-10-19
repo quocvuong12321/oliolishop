@@ -61,7 +61,8 @@ public class ApiPath {
     }
 
     public static final class Customer{
-        public static final String ROOT = BASE+"/customer/address";
+        public static final String ROOT = BASE+"/customer";
+        public static final String ADDRESS = "/address";
     }
 
     public static final class Order{

@@ -174,7 +174,7 @@ public class AuthenticationController {
 
     @PutMapping("/update-account")
     public ApiResponse<AccountResponse> updateAccount(
-            @RequestPart(value = "request") AccountUpdateRequest request,
+            @Valid @RequestPart(value = "request") AccountUpdateRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file
             ) throws IOException {
 

@@ -39,20 +39,18 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CustomerService {
     CustomerRepository customerRepository;
-   CustomerMapper customerMapper;
+    CustomerMapper customerMapper;
     AccountRepository accountRepository;
 
     AddressRepository addressRepository;
     private final AddressMapper addressMapper;
 
 
-
-
-    public CustomerResponse createCustomer(CustomerRequest request,String accountId){
-        Account c = accountRepository.findById(accountId).orElseThrow(()->new AppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+    public CustomerResponse createCustomer(CustomerRequest request, String accountId) {
+        Account c = accountRepository.findById(accountId).orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_EXISTED));
 
         Customer customer = customerMapper.toCustomer(request);
 
@@ -60,52 +58,79 @@ public class CustomerService {
         customer.setAccount(c);
         customer.setId(id);
 
-
         return customerMapper.toResponse(customerRepository.save(customer));
     }
 
-    public List<AddressResponse> getAddresses(String customerId){
+    public List<AddressResponse> getAddresses() {
+        String customerId = AppUtils.getCustomerIdByJwt();
+
         List<Address> addresses = addressRepository.findByCustomerId(customerId).orElse(new ArrayList<>());
 
-        return addresses.stream().map(addressMapper::toResponse).toList();
+        return addresses.stream().map(address -> {
+            AddressResponse response = addressMapper.toResponse(address);
+            response.setDefault(address.isDefault());
+            return response;
+        }).toList();
     }
 
-    public AddressResponse createAddress(AddressRequest request){
+    public AddressResponse createAddress(AddressRequest request) {
+
+        String customerId = AppUtils.getCustomerIdByJwt();
+
+        if(request.getIsDefault()) {
+            Address address = addressRepository.findByIsDefault(true);
+            address.setDefault(false);
+            addressRepository.save(address);
+        }
 
         Address newAddress = addressMapper.toAddress(request);
 
         newAddress.setCustomer(Customer.builder()
-                .id(request.getCustomerId())
+                .id(customerId)
                 .build()); //Chỉ cần ấy id thôi vì đây là reference ảo nên khi lưu nó chỉ lấy customer id là đủ
-
+        newAddress.setDefault(request.getIsDefault());
         newAddress.setWard(Ward.builder()
                 .id(request.getWardId()).build());
+        newAddress.setId(UUID.randomUUID().toString());
 
-        return addressMapper.toResponse(addressRepository.save(newAddress));
+        AddressResponse response = addressMapper.toResponse(addressRepository.save(newAddress));
+        response.setDefault(newAddress.isDefault());
+        return response;
     }
 
-    public AddressResponse updateAddress(AddressUpdateRequest request,String addressId){
-        Address address = addressRepository.findById(addressId).orElseThrow(()->new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+    public AddressResponse updateAddress(AddressUpdateRequest request, String addressId) {
+
+        String customerId = AppUtils.getCustomerIdByJwt();
+
+        Address address = addressRepository.findById(addressId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+
+        if(request.getIsDefault()){
+            Address defaultAddress = addressRepository.findByIsDefault(true);
+            defaultAddress.setDefault(false);
+            addressRepository.save(defaultAddress);
+        }
 
         address.setDetailAddress(request.getDetailAddress());
-        address.setIdDefault(request.getIsDefault());
+        address.setDefault(request.getIsDefault());
         address.setName(request.getName());
         address.setWard(Ward.builder().id(request.getWardId()).build());
         address.setPhoneNumber(request.getPhoneNumber());
 
-        return addressMapper.toResponse(addressRepository.save(address));
+        AddressResponse response = addressMapper.toResponse(addressRepository.save(address));
+        response.setDefault(request.getIsDefault());
+        return response;
     }
 
-    public void deleteAddress(String addressId){
-        Address address = addressRepository.findById(addressId).orElseThrow(()->new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+    public void deleteAddress(String addressId) {
+        Address address = addressRepository.findById(addressId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         addressRepository.delete(address);
     }
 
-    public CustomerResponse updateCustomer(CustomerRequest request,MultipartFile file, String imageDir, String folderName ) throws IOException {
+    public CustomerResponse updateCustomer(CustomerRequest request, MultipartFile file, String imageDir, String folderName) throws IOException {
         String customerId = AppUtils.getCustomerIdByJwt();
 
-        Customer customer = customerRepository.findById(customerId).orElseThrow(()->new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
+        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
 
         customer.setDob(request.getDob());
 
@@ -113,7 +138,7 @@ public class CustomerService {
 
         customer.setName(request.getName());
 
-        String avatarUrl = saveAvatar(customerId,file,imageDir,folderName);
+        String avatarUrl = saveAvatar(customerId, file, imageDir, folderName);
 
         customer.setImage(avatarUrl);
 

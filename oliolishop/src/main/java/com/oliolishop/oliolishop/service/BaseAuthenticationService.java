@@ -37,7 +37,7 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     @Value("${jwt.signerKey}")
     protected  String SIGNER_KEY;
     public static final long TIME_ACCESS = 15;       // 15 phút
-    public static final long TIME_REFRESH = 15 * 24 * 60; // 24 giờ
+    public static final long TIME_REFRESH = 24 * 60; // 24 giờ
 
 
     protected abstract T findUserByUsername(String username);
@@ -59,7 +59,7 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
         String accessToken = generateToken(user, TIME_ACCESS, TokenType.ACCESSTYPE);
         String refreshToken = generateToken(user, TIME_REFRESH, TokenType.REFRESHTYPE);
 
-        refreshTokenService.storeRefreshToken(getUsername(user), refreshToken, (int)TIME_REFRESH);
+        refreshTokenService.storeRefreshToken(getUsername(user), refreshToken, (int)TIME_REFRESH/60);
 
 
 

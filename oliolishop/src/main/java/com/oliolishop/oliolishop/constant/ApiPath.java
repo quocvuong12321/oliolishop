@@ -77,4 +77,11 @@ public class ApiPath {
         public static final String VNPAY_RETURN = VNPAY+"/return";
     }
 
+    public static final class Location{
+        public static final String ROOT = BASE+"/locations";
+        public static final String PROVINCES = "/provinces";
+        public static final String DISTRICTS_BY_PROVINCE = "/provinces/{provinceId}/districts";
+        public static final String WARDS_BY_DISTRICT = "/districts/{districtId}/wards";
+    }
+
 }

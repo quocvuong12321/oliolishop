@@ -5,17 +5,16 @@ import com.oliolishop.oliolishop.dto.address.AddressResponse;
 import com.oliolishop.oliolishop.dto.address.AddressUpdateRequest;
 import com.oliolishop.oliolishop.dto.customer.CustomerRequest;
 import com.oliolishop.oliolishop.dto.customer.CustomerResponse;
-import com.oliolishop.oliolishop.entity.Account;
-import com.oliolishop.oliolishop.entity.Address;
-import com.oliolishop.oliolishop.entity.Customer;
-import com.oliolishop.oliolishop.entity.Ward;
+import com.oliolishop.oliolishop.entity.*;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.AddressMapper;
 import com.oliolishop.oliolishop.mapper.CustomerMapper;
+import com.oliolishop.oliolishop.mapper.LocationMapper;
 import com.oliolishop.oliolishop.repository.AccountRepository;
 import com.oliolishop.oliolishop.repository.AddressRepository;
 import com.oliolishop.oliolishop.repository.CustomerRepository;
+import com.oliolishop.oliolishop.repository.WardRepository;
 import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -47,6 +46,8 @@ public class CustomerService {
 
     AddressRepository addressRepository;
     private final AddressMapper addressMapper;
+    private final LocationMapper locationMapper;
+    private final WardRepository wardRepository;
 
 
     public CustomerResponse createCustomer(CustomerRequest request, String accountId) {
@@ -64,12 +65,17 @@ public class CustomerService {
     public List<AddressResponse> getAddresses() {
         String customerId = AppUtils.getCustomerIdByJwt();
 
-        List<Address> addresses = addressRepository.findByCustomerId(customerId).orElse(new ArrayList<>());
+        List<Address> addresses = addressRepository.findByCustomerIdWithDetail(customerId).orElse(new ArrayList<>());
 
         return addresses.stream().map(address -> {
             AddressResponse response = addressMapper.toResponse(address);
             response.setDefault(address.isDefault());
+            response.setWard(locationMapper.toWardDTO(address.getWard()));
+            response.setProvince(locationMapper.toProvinceDTO(address.getWard().getDistrict().getProvince()));
+            response.setDistrict(locationMapper.toDistrictDTO(address.getWard().getDistrict()));
             return response;
+
+
         }).toList();
     }
 
@@ -77,24 +83,35 @@ public class CustomerService {
 
         String customerId = AppUtils.getCustomerIdByJwt();
 
+        boolean existAddress = addressRepository.existsByCustomerId(customerId);
+
+        if(!existAddress)
+            request.setIsDefault(true);
+
         if(request.getIsDefault()) {
-            Address address = addressRepository.findByIsDefault(true);
-            address.setDefault(false);
-            addressRepository.save(address);
+            Address address = addressRepository.findByCustomerIdAndIsDefault(customerId,true).orElse(null);
+            if(address!=null){
+                address.setDefault(false);
+                addressRepository.save(address);
+            }
         }
 
+        Ward ward = wardRepository.findByIdWithDetails(request.getWardId()).orElseThrow(()->new AppException(ErrorCode.ADDRESS_NOT_EXIST));
         Address newAddress = addressMapper.toAddress(request);
 
         newAddress.setCustomer(Customer.builder()
                 .id(customerId)
                 .build()); //Chỉ cần ấy id thôi vì đây là reference ảo nên khi lưu nó chỉ lấy customer id là đủ
         newAddress.setDefault(request.getIsDefault());
-        newAddress.setWard(Ward.builder()
-                .id(request.getWardId()).build());
+        newAddress.setWard(ward);
         newAddress.setId(UUID.randomUUID().toString());
 
         AddressResponse response = addressMapper.toResponse(addressRepository.save(newAddress));
         response.setDefault(newAddress.isDefault());
+        response.setWard(locationMapper.toWardDTO(ward));
+        response.setDistrict(locationMapper.toDistrictDTO(ward.getDistrict()));
+        response.setProvince(locationMapper.toProvinceDTO(ward.getDistrict().getProvince()));
+
         return response;
     }
 
@@ -102,27 +119,36 @@ public class CustomerService {
 
         String customerId = AppUtils.getCustomerIdByJwt();
 
-        Address address = addressRepository.findById(addressId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+        Address address = addressRepository.findByIdAndCustomerId(customerId,addressId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         if(request.getIsDefault()){
-            Address defaultAddress = addressRepository.findByIsDefault(true);
-            defaultAddress.setDefault(false);
-            addressRepository.save(defaultAddress);
+            Address addressDefault = addressRepository.findByCustomerIdAndIsDefault(customerId,true).orElse(null);
+            if(addressDefault!=null){
+                addressDefault.setDefault(false);
+                addressRepository.save(addressDefault);
+            }
         }
+
+        Ward ward = wardRepository.findByIdWithDetails(request.getWardId()).orElseThrow(()->new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         address.setDetailAddress(request.getDetailAddress());
         address.setDefault(request.getIsDefault());
         address.setName(request.getName());
-        address.setWard(Ward.builder().id(request.getWardId()).build());
+        address.setWard(ward);
         address.setPhoneNumber(request.getPhoneNumber());
 
         AddressResponse response = addressMapper.toResponse(addressRepository.save(address));
         response.setDefault(request.getIsDefault());
+        response.setWard(locationMapper.toWardDTO(ward));
+        response.setDistrict(locationMapper.toDistrictDTO(ward.getDistrict()));
+        response.setProvince(locationMapper.toProvinceDTO(ward.getDistrict().getProvince()));
         return response;
     }
 
     public void deleteAddress(String addressId) {
-        Address address = addressRepository.findById(addressId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+        String customerId = AppUtils.getCustomerIdByJwt();
+
+        Address address = addressRepository.findByIdAndCustomerId(addressId,customerId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         addressRepository.delete(address);
     }

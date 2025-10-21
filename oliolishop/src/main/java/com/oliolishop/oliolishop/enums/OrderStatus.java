@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
         shipping,
         delivered,
         returned,
+        pending_cancellation,
         cancelled,
         payment_failed,
         partially_returned;

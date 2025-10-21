@@ -1,6 +1,9 @@
 package com.oliolishop.oliolishop.dto.address;
 
 
+import com.oliolishop.oliolishop.dto.location.DistrictDTO;
+import com.oliolishop.oliolishop.dto.location.ProvinceDTO;
+import com.oliolishop.oliolishop.dto.location.WardDTO;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,4 +18,8 @@ public class AddressResponse {
     String phoneNumber;
     String detailAddress;
     boolean isDefault;
+    ProvinceDTO province;
+    DistrictDTO district;
+    WardDTO ward;
+
 }

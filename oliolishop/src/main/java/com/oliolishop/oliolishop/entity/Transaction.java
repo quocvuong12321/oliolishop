@@ -33,6 +33,10 @@ public class Transaction {
     @JoinColumn(name= "payment_method_id")
     PaymentMethod paymentMethod;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_transaction_id")
+    Transaction parentTransaction; // Liên kết tự tham chiếu đến giao dịch PAYMENT gốc (cho REFUND/CANCEL)
+
     BigDecimal amount;
 
     @Column(name = "transaction_type", columnDefinition = "ENUM('PAYMENT','REFUND','CANCEL')")
@@ -44,7 +48,19 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     TransactionStatus status;
 
-    String gatewayTransactionId;
+    @Column(name = "vnp_txn_ref")
+    String vnpTxnRef; // Mã tham chiếu của Merchant (vnp_TxnRef) - Được sử dụng để gửi VNPAY
+
+    @Column(name = "gateway_transaction_id")
+    String gatewayTransactionId; // Mã giao dịch VNPAY (vnp_TransactionNo)
+
+    @Column(name = "refund_reason")
+    String refundReason; // Lý do hoàn tiền/hủy giao dịch
+
+    @Column(name = "vnp_response_code")
+     String vnpResponseCode;
+    @Column(name = "vnp_transaction_date")
+    String vnpTransactionDate;
 
     @CreationTimestamp
     LocalDateTime createDate;

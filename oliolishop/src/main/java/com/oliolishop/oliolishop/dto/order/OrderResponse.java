@@ -17,12 +17,28 @@ import java.util.List;
 public class OrderResponse {
     String id;
     OrderStatus status;
+
+    // --- Thông tin người nhận hàng ---
+    String receiverName;
+    String receiverPhone;
+
+    // --- Thông tin địa chỉ chi tiết ---
+    String shippingStreet;
+    String wardId;
+    String districtId;
+    String provinceId;
+    String shippingAddress; // Giữ lại cho mục đích hiển thị địa chỉ đầy đủ (text)
+
+    // --- Thông tin thanh toán ---
     BigDecimal totalAmount;
     BigDecimal feeShip;
     BigDecimal discountAmount;
     BigDecimal voucherDiscountAmount;
     BigDecimal finalAmount;
-    String shippingAddress;
+
+    // --- Audit ---
     LocalDateTime createDate;
+    LocalDateTime updateDate; // Thêm updateDate để tiện tracking trên client
+
     List<OrderItemResponse> orderItems;
 }

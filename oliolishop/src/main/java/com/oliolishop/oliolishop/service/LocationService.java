@@ -31,7 +31,6 @@ public class LocationService {
     // Cache Name: provinces. Key: SimpleKey (do không có tham số)
     @Cacheable(value = "provinces")
     public List<ProvinceDTO> getAllProvinces() {
-        // Log để kiểm tra: "Loading all provinces from Database..."
         List<Province> provinces = provinceRepository.findAll();
         return locationMapper.toProvinceDTOs(provinces);
     }
@@ -40,10 +39,7 @@ public class LocationService {
     // Key trong Redis sẽ là: oliolishop:location:districtsByProvince::01
     @Cacheable(value = "districtsByProvince", key = "#provinceId")
     public List<DistrictDTO> getDistrictsByProvinceId(String provinceId) {
-        // Log để kiểm tra: "Loading districts for province " + provinceId + " from Database..."
         List<District> districts = districtRepository.findByProvinceId(provinceId);
-        // Giả sử bạn có method này trong DistrictRepository
-
         return locationMapper.toDistrictDTOs(districts);
     }
 
@@ -51,9 +47,11 @@ public class LocationService {
     // Key trong Redis sẽ là: oliolishop:location:wardsByDistrict::001
     @Cacheable(value = "wardsByDistrict", key = "#districtId")
     public List<WardDTO> getWardsByDistrictId(String districtId) {
-        // Log để kiểm tra: "Loading wards for district " + districtId + " from Database..."
         List<Ward> wards = wardRepository.findByDistrictId(districtId);
-        // Giả sử bạn có method này trong WardRepository
         return locationMapper.toWardDTOs(wards);
     }
+
+
+
+
 }

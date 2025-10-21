@@ -29,11 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -50,16 +49,14 @@ public class OrderService {
     ProductSpuRepository productSpuRepository;
     ProductSkuUtils productSkuUtils;
     VNPayService vnPayService;
-   TransactionRepository transactionRepository;
-   PaymentMethodRepository paymentMethodRepository;
+    TransactionRepository transactionRepository;
+    PaymentMethodRepository paymentMethodRepository;
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
 
         String customerId = AppUtils.getCustomerIdByJwt();
         Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
-
-        Address address = addressRepository.findById(request.getAddressId()).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         Voucher voucher = null;
         if (!request.getVoucherCode().isEmpty()) {
@@ -69,11 +66,10 @@ public class OrderService {
         Order order = orderMapper.toOrder(request);
         order.setId(UUID.randomUUID().toString());
         order.setCustomer(customer);
-        order.setAddress(address);
         order.setVoucher(voucher);
         order.setFeeShip(request.getFeeShip());
         order.setOrderStatus(OrderStatus.pending_payment);
-        order.setShippingAddress(request.getShippingAddress());
+//        order.setShippingAddress(request.getShippingAddress());
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
 
@@ -135,11 +131,10 @@ public class OrderService {
 
         BigDecimal loyalPoint = finalAmount.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        if(customer.getLoyaltyPoints() != null)
+        if (customer.getLoyaltyPoints() != null)
             customer.setLoyaltyPoints(customer.getLoyaltyPoints().add(loyalPoint));
         else
             customer.setLoyaltyPoints(loyalPoint);
-
 
         OrderResponse response = orderMapper.toResponse(orderRepository.save(order));
         response.setId(order.getId());
@@ -167,22 +162,24 @@ public class OrderService {
         return response;
     }
 
-    public String createVnPayPayment(String orderId,String paymentMethodId) {
+    public String createVnPayPayment(String orderId, String paymentMethodId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
 
-        if(!order.getOrderStatus().equals(OrderStatus.pending_payment))
+        if (!order.getOrderStatus().equals(OrderStatus.pending_payment))
             throw new AppException(ErrorCode.ORDER_PAID);
 
         int amount = order.getFinalAmount().intValue();
 
-        String orderInfo = "THANH TOAN DON HANG #" + orderId;
+        String orderInfo = "DON HANG " + orderId;
+        String transactionId = UUID.randomUUID().toString();
 
         Transaction transaction = Transaction.builder()
-                .id(UUID.randomUUID().toString())
+                .id(transactionId)
                 .order(order)
                 .amount(order.getFinalAmount())
                 .transactionType(TransactionType.payment)
                 .status(TransactionStatus.pending)
+                .vnpTxnRef(transactionId)
                 .paymentMethod(PaymentMethod.builder()
                         .id(paymentMethodId).build())
                 .build();
@@ -194,7 +191,7 @@ public class OrderService {
                 + ApiPath.Payment.VNPAY_RETURN
                 + "?transactionId=" + transaction.getId();
 
-        return vnPayService.createOrder(amount, orderInfo, returnUrl);
+        return vnPayService.createOrder(amount, orderInfo, transactionId, returnUrl);
     }
 
     public int updateStatusTransaction(HttpServletRequest request) {
@@ -204,9 +201,13 @@ public class OrderService {
         String transactionId = request.getParameter("transactionId");
 
         Transaction existedTransaction = transactionRepository.findById(transactionId)
-                .orElseThrow(()->new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
         String gatewayTransactionId = request.getParameter("vnp_TransactionNo");
+        String vnpTxnRefResponse = request.getParameter("vnp_TxnRef"); // Mã tham chiếu Merchant trả về
+        String vnpTransactionDate = request.getParameter("vnp_PayDate");
         existedTransaction.setGatewayTransactionId(gatewayTransactionId);
+        existedTransaction.setVnpTransactionDate(vnpTransactionDate);
+        existedTransaction.setVnpTxnRef(vnpTxnRefResponse);
 
         Order order = existedTransaction.getOrder();
 
@@ -216,12 +217,13 @@ public class OrderService {
                 order.setOrderStatus(OrderStatus.pending_confirmation);
                 break;
             }
-            case 0:{
+            case 0: {
                 existedTransaction.setStatus(TransactionStatus.failed);
                 order.setOrderStatus(OrderStatus.payment_failed);
                 break;
             }
-            default: throw new AppException(ErrorCode.PAYMENT_INVALID);
+            default:
+                throw new AppException(ErrorCode.PAYMENT_INVALID);
         }
         transactionRepository.save(existedTransaction);
         orderRepository.save(order);
@@ -232,9 +234,9 @@ public class OrderService {
     public void checkPendingTransactions() {
         List<Transaction> pendingTransactions = transactionRepository.findByStatus(TransactionStatus.pending);
         LocalDateTime now = LocalDateTime.now();
-        for(Transaction tx : pendingTransactions){
+        for (Transaction tx : pendingTransactions) {
             // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
-            if(tx.getCreateDate().plusMinutes(15).isBefore(now)){
+            if (tx.getCreateDate().plusMinutes(15).isBefore(now)) {
                 tx.setStatus(TransactionStatus.failed);
                 Order order = tx.getOrder();
                 order.setOrderStatus(OrderStatus.payment_failed);
@@ -244,10 +246,11 @@ public class OrderService {
         }
     }
 
-    public void confirmOrder(String orderId){
-        Order order = orderRepository.findById(orderId).orElseThrow(()->new AppException(ErrorCode.ORDER_NOT_EXISTED));
 
-        if(!order.getOrderStatus().equals(OrderStatus.pending_confirmation))
+    public void confirmOrder(String orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        if (!order.getOrderStatus().equals(OrderStatus.pending_confirmation))
             throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
 
         String employeeId = AppUtils.getEmployeeIdByJwt();
@@ -259,4 +262,87 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+
+    public int cancelOrder(String orderId, String paymentMethodId) {
+        String customerId = AppUtils.getCustomerIdByJwt();
+
+        Order order = orderRepository.findByIdAndCustomerId(orderId, customerId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        if (order.getOrderStatus().equals(OrderStatus.ready_to_pick)) {
+            order.setOrderStatus(OrderStatus.pending_cancellation);
+            orderRepository.save(order);
+            return 1; // 1 yêu cầu hủy đã gửi, chờ xác nhận
+        }
+        if (order.getOrderStatus().equals(OrderStatus.pending_confirmation) || order.getOrderStatus().equals(OrderStatus.confirmed)) {
+            Transaction transaction = transactionRepository
+                    .findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
+                    .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
+
+            String newTransactionId = UUID.randomUUID().toString();
+            String orderInfor = "HOAN TIEN " + orderId;
+            String vnpCreateBy = "AutoRefund";
+
+            Transaction refTransaction = Transaction.builder()
+                    .id(newTransactionId)
+                    .amount(transaction.getAmount())
+                    .paymentMethod(transaction.getPaymentMethod())
+                    .order(order)
+                    .parentTransaction(transaction)
+                    .transactionType(TransactionType.refund)
+                    .status(TransactionStatus.pending)
+                    .vnpTxnRef(newTransactionId)
+                    .refundReason(orderInfor)
+                    .build();
+
+            transactionRepository.save(refTransaction);
+
+            String originalTransactionDate = transaction.getVnpTransactionDate();
+
+            String transactionNoGoc = transaction.getGatewayTransactionId();
+
+            String vnpTxnRef = transaction.getVnpTxnRef();
+
+            String vnpRequestId = UUID.randomUUID().toString().replace("-", "");
+
+            String refundApiUrl = vnPayService.refundOrder(transaction.getAmount().intValue(),
+                    vnpTxnRef,
+                    originalTransactionDate,
+                    transactionNoGoc,
+                    "02",
+                    vnpRequestId,
+                    orderInfor,
+                    vnpCreateBy);
+
+            String vnpResponseQueryString = vnPayService.executeVnPayRefundPost(refundApiUrl);
+
+            int refundResult = vnPayService.refundReturn(vnpResponseQueryString);
+            switch (refundResult) {
+                case 1: // Hoàn tiền thành công ngay
+                    refTransaction.setStatus(TransactionStatus.success);
+                    order.setOrderStatus(OrderStatus.cancelled);
+                    transactionRepository.save(refTransaction);
+                    orderRepository.save(order);
+                    return 2;
+
+                case 2: // Hoàn tiền đang xử lý
+                    refTransaction.setStatus(TransactionStatus.pending);
+                    transactionRepository.save(refTransaction);
+                    return 1; // Chờ xử lý tiếp
+
+                case 0: // Hoàn tiền thất bại
+                case 3: // Trạng thái khác chưa xử lý
+                    refTransaction.setStatus(TransactionStatus.failed);
+                    transactionRepository.save(refTransaction);
+                    return 3;
+
+                case -1: // Chữ ký không hợp lệ hoặc lỗi kỹ thuật
+                default:
+                    refTransaction.setStatus(TransactionStatus.failed);
+                    transactionRepository.save(refTransaction);
+                    throw new AppException(ErrorCode.PAYMENT_INVALID);
+            }
+        }
+
+        return 0; // Trường hợp khác, không thực hiện refund
+    }
 }

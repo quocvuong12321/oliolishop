@@ -20,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 public class Order {
     @Id
     @Column(name = "order_id")
@@ -28,10 +29,6 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
     Customer customer;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "address_id")
-    Address address;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -53,6 +50,24 @@ public class Order {
     BigDecimal voucherDiscountAmount;
 
     BigDecimal finalAmount;
+
+    @Column(name = "receiver_name", length = 100)
+    String receiverName;
+
+    @Column(name = "receiver_phone", length = 15)
+    String receiverPhone;
+
+    @Column(name = "shipping_street")
+    String shippingStreet; // Địa chỉ chi tiết (số nhà, tên đường)
+
+    @Column(name = "ward_id")
+    String wardId; // Mã Phường/Xã (ví dụ: mã GHN)
+
+    @Column(name = "district_id")
+    String districtId; // Mã Quận/Huyện
+
+    @Column(name = "province_id")
+    String provinceId; // Mã Tỉnh/Thành phố
 
     String shippingAddress;
 

@@ -69,6 +69,7 @@ public class ApiPath {
         public static final String ROOT = BASE+"/order";
         public static final String CONFIRM = "/confirm";
         public static final String RATING = "/rating";
+        public static final String CANCEL_ORDER = "/cancel-order";
     }
 
     public static final class Payment{

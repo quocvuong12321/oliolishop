@@ -2,7 +2,9 @@ package com.oliolishop.oliolishop.repository;
 
 
 import com.oliolishop.oliolishop.entity.Transaction;
+import com.oliolishop.oliolishop.enums.OrderStatus;
 import com.oliolishop.oliolishop.enums.TransactionStatus;
+import com.oliolishop.oliolishop.enums.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +16,7 @@ public interface TransactionRepository extends JpaRepository<Transaction,String>
 
     List<Transaction> findByStatus(TransactionStatus status);
 
+    Optional<Transaction> findByOrderId(String orderId);
+
+    Optional<Transaction> findByOrderIdAndTransactionTypeAndStatus(String orderId, TransactionType type, TransactionStatus status);
 }

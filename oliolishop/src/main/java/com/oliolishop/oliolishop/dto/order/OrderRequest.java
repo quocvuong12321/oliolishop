@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.dto.order;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,9 +13,14 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderRequest {
+    String receiverName;
+    String receiverPhone;
+    String provinceId;
+    String districtId;
+    String wardId;
+    String shippingStreet;
+    String shippingAddress;
     String voucherCode;
     BigDecimal feeShip;
-    String addressId;
-    String shippingAddress;
     List<OrderItemRequest> orderItems;
 }

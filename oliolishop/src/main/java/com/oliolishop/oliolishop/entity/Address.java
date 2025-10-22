@@ -36,7 +36,7 @@ public class Address {
     String name;
 
     @Column(name = "is_default")
-    boolean isDefault;
+    boolean defaultAddress;
 
     @CreationTimestamp
     LocalDateTime createDate;

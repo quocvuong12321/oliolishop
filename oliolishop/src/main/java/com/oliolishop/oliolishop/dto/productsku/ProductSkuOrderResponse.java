@@ -1,25 +1,23 @@
-package com.oliolishop.oliolishop.dto.order;
+package com.oliolishop.oliolishop.dto.productsku;
 
-import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OrderItemResponse {
+public class ProductSkuOrderResponse {
     String id;
     String productSkuId;
-    String name;
     String thumbnail;
+    String name;
     String variant;
     int quantity;
     BigDecimal unitPrice;
-    int returnQuantity;
-    boolean allowReturn;
-    boolean isRated;
+
 }

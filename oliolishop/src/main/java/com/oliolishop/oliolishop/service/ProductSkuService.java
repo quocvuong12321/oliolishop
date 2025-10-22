@@ -1,9 +1,6 @@
 package com.oliolishop.oliolishop.service;
 
-import com.oliolishop.oliolishop.dto.productsku.ProductSkuDeleteRequest;
-import com.oliolishop.oliolishop.dto.productsku.ProductSkuResponse;
-import com.oliolishop.oliolishop.dto.productsku.ProductSkuUpdateResponse;
-import com.oliolishop.oliolishop.dto.productsku.ProductUpdateRequest;
+import com.oliolishop.oliolishop.dto.productsku.*;
 import com.oliolishop.oliolishop.entity.ProductSku;
 import com.oliolishop.oliolishop.entity.ProductSkuAttr;
 import com.oliolishop.oliolishop.entity.ProductSpu;
@@ -36,6 +33,7 @@ public class ProductSkuService {
 
     public ProductSkuResponse getSkus(String id) {
         ProductSku sku = productSkuRepository.findByProductSkuId(id).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
 
         return productSkuMapper.toResponse(sku);
 

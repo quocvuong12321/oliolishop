@@ -70,6 +70,7 @@ public class ApiPath {
         public static final String CONFIRM = "/confirm";
         public static final String RATING = "/rating";
         public static final String CANCEL_ORDER = "/cancel-order";
+        public static final String CHECK_OUT  = "/check-out";
     }
 
     public static final class Payment{
@@ -83,6 +84,10 @@ public class ApiPath {
         public static final String PROVINCES = "/provinces";
         public static final String DISTRICTS_BY_PROVINCE = "/provinces/{provinceId}/districts";
         public static final String WARDS_BY_DISTRICT = "/districts/{districtId}/wards";
+    }
+
+    public static final class Voucher{
+        public static final String ROOT = BASE+"/voucher";
     }
 
 }

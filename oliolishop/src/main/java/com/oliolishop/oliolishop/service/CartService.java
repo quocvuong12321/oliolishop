@@ -109,15 +109,6 @@ public class CartService {
         Cart hadCart = cartRepository.findByCustomerId(customerId).orElseThrow(() -> new AppException(ErrorCode.CART_NOT_EXISTED));
 
         List<CartItem> cartItems = hadCart.getCartItems();
-
-//        List<String> skuIds = cartItems.stream().map(item ->item.getProductSku().getId()).toList();
-
-//        List<ProductSpu> spus = productSpuRepository.findAllBySkuIds(skuIds);
-//
-//        Map<String, ProductSpu> spuMap;
-//        spus.forEach(spu->productSpuRepository.findBySkuId());
-
-
         List<CartItemResponse> cartItemResponses = new ArrayList<>();
         cartItems.forEach(item ->{
             CartItemResponse cartItemResponse = cartItemMapper.toResponse(item);

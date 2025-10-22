@@ -3,9 +3,7 @@ package com.oliolishop.oliolishop.controller;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
-import com.oliolishop.oliolishop.dto.order.CancelOrderRequest;
-import com.oliolishop.oliolishop.dto.order.OrderRequest;
-import com.oliolishop.oliolishop.dto.order.OrderResponse;
+import com.oliolishop.oliolishop.dto.order.*;
 import com.oliolishop.oliolishop.dto.rating.RatingRequest;
 import com.oliolishop.oliolishop.dto.rating.RatingResponse;
 import com.oliolishop.oliolishop.service.OrderService;
@@ -69,6 +67,14 @@ public class OrderController {
 
         return ApiResponse.<String>builder()
                 .result(message)
+                .build();
+    }
+
+    @PostMapping(ApiPath.Order.CHECK_OUT)
+    public ApiResponse<CheckOutResponse> checkOut(@RequestBody CheckOutRequest request){
+
+        return ApiResponse.<CheckOutResponse>builder()
+                .result(orderService.checkOut(request))
                 .build();
     }
 

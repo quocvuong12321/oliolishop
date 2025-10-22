@@ -5,6 +5,7 @@ import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.productsku.ProductUpdateRequest;
 import com.oliolishop.oliolishop.service.ProductSkuService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class ProductSkuController {
     }
 
     @PutMapping(ApiPath.BY_ID)
-    public ApiResponse<?> updateSku(@PathVariable("id")String skuId,@RequestBody ProductUpdateRequest request){
+    public ApiResponse<?> updateSku(@PathVariable("id")String skuId,@Valid @RequestBody ProductUpdateRequest request){
 
         return ApiResponse.builder()
                 .result(productSkuService.updateStockPriceWeight(request,skuId))

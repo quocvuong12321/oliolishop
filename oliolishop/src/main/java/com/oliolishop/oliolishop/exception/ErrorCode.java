@@ -23,6 +23,9 @@ public enum ErrorCode {
     QUANTITY_POSITIVE(1009,"Số lượng phải lớn hơn 0",HttpStatus.BAD_REQUEST),
     PRICE_POSITIVE(1010,"Giá phải lớn hơn 0",HttpStatus.BAD_REQUEST),
     PHONE_NUMBER_INVALID_FORMAT(1011,"Số điện thoại không đúng định dạng",HttpStatus.BAD_REQUEST),
+    NOT_ENOUGH_QUANTITY_PRODUCT(1012,"Sản phẩm không đủ số lượng",HttpStatus.BAD_REQUEST),
+    NOT_ENOUGH_QUANTITY_VOUCHER(1013,"Voucher không đủ số lượng",HttpStatus.BAD_REQUEST),
+    INVALID_VOUCHER(1014,"Voucher không hợp lê",HttpStatus.BAD_REQUEST),
     // 2xxx: auth (Lỗi xác thực và ủy quyền)
     UNAUTHENTICATED(2001,"Chưa được xác thực/Đăng nhập",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),

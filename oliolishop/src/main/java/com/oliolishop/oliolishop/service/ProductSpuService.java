@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 //@RequiredArgsConstructor
 public class ProductSpuService {
+    private final RatingRepository ratingRepository;
     private final ProductSkuRepository productSkuRepository;
     private final DescriptionAttrRepository descriptionAttrRepository;
     BrandRepository brandRepository;
@@ -117,15 +118,21 @@ public class ProductSpuService {
                 .name(spu.getName())
                 .build());
 
+        long countRating = ratingRepository.countByProductSpu_Id(id);
+        Double avgStar = ratingRepository.getAverageStarByProductSpuId(id);
+
         // Build response
         ProductDetailResponse detail = ProductDetailResponse.builder()
                 .id(spu.getId())
                 .name(spu.getName())
                 .description(spu.getDescription())
+                .thumbnailUrl(spu.getImage())
                 .shortDescription(spu.getShortDescription())
                 .skus(setSku)
                 .sold(spu.getSold())
                 .originalPrice(minPrice)
+                .numRating((int)countRating)
+                .rating(avgStar)
 //                .originalPrice(spu.getMinPrice())
                 .desAttrs(setAttrs)
                 .skuAttrs(skuAttrs)

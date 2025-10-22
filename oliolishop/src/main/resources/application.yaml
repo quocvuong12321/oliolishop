@@ -19,6 +19,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          # Đảm bảo Hibernate sử dụng múi giờ Việt Nam khi lưu/đọc ngày giờ
+          # từ database.
+          time_zone: Asia/Ho_Chi_Minh
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -44,6 +50,15 @@ spring:
 
 app:
   image-dir: ${IMAGE_DIR:D:/HocTap/AI/crawl/images}
+
+ghn:
+  token: ${GHN_TOKEN:de1ce88f-9f3a-11f0-bdaf-ae7fa045a771}
+  shop-id: ${SHOP_ID:197548}
+  from:
+    ward-name: ${WARD_NAME:Xã Đông Thạnh}
+    district-name: ${DISTRICT_NAME:Huyện Hóc Môn}
+    province-name: ${PROVINCE_NAME:HCM}
+    detail-address: ${DETAIL_ADDRESS:29a Nguyễn Thị Đẹt, Đông Thạnh, Hóc Môn, Hồ Chí Minh 700000, Việt Nam}
 
 jwt:
   signerKey: ${JWT_PRIVATE_KEY:c248f3c5b1e84f8d1198d01488ee23a18360ce904c9eae484072de278cf2b6cc}

@@ -69,7 +69,7 @@ public class CustomerService {
 
         return addresses.stream().map(address -> {
             AddressResponse response = addressMapper.toResponse(address);
-            response.setDefault(address.isDefault());
+            response.setDefaultAddress(address.isDefaultAddress());
             response.setWard(locationMapper.toWardDTO(address.getWard()));
             response.setProvince(locationMapper.toProvinceDTO(address.getWard().getDistrict().getProvince()));
             response.setDistrict(locationMapper.toDistrictDTO(address.getWard().getDistrict()));
@@ -89,9 +89,9 @@ public class CustomerService {
             request.setIsDefault(true);
 
         if(request.getIsDefault()) {
-            Address address = addressRepository.findByCustomerIdAndIsDefault(customerId,true).orElse(null);
+            Address address = addressRepository.findByCustomerIdAndDefaultAddress(customerId,true).orElse(null);
             if(address!=null){
-                address.setDefault(false);
+                address.setDefaultAddress(false);
                 addressRepository.save(address);
             }
         }
@@ -102,12 +102,12 @@ public class CustomerService {
         newAddress.setCustomer(Customer.builder()
                 .id(customerId)
                 .build()); //Chỉ cần ấy id thôi vì đây là reference ảo nên khi lưu nó chỉ lấy customer id là đủ
-        newAddress.setDefault(request.getIsDefault());
+        newAddress.setDefaultAddress(request.getIsDefault());
         newAddress.setWard(ward);
         newAddress.setId(UUID.randomUUID().toString());
 
         AddressResponse response = addressMapper.toResponse(addressRepository.save(newAddress));
-        response.setDefault(newAddress.isDefault());
+        response.setDefaultAddress(newAddress.isDefaultAddress());
         response.setWard(locationMapper.toWardDTO(ward));
         response.setDistrict(locationMapper.toDistrictDTO(ward.getDistrict()));
         response.setProvince(locationMapper.toProvinceDTO(ward.getDistrict().getProvince()));
@@ -119,12 +119,12 @@ public class CustomerService {
 
         String customerId = AppUtils.getCustomerIdByJwt();
 
-        Address address = addressRepository.findByIdAndCustomerId(customerId,addressId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+        Address address = addressRepository.findByIdAndCustomer_Id(addressId,customerId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         if(request.getIsDefault()){
-            Address addressDefault = addressRepository.findByCustomerIdAndIsDefault(customerId,true).orElse(null);
+            Address addressDefault = addressRepository.findByCustomerIdAndDefaultAddress(customerId,true).orElse(null);
             if(addressDefault!=null){
-                addressDefault.setDefault(false);
+                addressDefault.setDefaultAddress(false);
                 addressRepository.save(addressDefault);
             }
         }
@@ -132,13 +132,13 @@ public class CustomerService {
         Ward ward = wardRepository.findByIdWithDetails(request.getWardId()).orElseThrow(()->new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         address.setDetailAddress(request.getDetailAddress());
-        address.setDefault(request.getIsDefault());
+        address.setDefaultAddress(request.getIsDefault());
         address.setName(request.getName());
         address.setWard(ward);
         address.setPhoneNumber(request.getPhoneNumber());
 
         AddressResponse response = addressMapper.toResponse(addressRepository.save(address));
-        response.setDefault(request.getIsDefault());
+        response.setDefaultAddress(request.getIsDefault());
         response.setWard(locationMapper.toWardDTO(ward));
         response.setDistrict(locationMapper.toDistrictDTO(ward.getDistrict()));
         response.setProvince(locationMapper.toProvinceDTO(ward.getDistrict().getProvince()));
@@ -148,7 +148,7 @@ public class CustomerService {
     public void deleteAddress(String addressId) {
         String customerId = AppUtils.getCustomerIdByJwt();
 
-        Address address = addressRepository.findByIdAndCustomerId(addressId,customerId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+        Address address = addressRepository.findByIdAndCustomer_Id(addressId,customerId).orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
 
         addressRepository.delete(address);
     }

@@ -17,6 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Normalizer;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -215,5 +218,11 @@ public class AppUtils {
             return employeeId;
         }
         throw new AppException(ErrorCode.UNAUTHENTICATED);
+    }
+
+    public static LocalDateTime pasteStringToDateTime(String dateTime){
+        ZoneId localZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        Instant instant = Instant.parse(dateTime);
+        return LocalDateTime.ofInstant(instant,localZone);
     }
 }

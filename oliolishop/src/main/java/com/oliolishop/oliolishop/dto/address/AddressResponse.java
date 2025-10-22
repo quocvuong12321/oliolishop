@@ -17,7 +17,7 @@ public class AddressResponse {
     String name;
     String phoneNumber;
     String detailAddress;
-    boolean isDefault;
+    boolean defaultAddress;
     ProvinceDTO province;
     DistrictDTO district;
     WardDTO ward;

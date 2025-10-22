@@ -14,7 +14,16 @@ RUN mvn package -DskipTests
 
 #Stage 2: create image
 # Start with Amazon Correto JDK 21
-FROM amazoncorretto:21
+FROM openjdk:21-jdk-slim
+
+# Thêm cấu hình Múi giờ cho Việt Nam (Asia/Ho_Chi_Minh)
+# Cài đặt tzdata và thiết lập biến môi trường
+RUN apt-get update && \
+    apt-get install -y tzdata && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV TZ Asia/Ho_Chi_Minh
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Set working folder to App and copy complied file from above step
 WORKDIR /app

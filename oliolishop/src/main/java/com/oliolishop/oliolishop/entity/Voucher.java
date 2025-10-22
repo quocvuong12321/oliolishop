@@ -4,7 +4,9 @@ import com.oliolishop.oliolishop.enums.VoucherStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cglib.core.Local;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,7 +19,7 @@ import java.time.LocalDateTime;
 public class Voucher {
     @Id
     @Column(name = "voucher_id", length = 36, nullable = false)
-    String voucherId;
+    String id;
 
     @Column(name = "name", length = 128)
     String name;
@@ -29,10 +31,10 @@ public class Voucher {
     Double discountPercent;
 
     @Column(name = "max_discount_value", nullable = false)
-    double maxDiscountValue;
+    BigDecimal maxDiscountValue;
 
     @Column(name = "min_order_value")
-    double minOrderValue;
+    BigDecimal minOrderValue;
 
     @Column(name = "start_date", nullable = false)
     LocalDateTime startDate;
@@ -52,6 +54,17 @@ public class Voucher {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     VoucherStatus status;
+
+    @PrePersist
+    protected void onCreate() {
+        createDate = LocalDateTime.now();
+        updateDate = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updateDate = LocalDateTime.now();
+    }
 
 
 }

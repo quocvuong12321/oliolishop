@@ -23,8 +23,8 @@ public class ProductDetailResponse {
     String id;
     String name;
     int sold;
-//    double rating;
-//    int numRating;
+    double rating;
+    int numRating;
     BrandResponse brand;
     List<ProductSpuResponse> productsSameCategory;
     List<ProductSpuResponse> productSameBrand;
@@ -38,6 +38,7 @@ public class ProductDetailResponse {
     Set<ProductSkuAttrResponse> skuAttrs;
     Set<DescriptionAttrResponse> desAttrs;
     String[] media;
+    String thumbnailUrl;
 
     public void setMedia(String mediaStr) {
         try {

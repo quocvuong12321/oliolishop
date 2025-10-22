@@ -27,6 +27,8 @@ public class PaymentMethod {
 
     String code;
 
+    String name;
+
     String description;
 
     String iconUrl;

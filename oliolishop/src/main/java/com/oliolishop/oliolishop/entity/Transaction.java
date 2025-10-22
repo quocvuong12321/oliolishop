@@ -62,7 +62,11 @@ public class Transaction {
     @Column(name = "vnp_transaction_date")
     String vnpTransactionDate;
 
-    @CreationTimestamp
+
     LocalDateTime createDate;
+    @PrePersist
+    protected void onCreate() {
+        createDate = LocalDateTime.now();
+    }
 
 }

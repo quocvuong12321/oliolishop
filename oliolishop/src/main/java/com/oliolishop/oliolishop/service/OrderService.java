@@ -2,18 +2,20 @@ package com.oliolishop.oliolishop.service;
 
 
 import com.oliolishop.oliolishop.constant.ApiPath;
-import com.oliolishop.oliolishop.dto.order.OrderItemRequest;
-import com.oliolishop.oliolishop.dto.order.OrderItemResponse;
-import com.oliolishop.oliolishop.dto.order.OrderRequest;
-import com.oliolishop.oliolishop.dto.order.OrderResponse;
+import com.oliolishop.oliolishop.dto.address.AddressResponse;
+import com.oliolishop.oliolishop.dto.cart.CartItemRequest;
+import com.oliolishop.oliolishop.dto.ghn.GhnPreviewRequest;
+import com.oliolishop.oliolishop.dto.ghn.GhnPreviewResponse;
+import com.oliolishop.oliolishop.dto.order.*;
+import com.oliolishop.oliolishop.dto.payment.PaymentMethodResponse;
+import com.oliolishop.oliolishop.dto.voucher.VoucherResponse;
 import com.oliolishop.oliolishop.entity.*;
 import com.oliolishop.oliolishop.enums.OrderStatus;
 import com.oliolishop.oliolishop.enums.TransactionStatus;
 import com.oliolishop.oliolishop.enums.TransactionType;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
-import com.oliolishop.oliolishop.mapper.OrderItemMapper;
-import com.oliolishop.oliolishop.mapper.OrderMapper;
+import com.oliolishop.oliolishop.mapper.*;
 import com.oliolishop.oliolishop.repository.*;
 import com.oliolishop.oliolishop.util.AppUtils;
 import com.oliolishop.oliolishop.util.ProductSkuUtils;
@@ -21,18 +23,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -51,6 +50,117 @@ public class OrderService {
     VNPayService vnPayService;
     TransactionRepository transactionRepository;
     PaymentMethodRepository paymentMethodRepository;
+    AddressMapper addressMapper;
+    PaymentMethodMapper paymentMethodMapper;
+    VoucherMapper voucherMapper;
+    private final LocationMapper locationMapper;
+    GhnService ghnService;
+
+    public CheckOutResponse checkOut(CheckOutRequest request) {
+
+        String customerId = AppUtils.getCustomerIdByJwt();
+
+        Map<String, Integer> skuQuantityMap = request.getCartItemRequests().stream()
+                .collect(Collectors.toMap(
+                        CartItemRequest::getProductSkuId, // Key: productSkuId
+                        CartItemRequest::getQuantity      // Value: quantity
+                        // Thêm (oldValue, newValue) -> oldValue nếu cần xử lý SKU trùng lặp
+                ));
+
+        List<String> skuIds = skuQuantityMap.keySet().stream().toList();
+        List<ProductSku> skuList = productSkuRepository.findAllByIdIn(skuIds);
+
+
+        if (skuList.size() != skuIds.size()) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXIST);
+        }
+
+        List<CheckOutItemResponse> checkOutItemResponses = skuList.stream().map(s -> {
+            if (s.getSkuStock() < skuQuantityMap.get(s.getId()))
+                throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_PRODUCT);
+            ProductSpu spu = s.getSpu();
+            return CheckOutItemResponse.builder()
+                    .name(spu.getName())
+                    .price(s.getOriginalPrice())
+                    .productSkuId(s.getId())
+                    .productSpuId(spu.getId())
+                    .quantity(skuQuantityMap.get(s.getId()))
+                    .thumbnail(spu.getImage())
+                    .variant(productSkuUtils.getVariant(s))
+                    .weight(s.getWeight())
+                    .build();
+        }).toList();
+
+        List<AddressResponse> addressResponses = addressRepository.findByCustomerIdWithDetail(customerId).orElse(new ArrayList<>()).stream().map(address -> {
+            AddressResponse addressResponse = addressMapper.toResponse(address);
+            addressResponse.setWard(locationMapper.toWardDTO(address.getWard()));
+            addressResponse.setDistrict(locationMapper.toDistrictDTO(address.getWard().getDistrict()));
+            addressResponse.setProvince(locationMapper.toProvinceDTO(address.getWard().getDistrict().getProvince()));
+            addressResponse.setDefaultAddress(address.isDefaultAddress());
+            return addressResponse;
+        }).toList();
+
+        List<PaymentMethodResponse> paymentMethodResponses = paymentMethodRepository.findAll().stream().map(paymentMethodMapper::toResponse).toList();
+
+        CheckOutResponse response = CheckOutResponse.builder()
+                .checkOutItemResponses(checkOutItemResponses)
+                .address(addressResponses)
+                .paymentMethod(paymentMethodResponses)
+                .build();
+
+        List<VoucherResponse> voucherResponses = voucherRepository.findByTotalPrice(response.getTotalAmount()).orElse(new ArrayList<>())
+                .stream().map(voucherMapper::response).toList();
+        response.setVouchers(voucherResponses);
+
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        BigDecimal finalAmount = response.getTotalAmount();
+        if (request.getVoucherCode() != null) {
+            VoucherResponse voucherApplied = voucherResponses.stream().filter(voucherResponse -> voucherResponse.getVoucherCode().equals(request.getVoucherCode())).findFirst()
+                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
+
+            if (voucherApplied.getAmount() <= 0)
+                throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_VOUCHER);
+
+            discountAmount = response.getTotalAmount().multiply(BigDecimal.valueOf(voucherApplied.getDiscountPercent())).divide(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
+
+            discountAmount = discountAmount.min(BigDecimal.valueOf(voucherApplied.getMaxDiscountValue()));
+
+            finalAmount = response.getTotalAmount().subtract(discountAmount);
+            response.setAppliedVoucherCode(voucherApplied.getVoucherCode());
+        }
+
+        response.setFinalAmount(finalAmount);
+        response.setDiscountAmount(discountAmount);
+
+        List<GhnPreviewRequest.GhnItem> ghnItems = checkOutItemResponses.stream().map(sku -> GhnPreviewRequest.GhnItem.builder()
+                .weight(sku.getWeight().intValue())
+                .name(sku.getName())
+                .quantity(sku.getQuantity())
+                .build()).toList();
+
+        AddressResponse addressDefault = addressResponses.stream().filter(AddressResponse::isDefaultAddress).findFirst().orElse(null);
+        if (request.getAddressId() != null) {
+            addressDefault = addressResponses.stream()
+                    .filter(addressResponse -> addressResponse.getId().equals(request.getAddressId())).findFirst().orElse(null);
+        }
+
+        if (addressDefault == null)
+            return response;
+
+        GhnPreviewRequest ghnPreviewRequest = GhnPreviewRequest.builder()
+                .items(ghnItems)
+                .to_address(addressDefault.getDetailAddress())
+                .to_name(addressDefault.getName())
+                .to_phone(addressDefault.getPhoneNumber())
+                .to_ward_code(addressDefault.getWard().getId())
+                .weight((int) Math.round(response.getTotalWeight()*100))
+                .build();
+
+        GhnPreviewResponse ghnPreviewResponse = ghnService.getPreview(ghnPreviewRequest);
+        response.setFeeShip(ghnPreviewResponse.getData().getTotal_fee());
+        response.setExpectedDeliveryTime(AppUtils.pasteStringToDateTime(ghnPreviewResponse.getData().getExpected_delivery_time()));
+        return response;
+    }
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
@@ -59,8 +169,12 @@ public class OrderService {
         Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
 
         Voucher voucher = null;
-        if (!request.getVoucherCode().isEmpty()) {
+        if (request.getVoucherCode() != null && !request.getVoucherCode().isEmpty()) {
             voucher = voucherRepository.findByVoucherCode(request.getVoucherCode()).orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
+            if (voucher.getAmount() <= 0)
+                throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_VOUCHER);
+            if (!(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now())))
+                throw new AppException(ErrorCode.INVALID_VOUCHER);
         }
 
         Order order = orderMapper.toOrder(request);
@@ -77,7 +191,7 @@ public class OrderService {
             ProductSku sku = productSkuRepository.findById(item.getProductSkuId()).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
 
             if (sku.getSkuStock() < item.getQuantity())
-                throw new AppException(ErrorCode.NOT_ENOUGH_STOCK);
+                throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_PRODUCT);
 
             sku.setSkuStock(sku.getSkuStock() - item.getQuantity());
 
@@ -105,7 +219,7 @@ public class OrderService {
 
         BigDecimal voucherDiscount = BigDecimal.ZERO;
         if (voucher != null &&
-                totalAmount.compareTo(BigDecimal.valueOf(voucher.getMinOrderValue())) > 0) {
+                totalAmount.compareTo(voucher.getMinOrderValue()) > 0) {
             order.setVoucherCode(voucher.getVoucherCode());
 
             BigDecimal percentDiscount = BigDecimal
@@ -113,7 +227,7 @@ public class OrderService {
                     .multiply(totalAmount)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-            BigDecimal maxDiscount = BigDecimal.valueOf(voucher.getMaxDiscountValue());
+            BigDecimal maxDiscount =voucher.getMaxDiscountValue();
 
             voucherDiscount = percentDiscount.min(maxDiscount);
 
@@ -230,21 +344,21 @@ public class OrderService {
         return result;
     }
 
-    @Scheduled(fixedRate = 5 * 60 * 1000) // 5 phút
-    public void checkPendingTransactions() {
-        List<Transaction> pendingTransactions = transactionRepository.findByStatus(TransactionStatus.pending);
-        LocalDateTime now = LocalDateTime.now();
-        for (Transaction tx : pendingTransactions) {
-            // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
-            if (tx.getCreateDate().plusMinutes(15).isBefore(now)) {
-                tx.setStatus(TransactionStatus.failed);
-                Order order = tx.getOrder();
-                order.setOrderStatus(OrderStatus.payment_failed);
-                transactionRepository.save(tx);
-                orderRepository.save(order);
-            }
-        }
-    }
+//    @Scheduled(fixedRate = 5 * 60 * 1000) // 5 phút
+//    public void checkPendingTransactions() {
+//        List<Transaction> pendingTransactions = transactionRepository.findByStatus(TransactionStatus.pending);
+//        LocalDateTime now = LocalDateTime.now();
+//        for (Transaction tx : pendingTransactions) {
+//            // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
+//            if (tx.getCreateDate().plusMinutes(15).isBefore(now)) {
+//                tx.setStatus(TransactionStatus.failed);
+//                Order order = tx.getOrder();
+//                order.setOrderStatus(OrderStatus.payment_failed);
+//                transactionRepository.save(tx);
+//                orderRepository.save(order);
+//            }
+//        }
+//    }
 
 
     public void confirmOrder(String orderId) {
@@ -326,7 +440,9 @@ public class OrderService {
 
                 case 2: // Hoàn tiền đang xử lý
                     refTransaction.setStatus(TransactionStatus.pending);
+                    order.setOrderStatus(OrderStatus.cancelled);
                     transactionRepository.save(refTransaction);
+                    orderRepository.save(order);
                     return 1; // Chờ xử lý tiếp
 
                 case 0: // Hoàn tiền thất bại

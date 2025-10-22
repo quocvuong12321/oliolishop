@@ -19,4 +19,5 @@ public interface ProductSkuRepository extends JpaRepository<ProductSku,String> {
             """)
     Optional<ProductSku> findByProductSkuId(@Param("id") String id);
 
+    List<ProductSku> findAllByIdIn(List<String> ids);
 }

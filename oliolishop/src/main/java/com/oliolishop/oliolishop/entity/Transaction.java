@@ -25,7 +25,7 @@ public class Transaction {
     @Column(name = "transaction_id")
     String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
     Order order;
 

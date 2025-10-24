@@ -118,8 +118,8 @@ public class ProductSpuService {
                 .name(spu.getName())
                 .build());
 
-        long countRating = ratingRepository.countByProductSpu_Id(id);
-        Double avgStar = ratingRepository.getAverageStarByProductSpuId(id);
+        Long countRating = ratingRepository.countByProductSpu_Id(id).orElse((long)0);
+        Double avgStar = ratingRepository.getAverageStarByProductSpuId(id).orElse(0.0);
 
         // Build response
         ProductDetailResponse detail = ProductDetailResponse.builder()
@@ -131,7 +131,7 @@ public class ProductSpuService {
                 .skus(setSku)
                 .sold(spu.getSold())
                 .originalPrice(minPrice)
-                .numRating((int)countRating)
+                .numRating(countRating.intValue())
                 .rating(avgStar)
 //                .originalPrice(spu.getMinPrice())
                 .desAttrs(setAttrs)

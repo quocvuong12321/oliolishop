@@ -89,7 +89,7 @@ public class Order {
         updateDate = LocalDateTime.now();
     }
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
     List<OrderItem> orderItems;
 
     @ManyToOne(fetch = FetchType.LAZY)

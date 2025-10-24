@@ -58,6 +58,9 @@ public class GhnService {
     private static final String PREVIEW_URL =
             "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/preview";
 
+    public static final String CREATE_ORDER_URL =
+            "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create";
+
     public GhnPreviewResponse getPreview(GhnPreviewRequest request) {
 
         request.setFrom_address(detailAddress);
@@ -77,4 +80,24 @@ public class GhnService {
 
         return response.getBody();
     }
+
+    public GhnPreviewResponse createOrder(GhnPreviewRequest request){
+        request.setFrom_address(detailAddress);
+        request.setFrom_province_name(fromProvinceName);
+        request.setFrom_district_name(fromDistrictName);
+        request.setFrom_ward_name(fromWardName);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token",ghnToken);
+        headers.set("ShopId",shopId);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<GhnPreviewRequest> entity = new HttpEntity<>(request,headers);
+
+        ResponseEntity<GhnPreviewResponse> response = restTemplate
+                .postForEntity(CREATE_ORDER_URL,entity,GhnPreviewResponse.class);
+        return response.getBody();
+    }
+
+
 }

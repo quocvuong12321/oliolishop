@@ -10,6 +10,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GhnPreviewRequest {
+    String client_order_code;
     String from_ward_name;
     String from_district_name;
     String from_province_name;

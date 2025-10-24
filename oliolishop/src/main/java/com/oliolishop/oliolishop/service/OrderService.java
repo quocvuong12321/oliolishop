@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,7 @@ public class OrderService {
     private final LocationMapper locationMapper;
     GhnService ghnService;
 
+    @Transactional
     public CheckOutResponse checkOut(CheckOutRequest request) {
 
         String customerId = AppUtils.getCustomerIdByJwt();
@@ -129,7 +131,7 @@ public class OrderService {
             response.setAppliedVoucherCode(voucherApplied.getVoucherCode());
         }
 
-        response.setFinalAmount(finalAmount);
+
         response.setDiscountAmount(discountAmount);
 
         List<GhnPreviewRequest.GhnItem> ghnItems = checkOutItemResponses.stream().map(sku -> GhnPreviewRequest.GhnItem.builder()
@@ -157,8 +159,12 @@ public class OrderService {
                 .build();
 
         GhnPreviewResponse ghnPreviewResponse = ghnService.getPreview(ghnPreviewRequest);
-        response.setFeeShip(ghnPreviewResponse.getData().getTotal_fee());
+
+        BigDecimal feeShip = ghnPreviewResponse.getData().getTotal_fee();
+
+        response.setFeeShip(feeShip);
         response.setExpectedDeliveryTime(AppUtils.pasteStringToDateTime(ghnPreviewResponse.getData().getExpected_delivery_time()));
+        response.setFinalAmount(finalAmount.add(feeShip));
         return response;
     }
 
@@ -276,6 +282,7 @@ public class OrderService {
         return response;
     }
 
+    @Transactional
     public String createVnPayPayment(String orderId, String paymentMethodId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
 
@@ -308,6 +315,7 @@ public class OrderService {
         return vnPayService.createOrder(amount, orderInfo, transactionId, returnUrl);
     }
 
+    @Transactional
     public int updateStatusTransaction(HttpServletRequest request) {
 
         int result = vnPayService.orderReturn(request);
@@ -344,23 +352,33 @@ public class OrderService {
         return result;
     }
 
-//    @Scheduled(fixedRate = 5 * 60 * 1000) // 5 phút
-//    public void checkPendingTransactions() {
-//        List<Transaction> pendingTransactions = transactionRepository.findByStatus(TransactionStatus.pending);
-//        LocalDateTime now = LocalDateTime.now();
-//        for (Transaction tx : pendingTransactions) {
-//            // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
-//            if (tx.getCreateDate().plusMinutes(15).isBefore(now)) {
-//                tx.setStatus(TransactionStatus.failed);
-//                Order order = tx.getOrder();
-//                order.setOrderStatus(OrderStatus.payment_failed);
-//                transactionRepository.save(tx);
-//                orderRepository.save(order);
-//            }
-//        }
-//    }
+    @Transactional
+    @Scheduled(fixedRate = 1 * 60 * 1000) // 5 phút
+    public void checkPendingTransactions() {
+        List<Transaction> pendingTransactions = transactionRepository.findByStatusAndTransactionType(TransactionStatus.pending,TransactionType.payment);
+        LocalDateTime now = LocalDateTime.now();
+        for (Transaction tx : pendingTransactions) {
+            // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
+            if (tx.getCreateDate().plusMinutes(15).isBefore(now)) {
+                tx.setStatus(TransactionStatus.failed);
+                Order order = tx.getOrder();
+                List<OrderItem> orderItems = order.getOrderItems();
+                order.setOrderStatus(OrderStatus.payment_failed);
+                List<ProductSku> skuItems = new ArrayList<>();
+                orderItems.forEach(item->{
+                    int currentStock = item.getProductSku().getSkuStock();
+                    ProductSku sku = item.getProductSku();
+                    sku.setSkuStock(currentStock+item.getQuantity());
+                    skuItems.add(sku);
+                });
+                transactionRepository.save(tx);
+                orderRepository.save(order);
+                productSkuRepository.saveAll(skuItems);
+            }
+        }
+    }
 
-
+    @Transactional
     public void confirmOrder(String orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
 
@@ -368,15 +386,50 @@ public class OrderService {
             throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
 
         String employeeId = AppUtils.getEmployeeIdByJwt();
-        if (employeeId == null || employeeId.isEmpty())
+        if (employeeId.isEmpty())
             throw new AppException(ErrorCode.UNAUTHENTICATED);
-        order.setOrderStatus(OrderStatus.confirmed);
-        order.setConfirmBy(Employee.builder().id(employeeId).build());
-        order.setConfirmDate(LocalDateTime.now());
+
+        if(OrderStatus.pending_confirmation.equals(order.getOrderStatus())){
+            order.setOrderStatus(OrderStatus.confirmed);
+            order.setConfirmBy(Employee.builder().id(employeeId).build());
+            order.setConfirmDate(LocalDateTime.now());
+        }else if (OrderStatus.ready_to_pick.equals(order.getOrderStatus()))
+        {
+            order.setOrderStatus(OrderStatus.shipping);
+        }
         orderRepository.save(order);
     }
 
+//    public OrderResponse createShipment(String orderId,GhnPreviewRequest request){
+//
+//        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+//
+//        if(!order.getOrderStatus().equals(OrderStatus.confirmed)){
+//
+//            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
+//
+//        }
+//
+//        List<OrderItem> orderItems = order.getOrderItems();
+//        Map<String, ProductSpu> spuMap = orderItems.fr
+//
+//        List<GhnPreviewRequest.GhnItem> ghnItems = orderItems.stream().map(orderItem -> {
+//        })
+//
+//        GhnPreviewRequest ghnPreviewRequest = GhnPreviewRequest.builder()
+//                .items(ghnItems)
+//                .to_address(addressDefault.getDetailAddress())
+//                .to_name(addressDefault.getName())
+//                .to_phone(addressDefault.getPhoneNumber())
+//                .to_ward_code(addressDefault.getWard().getId())
+//                .weight((int) Math.round(response.getTotalWeight()*100))
+//                .build();
+//
+//        GhnPreviewResponse response = ghnService.createOrder(request);
+//
+//    }
 
+    @Transactional
     public int cancelOrder(String orderId, String paymentMethodId) {
         String customerId = AppUtils.getCustomerIdByJwt();
 
@@ -461,4 +514,7 @@ public class OrderService {
 
         return 0; // Trường hợp khác, không thực hiện refund
     }
+
+
+
 }

@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,9 +18,9 @@ public interface RatingRepository extends JpaRepository<Rating,String> {
 
     boolean existsByCustomer_IdAndOrderItem_Id(String customerId,String orderItemId);
 
-    long countByProductSpu_Id(String spuId);
+    Optional<Long> countByProductSpu_Id(String spuId);
 
     @Query("SELECT AVG(r.star) FROM Rating r WHERE r.productSpu.id = :spuId AND r.isHidden = false")
-    Double getAverageStarByProductSpuId(@Param("spuId") String spuId);
+    Optional<Double> getAverageStarByProductSpuId(@Param("spuId") String spuId);
 
 }

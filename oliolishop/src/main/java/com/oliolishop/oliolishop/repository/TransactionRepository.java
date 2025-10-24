@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction,String> {
 
-    List<Transaction> findByStatus(TransactionStatus status);
+    List<Transaction> findByStatusAndTransactionType(TransactionStatus status,TransactionType type);
 
     Optional<Transaction> findByOrderId(String orderId);
 

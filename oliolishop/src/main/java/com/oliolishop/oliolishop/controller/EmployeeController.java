@@ -38,7 +38,7 @@ public class EmployeeController {
                                                           HttpServletResponse response){
 
         AuthenticateResponse responseAuth = authenticationService.authenticate(request);
-        Cookie cookie = new Cookie("refreshToken",responseAuth.getRefreshToken());
+        Cookie cookie = new Cookie("refreshToken-employee",responseAuth.getRefreshToken());
         cookie.setMaxAge((int)(BaseAuthenticationService.TIME_REFRESH*60));
         cookie.setSecure(true);
         cookie.setPath("/");
@@ -71,7 +71,7 @@ public class EmployeeController {
 
         String refreshToken = null;
         for(var cookie: cookies){
-            if("refreshToken".equals(cookie.getName())){
+            if("refreshToken-employee".equals(cookie.getName())){
                 refreshToken = cookie.getValue();
                 break;
             }

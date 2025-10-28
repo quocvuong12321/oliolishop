@@ -17,5 +17,6 @@ public class GhnPreviewResponse {
     public static class DataResponse {
         BigDecimal total_fee;
         String expected_delivery_time;
+        String order_code;
     }
 }

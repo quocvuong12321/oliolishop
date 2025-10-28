@@ -27,7 +27,7 @@ public class PaymentController {
     VNPayService vnPayService;
 
     private static final String FRONTEND_SUCCESS_URL = "http://localhost:4200/checkout/confirm";
-    private static final String FRONTEND_FAIL_URL = "http://localhost:4200/payment/vnpay/failure";
+    private static final String FRONTEND_FAIL_URL = "http://localhost:4200/payment/vnpay/fail";
 
     @GetMapping(ApiPath.Payment.VNPAY)
     public ApiResponse<?> createVnPayPayment(@RequestParam String orderId,@RequestParam String paymentMethodId){
@@ -56,6 +56,12 @@ public class PaymentController {
     // Helper method
     private String getOrderIdFromRequest(HttpServletRequest request) {
         // Giả sử tham số VNPAY trả về có tên là 'vnp_TxnRef' chứa Order ID
-        return request.getParameter("vnp_TxnRef");
+        String orderInfo  = request.getParameter("vnp_OrderInfo");
+        String[] parts = orderInfo.split(" ");
+
+        if(parts.length>0)
+            return parts[parts.length-1];
+
+        throw new AppException(ErrorCode.INVALID_REQUEST);
     }
 }

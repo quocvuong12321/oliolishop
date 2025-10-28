@@ -62,7 +62,7 @@ public enum ErrorCode {
     ORDER_PAID(3025,"Đơn hàng đã được thanh toán",HttpStatus.FORBIDDEN),
     ORDER_STATUS_INVALID(3026,"Trạng thái đơn hàng không hợp lệ",HttpStatus.BAD_REQUEST),
     RATED(3027,"Bạn đã đánh giá đơn hàng này rồi",HttpStatus.CONFLICT),
-
+    CREATE_SHIPPING_FAIL(3028,"Tạo đơn vận chuyeernt thất bại", HttpStatus.BAD_REQUEST),
 
     // Lỗi chung khi vi phạm ràng buộc DB (ví dụ: để fallback)
     DATABASE_INTEGRITY_VIOLATION(4000, "Vi phạm ràng buộc dữ liệu cơ sở. Vui lòng kiểm tra lại.", HttpStatus.CONFLICT),

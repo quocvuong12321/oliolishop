@@ -3,6 +3,7 @@ package com.oliolishop.oliolishop.service;
 
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.address.AddressResponse;
+import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.cart.CartItemRequest;
 import com.oliolishop.oliolishop.dto.ghn.GhnPreviewRequest;
 import com.oliolishop.oliolishop.dto.ghn.GhnPreviewResponse;
@@ -24,8 +25,13 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.aspectj.weaver.ast.Or;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -38,7 +44,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderService {
-    OrderItemRepository orderItemRepository;
     OrderRepository orderRepository;
     OrderItemMapper orderItemMapper;
     CustomerRepository customerRepository;
@@ -155,7 +160,7 @@ public class OrderService {
                 .to_name(addressDefault.getName())
                 .to_phone(addressDefault.getPhoneNumber())
                 .to_ward_code(addressDefault.getWard().getId())
-                .weight((int) Math.round(response.getTotalWeight()*100))
+                .weight((int) Math.round(response.getTotalWeight() * 100))
                 .build();
 
         GhnPreviewResponse ghnPreviewResponse = ghnService.getPreview(ghnPreviewRequest);
@@ -167,6 +172,130 @@ public class OrderService {
         response.setFinalAmount(finalAmount.add(feeShip));
         return response;
     }
+
+    public OrderResponse getOrderById(String orderId) {
+
+        Order order = orderRepository.findById(orderId).
+                orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        OrderResponse response = orderMapper.toResponse(order);
+
+        response.setStatus(order.getOrderStatus());
+
+        response.setOrderItems(order.getOrderItems().stream().map(item -> {
+            OrderItemResponse itemResponse = orderItemMapper.toResponse(item);
+            ProductSku sku = item.getProductSku();
+            ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+            itemResponse.setName(spu.getName());
+            itemResponse.setProductSkuId(sku.getId());
+            itemResponse.setThumbnail(spu.getImage());
+            itemResponse.setVariant(productSkuUtils.getVariant(sku));
+            return itemResponse;
+        }).collect(Collectors.toList()));
+
+        return response;
+
+    }
+
+    //    public PaginatedResponse<OrderResponse> getOrderByCustomerId(OrderStatus orderStatus, int page, int size){
+//        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
+//
+//        String customerId = AppUtils.getCustomerIdByJwt();
+//
+//        Pageable pageable = PageRequest.of(page,size,sort);
+//
+//        Page<Order> orders = orderRepository.findByCustomerIdAndOrderStatus(customerId,orderStatus,pageable);
+//
+//        List<OrderResponse> responses = orders.map(item->{
+//            OrderResponse orderResponse = orderMapper.toResponse(item);
+//            orderResponse.setStatus(item.getOrderStatus());
+//
+//            List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i->{
+//                OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
+//                ProductSku sku = i.getProductSku();
+//                ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+//                itemResponse.setName(spu.getName());
+//                itemResponse.setProductSkuId(sku.getId());
+//                itemResponse.setThumbnail(spu.getImage());
+//                itemResponse.setVariant(productSkuUtils.getVariant(sku));
+//                return itemResponse;
+//            }).toList();
+//            orderResponse.setOrderItems(orderItemResponses);
+//            return orderResponse;
+//        }).stream().toList();
+//
+//        return responses;
+//    }
+    public PaginatedResponse<OrderResponse> getOrdersByCustomerId(OrderStatus orderStatus, int page, int size) {
+
+        // 1. Chuẩn bị phân trang và lấy customerId
+        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
+        String customerId = AppUtils.getCustomerIdByJwt();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // 2. Truy vấn Repository
+        // Giả sử tên phương thức repository là findByCustomerIdAndStatus
+        Page<Order> ordersPage = orderRepository.findByCustomerIdAndOrderStatus(customerId, orderStatus, pageable);
+
+        // 3. Chuyển đổi Page<Order> sang Page<OrderResponse>
+        Page<OrderResponse> responsePage = ordersPage.map(item -> {
+            // Ánh xạ Order chính
+            OrderResponse orderResponse = orderMapper.toResponse(item);
+            orderResponse.setStatus(item.getOrderStatus()); // Giả sử trường Entity là 'status'
+
+            List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i -> {
+                OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
+
+                ProductSku sku = i.getProductSku();
+                ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+
+                itemResponse.setName(spu.getName());
+                itemResponse.setProductSkuId(sku.getId());
+                itemResponse.setThumbnail(spu.getImage());
+                itemResponse.setVariant(productSkuUtils.getVariant(sku));
+                return itemResponse;
+            }).collect(Collectors.toList()); // Đổi .toList() sang .collect(Collectors.toList())
+
+            orderResponse.setOrderItems(orderItemResponses);
+            return orderResponse;
+        });
+
+        // 4. Đóng gói kết quả thành PaginatedResponse tùy chỉnh
+        return PaginatedResponse.fromSpringPage(responsePage);
+    }
+
+    public PaginatedResponse<OrderResponse> getOrderByStatus(OrderStatus status, int page, int size) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Order> orders = orderRepository.findByOrderStatus(status, pageable);
+
+        Page<OrderResponse> responses = orders.map(item -> {
+            OrderResponse orderResponse = orderMapper.toResponse(item);
+            orderResponse.setStatus(item.getOrderStatus()); // Giả sử trường Entity là 'status'
+
+            List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i -> {
+                OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
+
+                ProductSku sku = i.getProductSku();
+                ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+
+                itemResponse.setName(spu.getName());
+                itemResponse.setProductSkuId(sku.getId());
+                itemResponse.setThumbnail(spu.getImage());
+                itemResponse.setVariant(productSkuUtils.getVariant(sku));
+                return itemResponse;
+            }).collect(Collectors.toList()); // Đổi .toList() sang .collect(Collectors.toList())
+
+            orderResponse.setOrderItems(orderItemResponses);
+            return orderResponse;
+        });
+
+        return PaginatedResponse.fromSpringPage(responses);
+
+    }
+
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
@@ -233,7 +362,7 @@ public class OrderService {
                     .multiply(totalAmount)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-            BigDecimal maxDiscount =voucher.getMaxDiscountValue();
+            BigDecimal maxDiscount = voucher.getMaxDiscountValue();
 
             voucherDiscount = percentDiscount.min(maxDiscount);
 
@@ -353,9 +482,9 @@ public class OrderService {
     }
 
     @Transactional
-    @Scheduled(fixedRate = 1 * 60 * 1000) // 5 phút
+    @Scheduled(fixedRate = 5 * 60 * 1000) // 5 phút
     public void checkPendingTransactions() {
-        List<Transaction> pendingTransactions = transactionRepository.findByStatusAndTransactionType(TransactionStatus.pending,TransactionType.payment);
+        List<Transaction> pendingTransactions = transactionRepository.findByStatusAndTransactionType(TransactionStatus.pending, TransactionType.payment);
         LocalDateTime now = LocalDateTime.now();
         for (Transaction tx : pendingTransactions) {
             // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
@@ -365,10 +494,10 @@ public class OrderService {
                 List<OrderItem> orderItems = order.getOrderItems();
                 order.setOrderStatus(OrderStatus.payment_failed);
                 List<ProductSku> skuItems = new ArrayList<>();
-                orderItems.forEach(item->{
+                orderItems.forEach(item -> {
                     int currentStock = item.getProductSku().getSkuStock();
                     ProductSku sku = item.getProductSku();
-                    sku.setSkuStock(currentStock+item.getQuantity());
+                    sku.setSkuStock(currentStock + item.getQuantity());
                     skuItems.add(sku);
                 });
                 transactionRepository.save(tx);
@@ -389,45 +518,67 @@ public class OrderService {
         if (employeeId.isEmpty())
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        if(OrderStatus.pending_confirmation.equals(order.getOrderStatus())){
+        if (OrderStatus.pending_confirmation.equals(order.getOrderStatus())) {
             order.setOrderStatus(OrderStatus.confirmed);
             order.setConfirmBy(Employee.builder().id(employeeId).build());
             order.setConfirmDate(LocalDateTime.now());
-        }else if (OrderStatus.ready_to_pick.equals(order.getOrderStatus()))
-        {
+        } else if (OrderStatus.ready_to_pick.equals(order.getOrderStatus())) {
             order.setOrderStatus(OrderStatus.shipping);
         }
         orderRepository.save(order);
     }
 
-//    public OrderResponse createShipment(String orderId,GhnPreviewRequest request){
-//
-//        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
-//
-//        if(!order.getOrderStatus().equals(OrderStatus.confirmed)){
-//
-//            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
-//
-//        }
-//
-//        List<OrderItem> orderItems = order.getOrderItems();
-//        Map<String, ProductSpu> spuMap = orderItems.fr
-//
-//        List<GhnPreviewRequest.GhnItem> ghnItems = orderItems.stream().map(orderItem -> {
-//        })
-//
-//        GhnPreviewRequest ghnPreviewRequest = GhnPreviewRequest.builder()
-//                .items(ghnItems)
-//                .to_address(addressDefault.getDetailAddress())
-//                .to_name(addressDefault.getName())
-//                .to_phone(addressDefault.getPhoneNumber())
-//                .to_ward_code(addressDefault.getWard().getId())
-//                .weight((int) Math.round(response.getTotalWeight()*100))
-//                .build();
-//
-//        GhnPreviewResponse response = ghnService.createOrder(request);
-//
-//    }
+    public GhnPreviewResponse createShipment(String orderId) {
+
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        if (!order.getOrderStatus().equals(OrderStatus.confirmed)) {
+
+            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
+
+        }
+
+        List<OrderItem> orderItems = order.getOrderItems();
+        Map<String, ProductSpu> spuMap = new HashMap<>();
+
+        orderItems.forEach(item -> {
+            ProductSpu spu = item.getProductSku().getSpu();
+            spuMap.put(item.getId(), spu);
+        });
+
+        List<GhnPreviewRequest.GhnItem> ghnItems = orderItems.stream().map(orderItem -> {
+
+            ProductSpu spu = spuMap.get(orderItem.getId());
+            ProductSku sku = orderItem.getProductSku();
+            GhnPreviewRequest.GhnItem ghnitem = GhnPreviewRequest.GhnItem.builder()
+                    .name(spu.getName())
+                    .weight(Double.valueOf(sku.getWeight() * 100.0).intValue())
+                    .quantity(orderItem.getQuantity())
+                    .build();
+
+            return ghnitem;
+        }).toList();
+
+        int totalWeight = ghnItems.stream().mapToInt(ghnItem -> ghnItem.getWeight() * ghnItem.getQuantity()).sum();
+
+        GhnPreviewRequest ghnPreviewRequest = GhnPreviewRequest.builder()
+                .items(ghnItems)
+                .to_ward_code(order.getWardId())
+                .to_phone(order.getReceiverPhone())
+                .to_name(order.getReceiverName())
+                .to_address(order.getShippingAddress())
+                .weight(totalWeight)
+                .build();
+
+        GhnPreviewResponse response = ghnService.createOrder(ghnPreviewRequest);
+
+        if (response.getData().getOrder_code() != null) {
+            order.setOrderStatus(OrderStatus.ready_to_pick);
+            orderRepository.save(order);
+            return response;
+        }
+        throw new AppException(ErrorCode.CREATE_SHIPPING_FAIL);
+    }
 
     @Transactional
     public int cancelOrder(String orderId, String paymentMethodId) {
@@ -444,77 +595,192 @@ public class OrderService {
             Transaction transaction = transactionRepository
                     .findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
                     .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
-
-            String newTransactionId = UUID.randomUUID().toString();
-            String orderInfor = "HOAN TIEN " + orderId;
-            String vnpCreateBy = "AutoRefund";
-
-            Transaction refTransaction = Transaction.builder()
-                    .id(newTransactionId)
-                    .amount(transaction.getAmount())
-                    .paymentMethod(transaction.getPaymentMethod())
-                    .order(order)
-                    .parentTransaction(transaction)
-                    .transactionType(TransactionType.refund)
-                    .status(TransactionStatus.pending)
-                    .vnpTxnRef(newTransactionId)
-                    .refundReason(orderInfor)
-                    .build();
-
-            transactionRepository.save(refTransaction);
-
-            String originalTransactionDate = transaction.getVnpTransactionDate();
-
-            String transactionNoGoc = transaction.getGatewayTransactionId();
-
-            String vnpTxnRef = transaction.getVnpTxnRef();
-
-            String vnpRequestId = UUID.randomUUID().toString().replace("-", "");
-
-            String refundApiUrl = vnPayService.refundOrder(transaction.getAmount().intValue(),
-                    vnpTxnRef,
-                    originalTransactionDate,
-                    transactionNoGoc,
-                    "02",
-                    vnpRequestId,
-                    orderInfor,
-                    vnpCreateBy);
-
-            String vnpResponseQueryString = vnPayService.executeVnPayRefundPost(refundApiUrl);
-
-            int refundResult = vnPayService.refundReturn(vnpResponseQueryString);
-            switch (refundResult) {
-                case 1: // Hoàn tiền thành công ngay
-                    refTransaction.setStatus(TransactionStatus.success);
+//
+//            String newTransactionId = UUID.randomUUID().toString();
+//            String orderInfor = "HOAN TIEN " + orderId;
+//            String vnpCreateBy = "AutoRefund";
+//
+//            Transaction refTransaction = Transaction.builder()
+//                    .id(newTransactionId)
+//                    .amount(transaction.getAmount())
+//                    .paymentMethod(transaction.getPaymentMethod())
+//                    .order(order)
+//                    .parentTransaction(transaction)
+//                    .transactionType(TransactionType.refund)
+//                    .status(TransactionStatus.pending)
+//                    .vnpTxnRef(newTransactionId)
+//                    .refundReason(orderInfor)
+//                    .build();
+//
+//            transactionRepository.save(refTransaction);
+//
+//            String originalTransactionDate = transaction.getVnpTransactionDate();
+//
+//            String transactionNoGoc = transaction.getGatewayTransactionId();
+//
+//            String vnpTxnRef = transaction.getVnpTxnRef();
+//
+//            String vnpRequestId = UUID.randomUUID().toString().replace("-", "");
+//
+//            String refundApiUrl = vnPayService.refundOrder(transaction.getAmount().intValue(),
+//                    vnpTxnRef,
+//                    originalTransactionDate,
+//                    transactionNoGoc,
+//                    "02",
+//                    vnpRequestId,
+//                    orderInfor,
+//                    vnpCreateBy);
+//
+//            String vnpResponseQueryString = vnPayService.executeVnPayRefundPost(refundApiUrl);
+//
+//            int refundResult = vnPayService.refundReturn(vnpResponseQueryString);
+//            switch (refundResult) {
+//                case 1: // Hoàn tiền thành công ngay
+//                    refTransaction.setStatus(TransactionStatus.success);
+//                    order.setOrderStatus(OrderStatus.cancelled);
+//                    transactionRepository.save(refTransaction);
+//                    orderRepository.save(order);
+//                    return 2;
+//
+//                case 2: // Hoàn tiền đang xử lý
+//                    refTransaction.setStatus(TransactionStatus.pending);
+//                    order.setOrderStatus(OrderStatus.cancelled);
+//                    transactionRepository.save(refTransaction);
+//                    orderRepository.save(order);
+//                    return 1; // Chờ xử lý tiếp
+//
+//                case 0: // Hoàn tiền thất bại
+//                case 3: // Trạng thái khác chưa xử lý
+//                    refTransaction.setStatus(TransactionStatus.failed);
+//                    transactionRepository.save(refTransaction);
+//                    return 3;
+//
+//                case -1: // Chữ ký không hợp lệ hoặc lỗi kỹ thuật
+//                default:
+//                    refTransaction.setStatus(TransactionStatus.failed);
+//                    transactionRepository.save(refTransaction);
+//                    throw new AppException(ErrorCode.PAYMENT_INVALID);
+//            }
+//        }
+//
+//        return 0; // Trường hợp khác, không thực hiện refund
+            int result = processVnPayRefund(order, transaction, "AutoRefund");
+            switch (result) {
+                case 1:
                     order.setOrderStatus(OrderStatus.cancelled);
-                    transactionRepository.save(refTransaction);
                     orderRepository.save(order);
                     return 2;
-
-                case 2: // Hoàn tiền đang xử lý
-                    refTransaction.setStatus(TransactionStatus.pending);
+                case 2:
                     order.setOrderStatus(OrderStatus.cancelled);
-                    transactionRepository.save(refTransaction);
                     orderRepository.save(order);
-                    return 1; // Chờ xử lý tiếp
-
-                case 0: // Hoàn tiền thất bại
-                case 3: // Trạng thái khác chưa xử lý
-                    refTransaction.setStatus(TransactionStatus.failed);
-                    transactionRepository.save(refTransaction);
+                    return 0;
+                case 0:
+                case 3:
                     return 3;
-
-                case -1: // Chữ ký không hợp lệ hoặc lỗi kỹ thuật
-                default:
-                    refTransaction.setStatus(TransactionStatus.failed);
-                    transactionRepository.save(refTransaction);
-                    throw new AppException(ErrorCode.PAYMENT_INVALID);
             }
-        }
 
-        return 0; // Trường hợp khác, không thực hiện refund
+        }
+        return -1;
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // Đảm bảo việc tạo transaction là độc lập
+    public int processVnPayRefund(Order order, Transaction originalPaymentTransaction, String vnpCreateBy) {
+        // 1. Tạo giao dịch hoàn tiền mới với trạng thái PENDING
+        String newTransactionId = UUID.randomUUID().toString();
+        String refundReason = "HOAN TIEN HUY DON " + order.getId();
 
+        Transaction refTransaction = Transaction.builder()
+                .id(newTransactionId)
+                .amount(originalPaymentTransaction.getAmount())
+                .paymentMethod(originalPaymentTransaction.getPaymentMethod())
+                .order(order)
+                .parentTransaction(originalPaymentTransaction)
+                .transactionType(TransactionType.refund)
+                .status(TransactionStatus.pending)
+                .vnpTxnRef(newTransactionId)
+                .refundReason(refundReason)
+                .build();
 
+        refTransaction = transactionRepository.save(refTransaction); // Lưu bản ghi PENDING
+
+        // 2. Chuẩn bị tham số và gọi API hoàn tiền VNPAY
+        String originalTransactionDate = originalPaymentTransaction.getVnpTransactionDate();
+        String transactionNoGoc = originalPaymentTransaction.getGatewayTransactionId();
+        String vnpTxnRef = originalPaymentTransaction.getVnpTxnRef();
+        String vnpRequestId = UUID.randomUUID().toString().replace("-", "");
+        String orderInfor = refTransaction.getRefundReason();
+
+        // Gọi hàm chuẩn bị dữ liệu và thực thi POST
+        String refundApiUrl = vnPayService.refundOrder(
+                originalPaymentTransaction.getAmount().intValue(),
+                vnpTxnRef,
+                originalTransactionDate,
+                transactionNoGoc,
+                "02", // Loại hoàn tiền: 02 - Hoàn tiền toàn phần
+                vnpRequestId,
+                orderInfor,
+                vnpCreateBy // Tham số linh hoạt truyền vào
+        );
+
+        String vnpResponseQueryString = vnPayService.executeVnPayRefundPost(refundApiUrl);
+        int refundResult = vnPayService.refundReturn(vnpResponseQueryString);
+
+        // 3. Xử lý kết quả và cập nhật trạng thái giao dịch (chưa cập nhật Order Status)
+        switch (refundResult) {
+            case 1: // Hoàn tiền thành công ngay
+                refTransaction.setStatus(TransactionStatus.success);
+                break;
+
+            case 2: // Hoàn tiền đang xử lý
+                refTransaction.setStatus(TransactionStatus.pending);
+                break;
+
+            case 0: // Hoàn tiền thất bại (VNPAY trả lỗi)
+            case 3:
+                refTransaction.setStatus(TransactionStatus.failed);
+                break;
+
+            case -1: // Lỗi kỹ thuật (ký tự, hash không hợp lệ)
+            default:
+                refTransaction.setStatus(TransactionStatus.failed);
+                transactionRepository.save(refTransaction);
+                throw new AppException(ErrorCode.PAYMENT_INVALID);
+        }
+
+        transactionRepository.save(refTransaction); // Cập nhật trạng thái cuối cùng của giao dịch hoàn tiền
+
+        // Trả về kết quả để OrderService quyết định cập nhật Order Status
+        return refundResult;
+    }
+
+    @Transactional
+    public int confirmCancelOrder(String orderId) {
+
+        String employeeId = AppUtils.getEmployeeIdByJwt();
+
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        Transaction originalTransaction = transactionRepository.findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
+
+        if (!order.getOrderStatus().equals(OrderStatus.pending_cancellation))
+            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
+
+        int result = processVnPayRefund(order, originalTransaction, employeeId);
+
+        switch (result) {
+            case 1:
+                order.setOrderStatus(OrderStatus.cancelled);
+                orderRepository.save(order);
+                return 2;
+            case 2:
+                order.setOrderStatus(OrderStatus.cancelled);
+                orderRepository.save(order);
+                return 0;
+            case 0:
+            case 3:
+                return 3;
+        }
+        return -1;
+    }
 }

@@ -41,4 +41,6 @@ public class OrderResponse {
     LocalDateTime updateDate; // Thêm updateDate để tiện tracking trên client
 
     List<OrderItemResponse> orderItems;
+
+    boolean isRefundSuccess;
 }

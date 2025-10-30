@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -83,7 +84,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ApiResponse<PaginatedResponse<OrderResponse>> getOrderByCustomerId(@RequestParam(name = "status") OrderStatus status,
+    public ApiResponse<PaginatedResponse<OrderResponse>> getOrderByCustomerId(@RequestParam(name = "status") List<OrderStatus> status,
                                                                               @RequestParam(name = "page", defaultValue = "0") int page,
                                                                               @RequestParam(name = "size", defaultValue = "10") int size
     ) {
@@ -96,17 +97,26 @@ public class OrderController {
     }
 
     @GetMapping(ApiPath.Order.STATUS)
-    public ApiResponse<PaginatedResponse<OrderResponse>> getOrderByStatus(
-            @RequestParam(name = "status") OrderStatus status,
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
+//    public ApiResponse<PaginatedResponse<OrderResponse>> getOrderByStatus(
+//            @RequestParam(name = "status") OrderStatus status,
+//            @RequestParam(name = "page", defaultValue = "0") int page,
+//            @RequestParam(name = "size", defaultValue = "10") int size
+//    ) {
+//        return ApiResponse.<PaginatedResponse<OrderResponse>>builder()
+//                .result(orderService.getOrderByStatus(status, page, size))
+//                .build();
+//    }
+    public ApiResponse<PaginatedResponse<OrderResponse>> getOrdersByStatuses(
+            @RequestParam(required = false) List<OrderStatus> statuses,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         return ApiResponse.<PaginatedResponse<OrderResponse>>builder()
-                .result(orderService.getOrderByStatus(status, page, size))
+                .result((orderService.getOrdersByStatuses(statuses, page, size)))
                 .build();
     }
 
-    @PostMapping(ApiPath.Order.RATING)
+        @PostMapping(ApiPath.Order.RATING)
     public ApiResponse<RatingResponse> createOrder(@RequestPart(value = "request") RatingRequest request,
                                                    @RequestPart(value = "files", required = false) List<MultipartFile> files) throws IOException {
 
@@ -138,6 +148,13 @@ public class OrderController {
 
         return ApiResponse.<CheckOutResponse>builder()
                 .result(orderService.checkOut(request))
+                .build();
+    }
+
+    @GetMapping(ApiPath.Order.ORDER_STATUS)
+    public ApiResponse<List<Map<String,String>>> getAllOrderStatuses(){
+        return ApiResponse.<List<Map<String,String>>>builder()
+                .result(orderService.getAllOrderStatus())
                 .build();
     }
 

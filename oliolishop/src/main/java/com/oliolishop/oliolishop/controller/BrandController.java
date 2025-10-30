@@ -20,9 +20,11 @@ public class BrandController {
     private BrandService brandService;
 
     @GetMapping
-    public ApiResponse<?> getBrands(@RequestParam(defaultValue = "0") int page,@RequestParam(defaultValue = "10") int size){
+    public ApiResponse<?> getBrands(@RequestParam(name = "search", required = false) String searchKey,
+                                    @RequestParam(defaultValue = "0") int page,
+                                    @RequestParam(defaultValue = "10") int size){
         return ApiResponse.builder()
-                .result(brandService.getBrands(page,size))
+                .result(brandService.getBrands(searchKey,page,size))
                 .build();
     }
 

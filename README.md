@@ -26,8 +26,9 @@ docker build -f Dockerfile -t oliolishop:0.0.1 .
 ### Với Window
 ```bash
 
-docker run -d --name olioli-service -e DB_HOST=192.168.10.111 -e REDIS_HOST=192.168.10.111 -e IMAGE_DIR=/images -p 8080:8080 -v d:/KhoaLuanTotNghiep/image_oliolishop/images:/images oliolishop:0.0.1
-
+docker run -d --name olioli-service -e DB_HOST=172.16.41.124 -e REDIS_HOST=172.16.41.124 -e IMAGE_DIR=/images -p 8080:8080 -v d:/KhoaLuanTotNghiep/image_oliolishop/images:/images oliolishop:0.0.1
+192.168.10.111
+172.16.41.124
 ```
 d:/KhoaLuanTotNghiep/image_oliolishop/images
 ## Với Ubuntu

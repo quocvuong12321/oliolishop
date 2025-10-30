@@ -92,7 +92,7 @@ public class SecurityConfig {
                 "http://localhost:4200",
                 "http://127.0.0.1:4200",
                 "http://localhost:4202",
-                "http://127.0.0.1:4202"
+                "http://127.0.0.1:4202",
                 "https://sola-unweighty-lessie.ngrok-free.dev"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));

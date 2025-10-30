@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.service;
 
 
+import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.brand.BrandRequest;
 import com.oliolishop.oliolishop.dto.brand.BrandResponse;
 import com.oliolishop.oliolishop.entity.Brand;
@@ -24,9 +25,22 @@ import org.springframework.stereotype.Service;
 public class BrandService {
     private BrandRepository brandRepository;
     private BrandMapper brandMapper;
-    public Page<BrandResponse> getBrands(int page, int size){
-        Pageable pageable = PageRequest.of(page,size);
-        return brandRepository.findAll(pageable).map(brandMapper::toResponse);
+    public PaginatedResponse<BrandResponse> getBrands(String searchKey, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BrandResponse> springPage;
+
+        if (searchKey == null || searchKey.isBlank()) {
+            // Trường hợp không có keyword, trả về tất cả
+            springPage = brandRepository.findAll(pageable)
+                    .map(brandMapper::toResponse);
+        } else {
+            // Trường hợp có keyword
+            springPage = brandRepository.findByNameContainingIgnoreCase(searchKey.trim(), pageable)
+                    .map(brandMapper::toResponse);
+        }
+
+        // Chuyển từ Page -> PaginatedResponse
+        return PaginatedResponse.fromSpringPage(springPage);
     }
 
     public BrandResponse getBrandById(String id){

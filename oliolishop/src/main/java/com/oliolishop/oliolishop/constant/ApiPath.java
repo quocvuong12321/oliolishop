@@ -73,6 +73,7 @@ public class ApiPath {
         public static final String CHECK_OUT  = "/check-out";
         public static final String STATUS = "/status";
         public static final String CREATE_SHIPPING = "/shipping";
+        public static final String ORDER_STATUS = "/order-statuses";
 
     }
 

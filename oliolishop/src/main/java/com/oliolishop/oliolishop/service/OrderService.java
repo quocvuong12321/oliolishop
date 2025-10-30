@@ -226,22 +226,22 @@ public class OrderService {
 //
 //        return responses;
 //    }
-    public PaginatedResponse<OrderResponse> getOrdersByCustomerId(OrderStatus orderStatus, int page, int size) {
-
-        // 1. Chuẩn bị phân trang và lấy customerId
+    public PaginatedResponse<OrderResponse> getOrdersByCustomerId(List<OrderStatus> statuses, int page, int size) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
         String customerId = AppUtils.getCustomerIdByJwt();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        // 2. Truy vấn Repository
-        // Giả sử tên phương thức repository là findByCustomerIdAndStatus
-        Page<Order> ordersPage = orderRepository.findByCustomerIdAndOrderStatus(customerId, orderStatus, pageable);
+        Page<Order> ordersPage;
 
-        // 3. Chuyển đổi Page<Order> sang Page<OrderResponse>
+        if (statuses == null || statuses.isEmpty()) {
+            ordersPage = orderRepository.findByCustomerId(customerId, pageable);
+        } else {
+            ordersPage = orderRepository.findByCustomerIdAndOrderStatusIn(customerId, statuses, pageable);
+        }
+
         Page<OrderResponse> responsePage = ordersPage.map(item -> {
-            // Ánh xạ Order chính
             OrderResponse orderResponse = orderMapper.toResponse(item);
-            orderResponse.setStatus(item.getOrderStatus()); // Giả sử trường Entity là 'status'
+            orderResponse.setStatus(item.getOrderStatus());
 
             List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i -> {
                 OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
@@ -254,15 +254,15 @@ public class OrderService {
                 itemResponse.setThumbnail(spu.getImage());
                 itemResponse.setVariant(productSkuUtils.getVariant(sku));
                 return itemResponse;
-            }).collect(Collectors.toList()); // Đổi .toList() sang .collect(Collectors.toList())
+            }).collect(Collectors.toList());
 
             orderResponse.setOrderItems(orderItemResponses);
             return orderResponse;
         });
 
-        // 4. Đóng gói kết quả thành PaginatedResponse tùy chỉnh
         return PaginatedResponse.fromSpringPage(responsePage);
     }
+
 
     public PaginatedResponse<OrderResponse> getOrderByStatus(OrderStatus status, int page, int size) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
@@ -294,6 +294,41 @@ public class OrderService {
 
         return PaginatedResponse.fromSpringPage(responses);
 
+    }
+
+    public PaginatedResponse<OrderResponse> getOrdersByStatuses(List<OrderStatus> statuses, int page, int size) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Order> orders;
+        if (statuses == null || statuses.isEmpty()) {
+            orders = orderRepository.findAll(pageable);
+        } else {
+            orders = orderRepository.findByOrderStatusIn(statuses, pageable);
+        }
+
+        Page<OrderResponse> responses = orders.map(item -> {
+            OrderResponse orderResponse = orderMapper.toResponse(item);
+            orderResponse.setStatus(item.getOrderStatus());
+
+            List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i -> {
+                OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
+
+                ProductSku sku = i.getProductSku();
+                ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+
+                itemResponse.setName(spu.getName());
+                itemResponse.setProductSkuId(sku.getId());
+                itemResponse.setThumbnail(spu.getImage());
+                itemResponse.setVariant(productSkuUtils.getVariant(sku));
+                return itemResponse;
+            }).collect(Collectors.toList());
+
+            orderResponse.setOrderItems(orderItemResponses);
+            return orderResponse;
+        });
+
+        return PaginatedResponse.fromSpringPage(responses);
     }
 
 
@@ -782,5 +817,15 @@ public class OrderService {
                 return 3;
         }
         return -1;
+    }
+
+
+
+    public List<Map<String,String>> getAllOrderStatus(){
+        return Arrays.stream(OrderStatus.values())
+                .map(s->Map.of(
+                        "code",s.name(),
+                        "label",s.getLabel()
+                )).toList();
     }
 }

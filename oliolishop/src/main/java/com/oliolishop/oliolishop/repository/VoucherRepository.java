@@ -1,7 +1,9 @@
 package com.oliolishop.oliolishop.repository;
 
 import com.oliolishop.oliolishop.entity.Voucher;
+import com.oliolishop.oliolishop.enums.VoucherStatus;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,5 +26,9 @@ public interface VoucherRepository extends JpaRepository<Voucher,String> {
             """)
     Optional<List<Voucher>> findByTotalPrice(@Param("totalPrice") BigDecimal totalPrice);
 
+    Page<Voucher> findByStatus(VoucherStatus status, Pageable pageable);
 
+    Page<Voucher> findByNameContainingIgnoreCaseAndStatus(String name, VoucherStatus status, Pageable pageable);
+
+    Page<Voucher> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

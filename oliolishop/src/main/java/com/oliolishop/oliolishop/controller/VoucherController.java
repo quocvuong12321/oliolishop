@@ -6,6 +6,7 @@ import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.voucher.VoucherRequest;
 import com.oliolishop.oliolishop.dto.voucher.VoucherResponse;
+import com.oliolishop.oliolishop.enums.VoucherStatus;
 import com.oliolishop.oliolishop.service.VoucherService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,13 @@ public class VoucherController {
     VoucherService voucherService;
 
     @GetMapping
-    public ApiResponse<?> getVoucher(@RequestParam(defaultValue = "10") int size , @RequestParam(defaultValue = "0") int page ){
-        return ApiResponse.<Page<VoucherResponse>>builder()
+    public ApiResponse<?> getVoucher( @RequestParam(required = false) String searchKey,
+                                      @RequestParam(required = false) VoucherStatus status,
+                                      @RequestParam(defaultValue = "0") int page,
+                                      @RequestParam(defaultValue = "10") int size){
+        return ApiResponse.<PaginatedResponse<VoucherResponse>>builder()
                 .result(
-                        voucherService.getVoucher(size,page)
+                        voucherService.getVoucher(searchKey,status,page,size)
                 )
                 .build();
     }

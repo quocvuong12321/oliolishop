@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.dto.voucher;
 
+import com.oliolishop.oliolishop.enums.VoucherStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.cglib.core.Local;
@@ -24,5 +25,6 @@ public class VoucherResponse {
     int amount;
     LocalDateTime createDate;
     LocalDateTime updateDate;
+    VoucherStatus status;
 
 }

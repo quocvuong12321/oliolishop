@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.service;
 
+import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.voucher.VoucherRequest;
 import com.oliolishop.oliolishop.dto.voucher.VoucherResponse;
 import com.oliolishop.oliolishop.entity.Voucher;
@@ -14,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,28 +29,77 @@ public class VoucherService {
     VoucherRepository voucherRepository;
     private final VoucherMapper voucherMapper;
 
-    public Page<VoucherResponse> getVoucher(int size, int page){
-        Pageable pageable =  PageRequest.of(page,size);
+    public PaginatedResponse<VoucherResponse> getVoucher(String searchKey, VoucherStatus status, int page, int size) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "startDate");
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        return voucherRepository.findAll(pageable).map(voucherMapper::response);
+        // 2. Query kết quả
+        Page<VoucherResponse> resultPage;
 
+        if (searchKey != null && !searchKey.isBlank()) {
+            // --- Có searchKey ---
+            if (status != null) {
+                // Có cả status
+                resultPage = voucherRepository
+                        .findByNameContainingIgnoreCaseAndStatus(searchKey, status, pageable)
+                        .map(voucher -> {
+                            VoucherResponse response = voucherMapper.response(voucher);
+                            response.setStatus(voucher.getStatus());
+                            return response;
+                        });
+            } else {
+                // Không có status → findByName thôi
+                resultPage = voucherRepository
+                        .findByNameContainingIgnoreCase(searchKey, pageable)
+                        .map(voucher -> {
+                            VoucherResponse response = voucherMapper.response(voucher);
+                            response.setStatus(voucher.getStatus());
+                            return response;
+                        });
+            }
+        } else {
+            // --- Không có searchKey ---
+            if (status != null) {
+                // Chỉ lọc theo status
+                resultPage = voucherRepository
+                        .findByStatus(status, pageable)
+                        .map(voucher -> {
+                            VoucherResponse response = voucherMapper.response(voucher);
+                            response.setStatus(voucher.getStatus());
+                            return response;
+                        });
+            } else {
+                // Không có status → lấy toàn bộ
+                resultPage = voucherRepository
+                        .findAll(pageable)
+                        .map(voucher -> {
+                            VoucherResponse response = voucherMapper.response(voucher);
+                            response.setStatus(voucher.getStatus());
+                            return response;
+                        });
+            }
+        }
+
+        // 3. Trả về dạng PaginatedResponse
+        return PaginatedResponse.fromSpringPage(resultPage);
     }
 
-    public VoucherResponse createVoucher(VoucherRequest request){
 
+    public VoucherResponse createVoucher(VoucherRequest request) {
         Voucher voucher = voucherMapper.toVoucher(request);
 
         voucher.setStatus(VoucherStatus.Active);
-
         voucher.setId(UUID.randomUUID().toString());
 
-
-        return voucherMapper.response(voucherRepository.save(voucher));
-
+        Voucher saved = voucherRepository.save(voucher);
+        VoucherResponse response = voucherMapper.response(saved);
+        response.setStatus(saved.getStatus());
+        return response;
     }
 
-    public VoucherResponse updateVoucher(VoucherRequest request,String voucherId){
-        Voucher voucher = voucherRepository.findById(voucherId).orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
+    public VoucherResponse updateVoucher(VoucherRequest request, String voucherId) {
+        Voucher voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
 
         voucher.setName(request.getName());
         voucher.setStartDate(request.getStartDate());
@@ -58,21 +109,26 @@ public class VoucherService {
         voucher.setMaxDiscountValue(request.getMaxDiscountValue());
         voucher.setMinOrderValue(request.getMinOrderValue());
 
-        return voucherMapper.response(voucherRepository.save(voucher));
+        Voucher updated = voucherRepository.save(voucher);
+        VoucherResponse response = voucherMapper.response(updated);
+        response.setStatus(updated.getStatus());
+        return response;
     }
 
-    public void deleteVoucher(String voucherId){
-        Voucher voucher = voucherRepository.findById(voucherId).orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
+    public void deleteVoucher(String voucherId) {
+        Voucher voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
         voucher.setStatus(VoucherStatus.Inactive);
-
         voucherRepository.save(voucher);
     }
 
-    public VoucherResponse getVoucherById(String voucherId){
+    public VoucherResponse getVoucherById(String voucherId) {
+        Voucher voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
 
-        return voucherMapper.response(voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED)));
-
+        VoucherResponse response = voucherMapper.response(voucher);
+        response.setStatus(voucher.getStatus());
+        return response;
     }
 
 }

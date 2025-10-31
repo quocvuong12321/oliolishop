@@ -1,7 +1,5 @@
 package com.oliolishop.oliolishop.dto.employee;
 
-
-import com.oliolishop.oliolishop.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -10,9 +8,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EmployeeRequest {
-
-    String username;
+public class EmployeeUpdateRequest {
     String password;
     String name;
     String phoneNumber;

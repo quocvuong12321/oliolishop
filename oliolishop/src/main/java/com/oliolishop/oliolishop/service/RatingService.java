@@ -125,6 +125,7 @@ public class RatingService {
         response.setAttachedImageUrls(AppUtils.parseStringToArray(saved.getImages()));
         response.setLikeCount(saved.getLikesCount());
         response.setCustomerAvatarUrl(customer.getImage());
+        response.setCreateDate(saved.getCreateDate());
 
         return response;
     }

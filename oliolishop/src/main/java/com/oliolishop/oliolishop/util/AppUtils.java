@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AppUtils {
@@ -90,75 +91,90 @@ public class AppUtils {
     }
 
 //    public static String saveImage(MultipartFile file,
-//                            String imageDir,
-//                            String folder,
-//                            String fileName) throws IOException {
+//                                   String imageDir,
+//                                   String folder,
+//                                   String fileNameBase) throws IOException { // Đổi tên fileName thành fileNameBase cho rõ ràng
+//
+//        // 1. Tạo thư mục upload nếu chưa tồn tại
 //        Path uploadDirPath = Paths.get(imageDir, folder);
 //        Files.createDirectories(uploadDirPath);
 //
-//        BufferedImage image = ImageIO.read(file.getInputStream());
-//        if (image == null) {
-//            throw new IOException("File upload không hợp lệ (không phải ảnh): " + file.getOriginalFilename());
+//        // 2. Xác định định dạng (Extension) và Tên file cuối cùng
+//        String originalFilename = file.getOriginalFilename();
+//        String contentType = file.getContentType();
+//
+//        // Ưu tiên PNG nếu nội dung là PNG (để giữ nền trong suốt), nếu không thì dùng JPG
+//        String outputExt = "jpg";
+//        if (contentType != null && contentType.toLowerCase().contains("png")) {
+//            outputExt = "png";
 //        }
 //
-//        // Luôn convert sang jpg
-//        String ext = "jpg";
-//        if (!fileName.endsWith("." + ext)) {
-//            fileName = fileName + "." + ext;
+//        // Tên file cuối cùng (baseName + .ext)
+//        String finalFileName = fileNameBase + "." + outputExt;
+//        Path targetPath = uploadDirPath.resolve(finalFileName);
+//
+//        // 3. Xử lý ảnh bằng Thumbnailator (Tối ưu đọc/ghi)
+//        try {
+//            Thumbnails.of(file.getInputStream())
+//                    // Giữ tỷ lệ ảnh (Aspect Ratio), giới hạn tối đa 800x800.
+//                    // Nếu ảnh nhỏ hơn, nó sẽ không phóng to.
+//                    .size(500, 500)
+//                    .keepAspectRatio(true) // Rất quan trọng: GIỮ TỶ LỆ GỐC
+//
+//                    // Chất lượng (Chỉ áp dụng cho JPG)
+//                    .outputQuality(0.9)
+//
+//                    // Định dạng đầu ra
+//                    .outputFormat(outputExt)
+//                    .toFile(targetPath.toFile());
+//        } catch (IOException e) {
+//            throw new IOException("Lỗi khi xử lý và lưu file ảnh: " + file.getOriginalFilename(), e);
 //        }
-//        Path targetPath = uploadDirPath.resolve(fileName);
 //
-//        // Resize 500x500 và lưu
-//        Thumbnails.of(image)
-//                .size(500, 500)
-//                .outputFormat(ext)
-//                .toFile(targetPath.toFile());
-//
-//        return folder + "/" + fileName;
+//        // 4. Trả về URL tương đối
+//        return folder + "/" + finalFileName;
 //    }
 
     public static String saveImage(MultipartFile file,
                                    String imageDir,
                                    String folder,
-                                   String fileNameBase) throws IOException { // Đổi tên fileName thành fileNameBase cho rõ ràng
+                                   String fileNameBase) throws IOException {
 
         // 1. Tạo thư mục upload nếu chưa tồn tại
         Path uploadDirPath = Paths.get(imageDir, folder);
         Files.createDirectories(uploadDirPath);
 
-        // 2. Xác định định dạng (Extension) và Tên file cuối cùng
+        // 2. Xác định định dạng đầu vào và đầu ra
         String originalFilename = file.getOriginalFilename();
-        String contentType = file.getContentType();
+        String extension = "";
 
-        // Ưu tiên PNG nếu nội dung là PNG (để giữ nền trong suốt), nếu không thì dùng JPG
-        String outputExt = "jpg";
-        if (contentType != null && contentType.toLowerCase().contains("png")) {
-            outputExt = "png";
+        // Lấy phần mở rộng từ tên file nếu có
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
         }
 
-        // Tên file cuối cùng (baseName + .ext)
-        String finalFileName = fileNameBase + "." + outputExt;
+        // Một số định dạng ảnh hợp lệ
+        Set<String> supportedFormats = Set.of("jpg", "jpeg", "png", "bmp", "gif");
+
+        // Nếu đuôi không nằm trong danh sách, fallback về jpg
+        if (!supportedFormats.contains(extension)) {
+            extension = "jpg";
+        }
+
+        String finalFileName = fileNameBase + "." + extension;
         Path targetPath = uploadDirPath.resolve(finalFileName);
 
-        // 3. Xử lý ảnh bằng Thumbnailator (Tối ưu đọc/ghi)
         try {
             Thumbnails.of(file.getInputStream())
-                    // Giữ tỷ lệ ảnh (Aspect Ratio), giới hạn tối đa 800x800.
-                    // Nếu ảnh nhỏ hơn, nó sẽ không phóng to.
-                    .size(500, 500)
-                    .keepAspectRatio(true) // Rất quan trọng: GIỮ TỶ LỆ GỐC
-
-                    // Chất lượng (Chỉ áp dụng cho JPG)
+                    .size(800, 800)
+                    .keepAspectRatio(true)
                     .outputQuality(0.9)
-
-                    // Định dạng đầu ra
-                    .outputFormat(outputExt)
+                    .outputFormat(extension)
                     .toFile(targetPath.toFile());
         } catch (IOException e) {
-            throw new IOException("Lỗi khi xử lý và lưu file ảnh: " + file.getOriginalFilename(), e);
+            throw new IOException("Lỗi khi xử lý ảnh: " + originalFilename, e);
         }
 
-        // 4. Trả về URL tương đối
         return folder + "/" + finalFileName;
     }
 

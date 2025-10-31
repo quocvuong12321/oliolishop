@@ -2,6 +2,7 @@ package com.oliolishop.oliolishop.service;
 
 
 import com.oliolishop.oliolishop.dto.BreadCrumbResponse;
+import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.category.CategoryResponse;
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrRequest;
 import com.oliolishop.oliolishop.dto.descriptionattr.DescriptionAttrResponse;
@@ -21,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,11 +57,42 @@ public class ProductSpuService {
     RedisService redisService;
 
 
-    public List<ProductSpuResponse> getProducts(String categoryId,  String brandId ,double minPrice, double maxPrice, int page, int size) {
-        List<ProductSpuProjection> query = productSpuRepository.findProducts(categoryId,brandId,minPrice,maxPrice, page, size);
-        List<ProductSpuResponse> lstResponse = new ArrayList<>();
+    //    public List<ProductSpuResponse> getProducts(String categoryId,  String brandId ,double minPrice, double maxPrice, int page, int size) {
+//        List<ProductSpuProjection> query = productSpuRepository.findProducts(categoryId,brandId,minPrice,maxPrice, page, size);
+//        List<ProductSpuResponse> lstResponse = new ArrayList<>();
+//
+//        query.forEach(s->lstResponse.add(ProductSpuResponse.builder()
+//                        .id(s.getProductSpuId())
+//                        .brandId(s.getBrandId())
+//                        .categoryId(s.getCategoryId())
+//                        .maxPrice(s.getMaxPrice())
+//                        .minPrice(s.getMinPrice())
+//                        .image(s.getImage())
+//                        .name(s.getName())
+//                .build()));
+//
+//        return  lstResponse;
+//    }
+    public PaginatedResponse<ProductSpuResponse> getProducts(String categoryId,
+                                                             String brandId,
+                                                             Double minPrice,
+                                                             Double maxPrice,
+                                                             int page,
+                                                             int size,
+                                                             String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "minPrice"));
 
-        query.forEach(s->lstResponse.add(ProductSpuResponse.builder()
+        Page<ProductSpuProjection> query = productSpuRepository.findProducts(
+                categoryId,
+                brandId,
+                minPrice,
+                maxPrice,
+                search,
+                pageable
+        );
+
+        List<ProductSpuResponse> content = query.stream()
+                .map(s -> ProductSpuResponse.builder()
                         .id(s.getProductSpuId())
                         .brandId(s.getBrandId())
                         .categoryId(s.getCategoryId())
@@ -67,14 +100,15 @@ public class ProductSpuService {
                         .minPrice(s.getMinPrice())
                         .image(s.getImage())
                         .name(s.getName())
-                .build()));
+                        .build())
+                .toList();
 
-        return  lstResponse;
+        return PaginatedResponse.fromSpringPage(new PageImpl<>(content, pageable, query.getTotalElements()));
     }
 
 
-    public Integer getTotalElements(String categoryId, String brandId, double minPrice, double maxPrice){
-        return productSpuRepository.getTotalElements(categoryId,brandId,minPrice,maxPrice);
+    public Integer getTotalElements(String categoryId, String brandId, double minPrice, double maxPrice) {
+        return productSpuRepository.getTotalElements(categoryId, brandId, minPrice, maxPrice);
     }
 
     public ProductDetailResponse detailProduct(String id) {
@@ -118,7 +152,7 @@ public class ProductSpuService {
                 .name(spu.getName())
                 .build());
 
-        Long countRating = ratingRepository.countByProductSpu_Id(id).orElse((long)0);
+        Long countRating = ratingRepository.countByProductSpu_Id(id).orElse((long) 0);
         Double avgStar = ratingRepository.getAverageStarByProductSpuId(id).orElse(0.0);
 
         // Build response
@@ -147,11 +181,46 @@ public class ProductSpuService {
     }
 
 
+//    protected List<ProductSpuResponse> productsSameBrand(String brandId) {
+//        List<ProductSpuResponse> lstResponse = new ArrayList<>();
+//
+//        productSpuRepository.findProducts(null, brandId, 0, 9999999, 0, 20).forEach(
+//                s -> lstResponse.add(ProductSpuResponse.builder()
+//                        .id(s.getProductSpuId())
+//                        .brandId(s.getBrandId())
+//                        .categoryId(s.getCategoryId())
+//                        .maxPrice(s.getMaxPrice())
+//                        .minPrice(s.getMinPrice())
+//                        .image(s.getImage())
+//                        .name(s.getName())
+//                        .build()));
+//        return lstResponse;
+//
+//    }
+//
+//    protected List<ProductSpuResponse> productsSameCategory(String categoryId) {
+//
+//        List<ProductSpuResponse> lstResponse = new ArrayList<>();
+//
+//        productSpuRepository.findProducts(categoryId, null, 0, 9999999, 0, 20).forEach(
+//                s -> lstResponse.add(ProductSpuResponse.builder()
+//                        .id(s.getProductSpuId())
+//                        .brandId(s.getBrandId())
+//                        .categoryId(s.getCategoryId())
+//                        .maxPrice(s.getMaxPrice())
+//                        .minPrice(s.getMinPrice())
+//                        .image(s.getImage())
+//                        .name(s.getName())
+//                        .build()));
+//        return lstResponse;
+//
+//    }
+
     protected List<ProductSpuResponse> productsSameBrand(String brandId) {
-        List<ProductSpuResponse> lstResponse = new ArrayList<>();
-
-        productSpuRepository.findProducts(null,brandId,0,9999999,0,20).forEach(
-                s->lstResponse.add(ProductSpuResponse.builder()
+        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "minPrice"));
+        return productSpuRepository.findProducts(null, brandId, null, null, null, pageable)
+                .stream()
+                .map(s -> ProductSpuResponse.builder()
                         .id(s.getProductSpuId())
                         .brandId(s.getBrandId())
                         .categoryId(s.getCategoryId())
@@ -159,17 +228,15 @@ public class ProductSpuService {
                         .minPrice(s.getMinPrice())
                         .image(s.getImage())
                         .name(s.getName())
-                        .build()));
-        return  lstResponse;
-
+                        .build())
+                .toList();
     }
 
-    protected List<ProductSpuResponse> productsSameCategory(String categoryId){
-
-        List<ProductSpuResponse> lstResponse = new ArrayList<>();
-
-        productSpuRepository.findProducts(categoryId,null,0,9999999,0,20).forEach(
-                s->lstResponse.add(ProductSpuResponse.builder()
+    protected List<ProductSpuResponse> productsSameCategory(String categoryId) {
+        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "minPrice"));
+        return productSpuRepository.findProducts(categoryId, null, null, null, null, pageable)
+                .stream()
+                .map(s -> ProductSpuResponse.builder()
                         .id(s.getProductSpuId())
                         .brandId(s.getBrandId())
                         .categoryId(s.getCategoryId())
@@ -177,13 +244,12 @@ public class ProductSpuService {
                         .minPrice(s.getMinPrice())
                         .image(s.getImage())
                         .name(s.getName())
-                        .build()));
-        return  lstResponse;
-
+                        .build())
+                .toList();
     }
 
 
-    private BigDecimal findMinPriceSpuId(Set<ProductSku> setSkus){
+    private BigDecimal findMinPriceSpuId(Set<ProductSku> setSkus) {
 
         return setSkus.stream().map(ProductSku::getOriginalPrice).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
     }
@@ -195,13 +261,13 @@ public class ProductSpuService {
 
         spu.setId(spu_id);
 
-        spu.setKey(AppUtils.convertToSpuUrl(AppUtils.toSlug(spu.getName()),spu_id));
+        spu.setKey(AppUtils.convertToSpuUrl(AppUtils.toSlug(spu.getName()), spu_id));
 
         List<DescriptionAttrRequest> attrs = request.getDescriptionAttrRequests();
 
 
         Category c = categoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST));
-        Brand b = brandRepository.findById(request.getBrandId()).orElseThrow(()->new AppException(ErrorCode.BRAND_NOT_EXISTED));
+        Brand b = brandRepository.findById(request.getBrandId()).orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_EXISTED));
 
         spu.setCategory(c);
         spu.setBrand(b);
@@ -209,9 +275,9 @@ public class ProductSpuService {
         String key = c.getKey();
 
 
-        List<String> lstMedia = saveProductImages(key,spu_id,files,imageDir);
+        List<String> lstMedia = saveProductImages(key, spu_id, files, imageDir);
 
-        String[] media =  lstMedia.toArray(new String[0]);
+        String[] media = lstMedia.toArray(new String[0]);
         spu.setMedia(AppUtils.arrayToPythonList(media));
 
         spu.setImage(media[0]);
@@ -228,12 +294,11 @@ public class ProductSpuService {
 
         resp.setMedia(media);
 
-        resp.setDescriptionAttrs(descriptionAttrService.createDescriptionAttrs(request.getDescriptionAttrRequests(),spu));
+        resp.setDescriptionAttrs(descriptionAttrService.createDescriptionAttrs(request.getDescriptionAttrRequests(), spu));
 
         return resp;
 
     }
-
 
 
     public List<String> saveProductImages(String key, String spuId, List<MultipartFile> files, String imageDir) {
@@ -263,12 +328,13 @@ public class ProductSpuService {
         }
         return mediaUrls;
     }
+
     @Transactional
-    public ProductSpuCreateResponse updateProductSpu(ProductSpuCreateRequest request, String id){
-        ProductSpu spu = productSpuRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+    public ProductSpuCreateResponse updateProductSpu(ProductSpuCreateRequest request, String id) {
+        ProductSpu spu = productSpuRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
 
         spu.setName(request.getName());
-        spu.setKey(AppUtils.convertToSpuUrl(AppUtils.toSlug(request.getName()),id));
+        spu.setKey(AppUtils.convertToSpuUrl(AppUtils.toSlug(request.getName()), id));
         spu.setDescription(request.getDescription());
         spu.setShortDescription(request.getShortDescription());
         spu.setBrand(Brand.builder().id(request.getBrandId()).build());

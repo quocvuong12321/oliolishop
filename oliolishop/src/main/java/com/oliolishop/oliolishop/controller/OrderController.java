@@ -84,7 +84,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ApiResponse<PaginatedResponse<OrderResponse>> getOrderByCustomerId(@RequestParam(name = "status") List<OrderStatus> status,
+    public ApiResponse<PaginatedResponse<OrderResponse>> getOrderByCustomerId(@RequestParam(name = "status", required = false) List<OrderStatus> status,
                                                                               @RequestParam(name = "page", defaultValue = "0") int page,
                                                                               @RequestParam(name = "size", defaultValue = "10") int size
     ) {

@@ -21,17 +21,58 @@ import java.util.UUID;
 public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> {
 
 
+    //    @Query(
+//            value = "CALL GetProductList(:categoryId, :brandId, :minPrice, :maxPrice, :page, :size)",
+//            nativeQuery = true
+//    )
+//    List<ProductSpuProjection> findProducts(
+//            @Param("categoryId") String categoryId,
+//            @Param("brandId") String brandId,
+//            @Param("minPrice") double minPrice,
+//            @Param("maxPrice") double maxPrice,
+//            @Param("page") int page,
+//            @Param("size") int size
+//    );
     @Query(
-            value = "CALL GetProductList(:categoryId, :brandId, :minPrice, :maxPrice, :page, :size)",
+            value = """
+                    SELECT 
+                        spu.product_spu_id AS productSpuId,
+                        spu.name AS name,
+                        spu.category_id AS categoryId,
+                        spu.brand_id AS brandId,
+                        MIN(sku.original_price) AS minPrice,
+                        MAX(sku.original_price) AS maxPrice,
+                        spu.image AS image
+                    FROM product_spu spu
+                    JOIN product_sku sku ON spu.product_spu_id = sku.product_spu_id
+                    WHERE (:categoryId IS NULL OR spu.category_id = :categoryId)
+                      AND (:brandId IS NULL OR spu.brand_id = :brandId)
+                      AND (:search IS NULL OR spu.name LIKE CONCAT('%', :search, '%'))
+                      AND spu.delete_status = 'Active'
+                    GROUP BY spu.product_spu_id, spu.name, spu.category_id, spu.brand_id, spu.image
+                    HAVING (:minPrice IS NULL OR MIN(sku.original_price) >= :minPrice)
+                       AND (:maxPrice IS NULL OR MIN(sku.original_price) <= :maxPrice)
+                    """,
+            countQuery = """
+                    SELECT COUNT(DISTINCT spu.product_spu_id)
+                    FROM product_spu spu
+                    JOIN product_sku sku ON spu.product_spu_id = sku.product_spu_id
+                    WHERE (:categoryId IS NULL OR spu.category_id = :categoryId)
+                      AND (:brandId IS NULL OR spu.brand_id = :brandId)
+                      AND (:search IS NULL OR spu.name LIKE CONCAT('%', :search, '%'))
+                      AND spu.delete_status = 'Active'
+                    HAVING (:minPrice IS NULL OR MIN(sku.original_price) >= :minPrice)
+                       AND (:maxPrice IS NULL OR MIN(sku.original_price) <= :maxPrice)
+                    """,
             nativeQuery = true
     )
-    List<ProductSpuProjection> findProducts(
+    Page<ProductSpuProjection> findProducts(
             @Param("categoryId") String categoryId,
             @Param("brandId") String brandId,
-            @Param("minPrice") double minPrice,
-            @Param("maxPrice") double maxPrice,
-            @Param("page") int page,
-            @Param("size") int size
+            @Param("minPrice") Double minPrice,
+            @Param("maxPrice") Double maxPrice,
+            @Param("search") String search,
+            Pageable pageable
     );
 
     @Query(
@@ -68,40 +109,40 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
 
 
     @Query("""
-        SELECT spu
-        FROM ProductSpu spu
-        LEFT JOIN FETCH spu.productSkus skus
-        LEFT JOIN FETCH spu.attrs attrs
-        LEFT JOIN FETCH spu.skuAttrs skuAttrs
-        LEFT JOIN FETCH spu.category category
-        LEFT JOIN FETCH spu.brand brand
-        WHERE spu.id = :id and skus.status = :status
-    """)
-    Optional<ProductSpu> findDetailById(@Param("id") String id, @Param("status")ProductSku.Status status);
+                SELECT spu
+                FROM ProductSpu spu
+                LEFT JOIN FETCH spu.productSkus skus
+                LEFT JOIN FETCH spu.attrs attrs
+                LEFT JOIN FETCH spu.skuAttrs skuAttrs
+                LEFT JOIN FETCH spu.category category
+                LEFT JOIN FETCH spu.brand brand
+                WHERE spu.id = :id and skus.status = :status
+            """)
+    Optional<ProductSpu> findDetailById(@Param("id") String id, @Param("status") ProductSku.Status status);
 
 
     @Query(value = """
-        SELECT COALESCE(MIN(sk.original_price), 0)
-        FROM product_sku sk
-        WHERE sk.product_spu_id = :spu_id
-        """, nativeQuery = true)
+            SELECT COALESCE(MIN(sk.original_price), 0)
+            FROM product_sku sk
+            WHERE sk.product_spu_id = :spu_id
+            """, nativeQuery = true)
     Double findMinPriceBySpuId(@Param("spu_id") String spu_id);
 
 
     @Query("""
-        SELECT spu
-        FROM ProductSpu spu
-        JOIN spu.productSkus sku
-        WHERE sku.id = :skuId
-    """)
+                SELECT spu
+                FROM ProductSpu spu
+                JOIN spu.productSkus sku
+                WHERE sku.id = :skuId
+            """)
     ProductSpu findBySkuId(@Param("skuId") String skuId);
 
     @Query("""
-    SELECT DISTINCT spu
-    FROM ProductSpu spu
-    JOIN spu.productSkus sku
-    WHERE sku.id IN :skuIds
-    """)
+            SELECT DISTINCT spu
+            FROM ProductSpu spu
+            JOIN spu.productSkus sku
+            WHERE sku.id IN :skuIds
+            """)
     List<ProductSpu> findAllBySkuIds(@Param("skuIds") List<String> skuIds);
 }
 

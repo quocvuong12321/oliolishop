@@ -27,6 +27,14 @@ public class VoucherController {
                 .build();
     }
 
+    @GetMapping(ApiPath.BY_ID)
+    public ApiResponse<?> getVoucherById(@PathVariable(name = "id")String voucherId){
+
+        return ApiResponse.builder()
+                .result(voucherService.getVoucherById(voucherId))
+                .build();
+    }
+
     @PostMapping
     public ApiResponse<VoucherResponse> createVoucher(@Valid @RequestBody VoucherRequest request){
 
@@ -51,4 +59,6 @@ public class VoucherController {
                 .result("")
                 .build();
     }
+
+
 }

@@ -68,4 +68,11 @@ public class VoucherService {
         voucherRepository.save(voucher);
     }
 
+    public VoucherResponse getVoucherById(String voucherId){
+
+        return voucherMapper.response(voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED)));
+
+    }
+
 }

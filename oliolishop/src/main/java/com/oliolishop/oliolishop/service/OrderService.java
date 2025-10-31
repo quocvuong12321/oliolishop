@@ -252,6 +252,7 @@ public class OrderService {
                 itemResponse.setName(spu.getName());
                 itemResponse.setProductSkuId(sku.getId());
                 itemResponse.setThumbnail(spu.getImage());
+                itemResponse.setProductSpuId(spu.getId());
                 itemResponse.setVariant(productSkuUtils.getVariant(sku));
                 return itemResponse;
             }).collect(Collectors.toList());
@@ -264,37 +265,6 @@ public class OrderService {
     }
 
 
-    public PaginatedResponse<OrderResponse> getOrderByStatus(OrderStatus status, int page, int size) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<Order> orders = orderRepository.findByOrderStatus(status, pageable);
-
-        Page<OrderResponse> responses = orders.map(item -> {
-            OrderResponse orderResponse = orderMapper.toResponse(item);
-            orderResponse.setStatus(item.getOrderStatus()); // Giả sử trường Entity là 'status'
-
-            List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i -> {
-                OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
-
-                ProductSku sku = i.getProductSku();
-                ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
-
-                itemResponse.setName(spu.getName());
-                itemResponse.setProductSkuId(sku.getId());
-                itemResponse.setThumbnail(spu.getImage());
-                itemResponse.setVariant(productSkuUtils.getVariant(sku));
-                return itemResponse;
-            }).collect(Collectors.toList()); // Đổi .toList() sang .collect(Collectors.toList())
-
-            orderResponse.setOrderItems(orderItemResponses);
-            return orderResponse;
-        });
-
-        return PaginatedResponse.fromSpringPage(responses);
-
-    }
 
     public PaginatedResponse<OrderResponse> getOrdersByStatuses(List<OrderStatus> statuses, int page, int size) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
@@ -320,6 +290,7 @@ public class OrderService {
                 itemResponse.setName(spu.getName());
                 itemResponse.setProductSkuId(sku.getId());
                 itemResponse.setThumbnail(spu.getImage());
+                itemResponse.setProductSpuId(spu.getId());
                 itemResponse.setVariant(productSkuUtils.getVariant(sku));
                 return itemResponse;
             }).collect(Collectors.toList());

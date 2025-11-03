@@ -30,4 +30,7 @@ public class Employee {
     @ManyToOne
     @JoinColumn(name = "role_id")
     Role role;
+
+    @Enumerated(EnumType.STRING)
+    Account.AccountStatus status;
 }

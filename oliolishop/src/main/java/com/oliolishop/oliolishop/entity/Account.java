@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.entity;
 
 
+import com.oliolishop.oliolishop.enums.VoucherStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -46,5 +47,13 @@ public class Account {
 
     @OneToOne(mappedBy = "account")
     Customer customer;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name =  "active_status")
+    AccountStatus status;
+
+    public enum AccountStatus{
+        Active,Inactive
+    }
 
 }

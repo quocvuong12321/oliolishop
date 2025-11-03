@@ -5,6 +5,7 @@ import com.oliolishop.oliolishop.enums.OrderStatus;
 import com.oliolishop.oliolishop.service.OrderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -24,5 +25,7 @@ public interface OrderRepository extends JpaRepository<Order,String> {
 
     Page<Order> findByOrderStatusIn(List<OrderStatus> statuses, Pageable pageable);
 
+
+    Page<Order> findAll(Specification<Order> spec, Pageable pageable);
 }
 

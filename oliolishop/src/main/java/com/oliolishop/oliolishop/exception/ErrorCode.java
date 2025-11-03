@@ -26,6 +26,7 @@ public enum ErrorCode {
     NOT_ENOUGH_QUANTITY_PRODUCT(1012,"Sản phẩm không đủ số lượng",HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_QUANTITY_VOUCHER(1013,"Voucher không đủ số lượng",HttpStatus.BAD_REQUEST),
     INVALID_VOUCHER(1014,"Voucher không hợp lê",HttpStatus.BAD_REQUEST),
+    EMAIL_INVALID_FORMAT(1015,"Email không đúng định dạng",HttpStatus.BAD_REQUEST),
     // 2xxx: auth (Lỗi xác thực và ủy quyền)
     UNAUTHENTICATED(2001,"Chưa được xác thực/Đăng nhập",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),
@@ -63,6 +64,7 @@ public enum ErrorCode {
     ORDER_STATUS_INVALID(3026,"Trạng thái đơn hàng không hợp lệ",HttpStatus.BAD_REQUEST),
     RATED(3027,"Bạn đã đánh giá đơn hàng này rồi",HttpStatus.CONFLICT),
     CREATE_SHIPPING_FAIL(3028,"Tạo đơn vận chuyeernt thất bại", HttpStatus.BAD_REQUEST),
+    EMPLOYEE_NOT_EXIST(3029, "Nhân viên không tồn tại", HttpStatus.BAD_REQUEST),
 
     // Lỗi chung khi vi phạm ràng buộc DB (ví dụ: để fallback)
     DATABASE_INTEGRITY_VIOLATION(4000, "Vi phạm ràng buộc dữ liệu cơ sở. Vui lòng kiểm tra lại.", HttpStatus.CONFLICT),

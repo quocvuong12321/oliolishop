@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.dto.employee;
 
+import com.oliolishop.oliolishop.entity.Account;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -16,6 +17,7 @@ public class EmployeeResponse {
     String phoneNumber;
     String email;
     RoleResponse role;
+    Account.AccountStatus status;
 
     @Data
     @NoArgsConstructor

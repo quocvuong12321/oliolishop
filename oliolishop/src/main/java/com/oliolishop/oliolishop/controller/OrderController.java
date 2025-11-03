@@ -96,25 +96,27 @@ public class OrderController {
 
     }
 
-    @GetMapping(ApiPath.Order.STATUS)
-//    public ApiResponse<PaginatedResponse<OrderResponse>> getOrderByStatus(
-//            @RequestParam(name = "status") OrderStatus status,
-//            @RequestParam(name = "page", defaultValue = "0") int page,
-//            @RequestParam(name = "size", defaultValue = "10") int size
+    @GetMapping(ApiPath.Order.SEARCH)
+//    public ApiResponse<PaginatedResponse<OrderResponse>> getOrdersByStatuses(
+//            @RequestParam(required = false) List<OrderStatus> statuses,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
 //    ) {
 //        return ApiResponse.<PaginatedResponse<OrderResponse>>builder()
-//                .result(orderService.getOrderByStatus(status, page, size))
+//                .result((orderService.searchOrders(statuses, page, size)))
 //                .build();
 //    }
-    public ApiResponse<PaginatedResponse<OrderResponse>> getOrdersByStatuses(
-            @RequestParam(required = false) List<OrderStatus> statuses,
+    public ApiResponse<PaginatedResponse<OrderResponse>> searchOrder(
+            @ModelAttribute OrderSearchCriteria orderSearchCriteria,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         return ApiResponse.<PaginatedResponse<OrderResponse>>builder()
-                .result((orderService.getOrdersByStatuses(statuses, page, size)))
+                .result((orderService.searchOrders(orderSearchCriteria, page, size)))
                 .build();
     }
+
+
 
         @PostMapping(ApiPath.Order.RATING)
     public ApiResponse<RatingResponse> createOrder(@RequestPart(value = "request") RatingRequest request,

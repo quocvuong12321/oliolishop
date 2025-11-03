@@ -2,6 +2,7 @@ package com.oliolishop.oliolishop.controller;
 
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
+import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.brand.BrandRequest;
 import com.oliolishop.oliolishop.dto.brand.BrandResponse;
 import com.oliolishop.oliolishop.service.BrandService;
@@ -13,7 +14,7 @@ import java.security.PublicKey;
 
 
 @RestController
-@RequestMapping(ApiPath.BASE+ApiPath.BRAND)
+@RequestMapping(ApiPath.brand.ROOT)
 @Slf4j
 public class BrandController {
     @Autowired
@@ -25,6 +26,17 @@ public class BrandController {
                                     @RequestParam(defaultValue = "10") int size){
         return ApiResponse.builder()
                 .result(brandService.getBrands(searchKey,page,size))
+                .build();
+    }
+
+
+    @GetMapping(ApiPath.brand.GET_BY_CATEGORY)
+    public ApiResponse<?> getBrandsByCategory(@RequestParam(name = "id") String categoryId,
+                                                   @RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "10") int size){
+
+        return ApiResponse.<PaginatedResponse<BrandResponse>>builder()
+                .result(brandService.getBrandByCategory(categoryId,page,size))
                 .build();
     }
 

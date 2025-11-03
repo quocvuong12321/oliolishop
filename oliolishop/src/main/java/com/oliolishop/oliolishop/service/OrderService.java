@@ -19,6 +19,7 @@ import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.*;
 import com.oliolishop.oliolishop.repository.*;
 import com.oliolishop.oliolishop.util.AppUtils;
+import com.oliolishop.oliolishop.util.OrderUtils;
 import com.oliolishop.oliolishop.util.ProductSkuUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -36,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -277,6 +280,43 @@ public class OrderService {
         } else {
             orders = orderRepository.findByOrderStatusIn(statuses, pageable);
         }
+
+        Page<OrderResponse> responses = orders.map(item -> {
+            OrderResponse orderResponse = orderMapper.toResponse(item);
+            orderResponse.setStatus(item.getOrderStatus());
+
+            List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i -> {
+                OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
+
+                ProductSku sku = i.getProductSku();
+                ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+
+                itemResponse.setName(spu.getName());
+                itemResponse.setProductSkuId(sku.getId());
+                itemResponse.setThumbnail(spu.getImage());
+                itemResponse.setProductSpuId(spu.getId());
+                itemResponse.setVariant(productSkuUtils.getVariant(sku));
+                return itemResponse;
+            }).collect(Collectors.toList());
+
+            orderResponse.setOrderItems(orderItemResponses);
+            return orderResponse;
+        });
+
+        return PaginatedResponse.fromSpringPage(responses);
+    }
+
+
+    public PaginatedResponse<OrderResponse> searchOrders(OrderSearchCriteria criteria, int page, int size) {
+        // 1. Thiết lập phân trang và sắp xếp
+        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // 2. Xây dựng Specification
+        Specification<Order> spec = OrderUtils.byCriteria(criteria);
+
+        // 3. Thực hiện truy vấn
+        Page<Order> orders = orderRepository.findAll(spec, pageable);
 
         Page<OrderResponse> responses = orders.map(item -> {
             OrderResponse orderResponse = orderMapper.toResponse(item);

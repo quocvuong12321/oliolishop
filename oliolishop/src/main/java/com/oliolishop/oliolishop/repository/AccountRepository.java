@@ -1,6 +1,8 @@
 package com.oliolishop.oliolishop.repository;
 
 import com.oliolishop.oliolishop.entity.Account;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,5 +18,7 @@ public interface AccountRepository extends JpaRepository<Account,String> {
     boolean existsByPhoneNumber(String phoneNumber);
 
     Optional<Account> findByEmail(String email);
+
+    Page<Account> findByStatus(Account.AccountStatus status, Pageable pageable);
 
 }

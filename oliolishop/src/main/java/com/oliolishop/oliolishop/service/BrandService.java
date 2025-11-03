@@ -43,6 +43,13 @@ public class BrandService {
         return PaginatedResponse.fromSpringPage(springPage);
     }
 
+    public PaginatedResponse<BrandResponse> getBrandByCategory(String categoryId, int page, int size){
+        Pageable pageable = PageRequest.of(page,size);
+        Page<Brand> brands = brandRepository.findDistinctBrandsByCategoryId(categoryId,pageable);
+        return PaginatedResponse.fromSpringPage(brands.map(brandMapper::toResponse));
+    }
+
+
     public BrandResponse getBrandById(String id){
         return brandMapper.toResponse(brandRepository.findById(id).orElseThrow(()-> new AppException(ErrorCode.BRAND_NOT_EXISTED)));
     }

@@ -25,4 +25,6 @@ public class MessageConstants {
         public static final String CANT = "Yêu cầu hủy đơn hàng không thể thực hiện.";
         public static final String PENDING_REFUND = "Đơn hàng đã được hủy và tiền sẽ được hoàn về tài khoản quý khách trong khoảng 7 - 14 ngày tới";
     }
+
+    public static final String DELETE_SUCCESS = "Xóa %s thành công";
 }

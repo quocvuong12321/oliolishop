@@ -39,6 +39,11 @@ public class ApiPath {
     public static final String CATEGORY = "/category";
 
     public static final String BRAND = "/brand";
+    public static final class brand{
+        public static final String ROOT = BASE +"/brand";
+        public static final String GET_BY_CATEGORY = "/category";
+
+    }
 
     public static final String IMAGE = "/image";
 
@@ -74,6 +79,7 @@ public class ApiPath {
         public static final String STATUS = "/status";
         public static final String CREATE_SHIPPING = "/shipping";
         public static final String ORDER_STATUS = "/order-statuses";
+        public static final String SEARCH ="/search";
 
     }
 
@@ -92,6 +98,12 @@ public class ApiPath {
 
     public static final class Voucher{
         public static final String ROOT = BASE+"/voucher";
+    }
+
+    public static final class Admin{
+        public static final String ROOT = BASE+"/admin";
+        public static final String EMPLOYEE = "/employee";
+        public static final String CUSTOMER = "/customer";
     }
 
 }

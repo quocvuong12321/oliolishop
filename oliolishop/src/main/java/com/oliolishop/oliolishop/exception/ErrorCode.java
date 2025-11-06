@@ -63,7 +63,7 @@ public enum ErrorCode {
     ORDER_PAID(3025,"Đơn hàng đã được thanh toán",HttpStatus.FORBIDDEN),
     ORDER_STATUS_INVALID(3026,"Trạng thái đơn hàng không hợp lệ",HttpStatus.BAD_REQUEST),
     RATED(3027,"Bạn đã đánh giá đơn hàng này rồi",HttpStatus.CONFLICT),
-    CREATE_SHIPPING_FAIL(3028,"Tạo đơn vận chuyeernt thất bại", HttpStatus.BAD_REQUEST),
+    CREATE_SHIPPING_FAIL(3028,"Tạo đơn vận chuyển thất bại", HttpStatus.BAD_REQUEST),
     EMPLOYEE_NOT_EXIST(3029, "Nhân viên không tồn tại", HttpStatus.BAD_REQUEST),
 
     // Lỗi chung khi vi phạm ràng buộc DB (ví dụ: để fallback)

@@ -23,4 +23,6 @@ public interface RatingRepository extends JpaRepository<Rating,String> {
     @Query("SELECT AVG(r.star) FROM Rating r WHERE r.productSpu.id = :spuId AND r.isHidden = false")
     Optional<Double> getAverageStarByProductSpuId(@Param("spuId") String spuId);
 
+    boolean existsByOrderItem_Id(String orderItemId);
+
 }

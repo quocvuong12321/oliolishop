@@ -14,7 +14,7 @@ RUN mvn package -DskipTests
 
 #Stage 2: create image
 # Start with Amazon Correto JDK 21
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jdk
 
 # Thêm cấu hình Múi giờ cho Việt Nam (Asia/Ho_Chi_Minh)
 # Cài đặt tzdata và thiết lập biến môi trường

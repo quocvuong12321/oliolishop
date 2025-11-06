@@ -28,7 +28,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      port: ${REDIS_PORT:6380}
   mail:
     host: smtp.gmail.com
     port: 587

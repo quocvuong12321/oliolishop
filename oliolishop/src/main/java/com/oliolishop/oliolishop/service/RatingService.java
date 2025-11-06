@@ -127,6 +127,7 @@ public class RatingService {
         response.setCustomerAvatarUrl(customer.getImage());
         response.setCreateDate(saved.getCreateDate());
 
+
         return response;
     }
 

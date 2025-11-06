@@ -12,4 +12,5 @@ public class RoleResponse {
     String roleId;
     String name;
     String description;
+
 }

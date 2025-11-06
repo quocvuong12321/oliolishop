@@ -64,6 +64,7 @@ public class OrderService {
     VoucherMapper voucherMapper;
     private final LocationMapper locationMapper;
     GhnService ghnService;
+    private final RatingRepository ratingRepository;
 
     @Transactional
     public CheckOutResponse checkOut(CheckOutRequest request) {
@@ -189,11 +190,13 @@ public class OrderService {
             OrderItemResponse itemResponse = orderItemMapper.toResponse(item);
             ProductSku sku = item.getProductSku();
             ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+            boolean rated = ratingRepository.existsByOrderItem_Id(item.getId());
             itemResponse.setName(spu.getName());
             itemResponse.setProductSkuId(sku.getId());
             itemResponse.setThumbnail(spu.getImage());
             itemResponse.setProductSpuId(spu.getId());
             itemResponse.setVariant(productSkuUtils.getVariant(sku));
+            itemResponse.setRated(rated);
             return itemResponse;
         }).collect(Collectors.toList()));
 
@@ -252,12 +255,14 @@ public class OrderService {
 
                 ProductSku sku = i.getProductSku();
                 ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
+                boolean rated = ratingRepository.existsByCustomer_IdAndOrderItem_Id(customerId,i.getId());
 
                 itemResponse.setName(spu.getName());
                 itemResponse.setProductSkuId(sku.getId());
                 itemResponse.setThumbnail(spu.getImage());
                 itemResponse.setProductSpuId(spu.getId());
                 itemResponse.setVariant(productSkuUtils.getVariant(sku));
+                itemResponse.setRated(rated);
                 return itemResponse;
             }).collect(Collectors.toList());
 

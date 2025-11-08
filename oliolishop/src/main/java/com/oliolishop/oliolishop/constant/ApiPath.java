@@ -16,7 +16,7 @@ public class ApiPath {
     public static final String FOLDER_IMAGE_ATTR = "images_attr";
     public static final String FOLDER_IMAGE_AVATAR = "images_avatar";
     public static final String FOLDER_IMAGE_RATING = "images_rating";
-
+    public static final String FOLDER_IMAGE_BANNER = "images_banner";
 
     //Endpoint cho api
     public static final class Spu{
@@ -115,6 +115,10 @@ public class ApiPath {
         public static final String MONTH = "/month";
         public static final String QUARTER = "/quarter";
         public static final String YEAR = "/year";
+    }
+
+    public static final class Banner{
+        public static final String ROOT = BASE + "/banner";
     }
 
 }

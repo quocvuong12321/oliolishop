@@ -67,7 +67,7 @@ public enum ErrorCode {
     RATED(3027,"Bạn đã đánh giá đơn hàng này rồi",HttpStatus.CONFLICT),
     CREATE_SHIPPING_FAIL(3028,"Tạo đơn vận chuyển thất bại", HttpStatus.BAD_REQUEST),
     EMPLOYEE_NOT_EXIST(3029, "Nhân viên không tồn tại", HttpStatus.BAD_REQUEST),
-
+    BANNER_NOT_EXIST(3030,"Banner không tồn tại",HttpStatus.BAD_REQUEST),
     // Lỗi chung khi vi phạm ràng buộc DB (ví dụ: để fallback)
     DATABASE_INTEGRITY_VIOLATION(4000, "Vi phạm ràng buộc dữ liệu cơ sở. Vui lòng kiểm tra lại.", HttpStatus.CONFLICT),
     FOREIGN_KEY_VIOLATION(4001, "Không thể thực hiện do có dữ liệu liên quan đang sử dụng.", HttpStatus.CONFLICT),

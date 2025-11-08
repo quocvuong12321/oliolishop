@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,9 +24,14 @@ public interface OrderRepository extends JpaRepository<Order,String> {
 
     Page<Order> findByOrderStatus(OrderStatus status, Pageable pageable);
 
+    List<Order> findByOrderStatus(OrderStatus status);
+
     Page<Order> findByOrderStatusIn(List<OrderStatus> statuses, Pageable pageable);
 
+    List<Order> findByOrderStatusIn(List<OrderStatus> statuses);
 
     Page<Order> findAll(Specification<Order> spec, Pageable pageable);
+
+    List<Order> findByOrderStatusAndCreateDateBetween(OrderStatus status, LocalDateTime start, LocalDateTime end);
 }
 

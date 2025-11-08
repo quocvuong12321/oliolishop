@@ -9,10 +9,14 @@ import com.oliolishop.oliolishop.dto.Token.RefreshTokenRequest;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.authenticate.AuthenticateRequest;
 import com.oliolishop.oliolishop.dto.authenticate.AuthenticateResponse;
+import com.oliolishop.oliolishop.dto.employee.ChangePasswordRequest;
+import com.oliolishop.oliolishop.dto.employee.EmployeeResponse;
+import com.oliolishop.oliolishop.dto.employee.EmployeeUpdateRequest;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.service.BaseAuthenticationService;
 import com.oliolishop.oliolishop.service.EmployeeAuthenticationService;
+import com.oliolishop.oliolishop.service.EmployeeService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,9 +32,10 @@ import java.text.ParseException;
 public class EmployeeController {
     @Autowired
     private EmployeeAuthenticationService authenticationService;
+    @Autowired
+    private EmployeeService employeeService;
 
-
-    @PostMapping
+    @PostMapping(ApiPath.Employee.LOGIN)
     public ApiResponse<AuthenticateResponse> authenticate(@RequestBody AuthenticateRequest request,
                                                           HttpServletResponse response){
 
@@ -83,6 +88,30 @@ public class EmployeeController {
                 .result(response)
                 .build();
     }
+
+    @PutMapping
+    public ApiResponse<EmployeeResponse> updateEmployee(@Valid @RequestBody EmployeeUpdateRequest request){
+
+        return ApiResponse.<EmployeeResponse>builder()
+                .result(employeeService.updateEmployee(request))
+                .build();
+    }
+
+    @PutMapping (ApiPath.Employee.PASSWORD)
+    ApiResponse<String> updatePassword(@Valid @RequestBody ChangePasswordRequest request){
+        employeeService.updatePassword(request);
+        return ApiResponse.<String>builder()
+                .result(String.format(MessageConstants.SUCCESS,"Đổi mật khẩu"))
+                .build();
+    }
+
+    @GetMapping(ApiPath.Employee.PROFILE)
+    ApiResponse<EmployeeResponse> getProfile(){
+        return ApiResponse.<EmployeeResponse>builder()
+                .result(employeeService.getProfile())
+                .build();
+    }
+
 
 
 }

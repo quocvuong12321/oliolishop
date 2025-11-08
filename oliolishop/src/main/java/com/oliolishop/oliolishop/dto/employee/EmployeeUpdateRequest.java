@@ -18,6 +18,4 @@ public class EmployeeUpdateRequest {
     String phoneNumber;
     @Pattern(regexp = ValidationRegex.EMAIL_REGEX, message = "EMAIL_INVALID_FORMAT")
     String email;
-    String password;
-    String roleId;
 }

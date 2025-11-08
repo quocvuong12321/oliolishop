@@ -18,6 +18,8 @@ public class MessageConstants {
 
     public static final String REFRESH_TOKE_SAVED = "Refresh token đã được lưu vào cookie";
 
+    public static final String SUCCESS = "%s thành công";
+
     public static class Cancel{
         public static final String SUCCESS = "Hoàn tiền đơn hàng thành công và đơn đã được hủy.";
         public static final String PENDING = "Yêu cầu hủy đơn hàng đã được ghi nhận.";

@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -108,10 +109,12 @@ public class VoucherService {
         voucher.setDiscountPercent(request.getDiscountPercent());
         voucher.setMaxDiscountValue(request.getMaxDiscountValue());
         voucher.setMinOrderValue(request.getMinOrderValue());
-
+        if(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now()))
+            voucher.setStatus(VoucherStatus.Active);
         Voucher updated = voucherRepository.save(voucher);
         VoucherResponse response = voucherMapper.response(updated);
         response.setStatus(updated.getStatus());
+
         return response;
     }
 

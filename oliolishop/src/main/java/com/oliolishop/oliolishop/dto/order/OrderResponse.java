@@ -38,7 +38,7 @@ public class OrderResponse {
 
     // --- Audit ---
     LocalDateTime createDate;
-    LocalDateTime updateDate; // Thêm updateDate để tiện tracking trên client
+    LocalDateTime updateDate;
 
     List<OrderItemResponse> orderItems;
 

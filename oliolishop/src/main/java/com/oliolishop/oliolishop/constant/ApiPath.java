@@ -59,10 +59,9 @@ public class ApiPath {
         public static final String ROOT = BASE + "/employee";
         public static final String LOGIN = "/login";
         public static final String PROFILE = "/profile";
-        public static final String CREATE = "/create";
-        public static final String UPDATE = "/update";
         public static final String LOGOUT = "/logout";
         public static final String REFRESH = "/refresh";
+        public static final String PASSWORD = "/password";
     }
 
     public static final class Customer{
@@ -103,7 +102,19 @@ public class ApiPath {
     public static final class Admin{
         public static final String ROOT = BASE+"/admin";
         public static final String EMPLOYEE = "/employee";
+        public static final String EMPLOYEE_ROLE= "/role";
+
+
         public static final String CUSTOMER = "/customer";
+    }
+
+    public static final class Statistic{
+        public static final String ROOT = BASE+"/statistic";
+        public static final String TOTAL = "/total";
+        public static final String DAILY = "/daily";
+        public static final String MONTH = "/month";
+        public static final String QUARTER = "/quarter";
+        public static final String YEAR = "/year";
     }
 
 }

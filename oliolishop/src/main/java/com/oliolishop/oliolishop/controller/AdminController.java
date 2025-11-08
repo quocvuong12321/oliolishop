@@ -64,10 +64,11 @@ public class AdminController {
     public ApiResponse<PaginatedResponse<AccountResponse>> getAccounts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam (defaultValue = "20") int size,
-            @RequestParam(required = false) Account.AccountStatus status)
+            @RequestParam(required = false) Account.AccountStatus status,
+            @RequestParam(required = false) String phone)
     {
         return ApiResponse.<PaginatedResponse<AccountResponse>>builder()
-                .result(accountService.getAllUsers(page,size,status))
+                .result(accountService.getAllUsers(page,size,status,phone))
                 .build();
     }
 
@@ -87,6 +88,14 @@ public class AdminController {
         accountService.disableAccount(id);
         return ApiResponse.<String>builder()
                 .result(String.format(MessageConstants.DELETE_SUCCESS,"tài khoản"))
+                .build();
+    }
+
+    @PutMapping(ApiPath.Admin.EMPLOYEE +ApiPath.BY_ID + ApiPath.Admin.EMPLOYEE_ROLE)
+    public ApiResponse<String> updateRoleEmployee(@PathVariable String id, @RequestParam String roleId){
+        employeeService.updateRoleForEmployee(id,roleId);
+        return ApiResponse.<String>builder()
+                .result(String.format(MessageConstants.SUCCESS,"Cập nhật quyền"))
                 .build();
     }
 

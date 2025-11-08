@@ -27,6 +27,8 @@ public enum ErrorCode {
     NOT_ENOUGH_QUANTITY_VOUCHER(1013,"Voucher không đủ số lượng",HttpStatus.BAD_REQUEST),
     INVALID_VOUCHER(1014,"Voucher không hợp lê",HttpStatus.BAD_REQUEST),
     EMAIL_INVALID_FORMAT(1015,"Email không đúng định dạng",HttpStatus.BAD_REQUEST),
+    START_DATE_MUST_BEFORE(1016,"Ngày bắt đầu phải trước hoặc bằng ngày kết thúc",HttpStatus.BAD_REQUEST),
+    QUARTER_INVALID(1017,"Quý phải là 1-4",HttpStatus.BAD_REQUEST),
     // 2xxx: auth (Lỗi xác thực và ủy quyền)
     UNAUTHENTICATED(2001,"Chưa được xác thực/Đăng nhập",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),

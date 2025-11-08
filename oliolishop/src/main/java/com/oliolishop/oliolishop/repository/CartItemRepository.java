@@ -5,6 +5,7 @@ import com.oliolishop.oliolishop.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,6 +14,7 @@ public interface CartItemRepository extends JpaRepository<CartItem,Long> {
     Optional<CartItem> findByCartIdAndProductSkuId(Long cartId, String productSkuId);
 
 
+    Optional<List<CartItem>> findByCart_CustomerIdAndProductSku_Id(String customerId,String productSkuId);
 
 
 }

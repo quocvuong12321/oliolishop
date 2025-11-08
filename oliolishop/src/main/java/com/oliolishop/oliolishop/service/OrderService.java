@@ -14,6 +14,7 @@ import com.oliolishop.oliolishop.entity.*;
 import com.oliolishop.oliolishop.enums.OrderStatus;
 import com.oliolishop.oliolishop.enums.TransactionStatus;
 import com.oliolishop.oliolishop.enums.TransactionType;
+import com.oliolishop.oliolishop.enums.VoucherStatus;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.*;
@@ -25,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class OrderService {
     OrderRepository orderRepository;
     OrderItemMapper orderItemMapper;
@@ -62,9 +65,12 @@ public class OrderService {
     AddressMapper addressMapper;
     PaymentMethodMapper paymentMethodMapper;
     VoucherMapper voucherMapper;
-    private final LocationMapper locationMapper;
+    LocationMapper locationMapper;
     GhnService ghnService;
-    private final RatingRepository ratingRepository;
+    RatingRepository ratingRepository;
+    CartItemRepository cartItemRepository;
+    CartRepository cartRepository;
+    Random random = new Random();
 
     @Transactional
     public CheckOutResponse checkOut(CheckOutRequest request) {
@@ -119,7 +125,9 @@ public class OrderService {
                 .paymentMethod(paymentMethodResponses)
                 .build();
 
-        List<VoucherResponse> voucherResponses = voucherRepository.findByTotalPrice(response.getTotalAmount()).orElse(new ArrayList<>())
+        List<Voucher> vouchers = voucherRepository.findByTotalPrice(response.getTotalAmount()).orElse(new ArrayList<>());
+
+        List<VoucherResponse> voucherResponses =vouchers
                 .stream().map(voucherMapper::response).toList();
         response.setVouchers(voucherResponses);
 
@@ -129,8 +137,12 @@ public class OrderService {
             VoucherResponse voucherApplied = voucherResponses.stream().filter(voucherResponse -> voucherResponse.getVoucherCode().equals(request.getVoucherCode())).findFirst()
                     .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
 
-            if (voucherApplied.getAmount() <= 0)
+            if (voucherApplied.getAmount() <= 0 || voucherApplied.getStatus().equals(VoucherStatus.Inactive)) {
+                Voucher expiredVoucher = (Voucher) vouchers.stream().filter(v->v.getId().equals(voucherApplied.getId()));
+                expiredVoucher.setStatus(VoucherStatus.Inactive);
+                voucherRepository.save(expiredVoucher);
                 throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_VOUCHER);
+            }
 
             discountAmount = response.getTotalAmount().multiply(BigDecimal.valueOf(voucherApplied.getDiscountPercent())).divide(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
 
@@ -460,6 +472,18 @@ public class OrderService {
 
         response.setOrderItems(orderItemResponses);
 
+        if (request.isBuyFromCart()){
+            Cart cart = cartRepository.findByCustomerId(customerId).orElseThrow(() -> new AppException(ErrorCode.CART_NOT_EXISTED));
+            List<CartItem> deleteCartItems = cart.getCartItems();
+            Set<String> skus = request.getOrderItems().stream().map(OrderItemRequest::getProductSkuId).collect(Collectors.toSet());
+            List<CartItem> itemsToDelete = deleteCartItems.stream()
+                    .filter(cartItem -> skus.contains(cartItem.getProductSku().getId()))
+                    .toList();
+
+            cart.getCartItems().removeAll(itemsToDelete);
+            cartRepository.save(cart);
+        }
+
         return response;
     }
 
@@ -638,84 +662,16 @@ public class OrderService {
 
         Order order = orderRepository.findByIdAndCustomerId(orderId, customerId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
 
-        if (order.getOrderStatus().equals(OrderStatus.ready_to_pick)) {
-            order.setOrderStatus(OrderStatus.pending_cancellation);
-            orderRepository.save(order);
-            return 1; // 1 yêu cầu hủy đã gửi, chờ xác nhận
-        }
+//        if (order.getOrderStatus().equals(OrderStatus.ready_to_pick)) {
+//            order.setOrderStatus(OrderStatus.pending_cancellation);
+//            orderRepository.save(order);
+//            return 1; // 1 yêu cầu hủy đã gửi, chờ xác nhận
+//        }
         if (order.getOrderStatus().equals(OrderStatus.pending_confirmation) || order.getOrderStatus().equals(OrderStatus.confirmed)) {
             Transaction transaction = transactionRepository
                     .findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
                     .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
-//
-//            String newTransactionId = UUID.randomUUID().toString();
-//            String orderInfor = "HOAN TIEN " + orderId;
-//            String vnpCreateBy = "AutoRefund";
-//
-//            Transaction refTransaction = Transaction.builder()
-//                    .id(newTransactionId)
-//                    .amount(transaction.getAmount())
-//                    .paymentMethod(transaction.getPaymentMethod())
-//                    .order(order)
-//                    .parentTransaction(transaction)
-//                    .transactionType(TransactionType.refund)
-//                    .status(TransactionStatus.pending)
-//                    .vnpTxnRef(newTransactionId)
-//                    .refundReason(orderInfor)
-//                    .build();
-//
-//            transactionRepository.save(refTransaction);
-//
-//            String originalTransactionDate = transaction.getVnpTransactionDate();
-//
-//            String transactionNoGoc = transaction.getGatewayTransactionId();
-//
-//            String vnpTxnRef = transaction.getVnpTxnRef();
-//
-//            String vnpRequestId = UUID.randomUUID().toString().replace("-", "");
-//
-//            String refundApiUrl = vnPayService.refundOrder(transaction.getAmount().intValue(),
-//                    vnpTxnRef,
-//                    originalTransactionDate,
-//                    transactionNoGoc,
-//                    "02",
-//                    vnpRequestId,
-//                    orderInfor,
-//                    vnpCreateBy);
-//
-//            String vnpResponseQueryString = vnPayService.executeVnPayRefundPost(refundApiUrl);
-//
-//            int refundResult = vnPayService.refundReturn(vnpResponseQueryString);
-//            switch (refundResult) {
-//                case 1: // Hoàn tiền thành công ngay
-//                    refTransaction.setStatus(TransactionStatus.success);
-//                    order.setOrderStatus(OrderStatus.cancelled);
-//                    transactionRepository.save(refTransaction);
-//                    orderRepository.save(order);
-//                    return 2;
-//
-//                case 2: // Hoàn tiền đang xử lý
-//                    refTransaction.setStatus(TransactionStatus.pending);
-//                    order.setOrderStatus(OrderStatus.cancelled);
-//                    transactionRepository.save(refTransaction);
-//                    orderRepository.save(order);
-//                    return 1; // Chờ xử lý tiếp
-//
-//                case 0: // Hoàn tiền thất bại
-//                case 3: // Trạng thái khác chưa xử lý
-//                    refTransaction.setStatus(TransactionStatus.failed);
-//                    transactionRepository.save(refTransaction);
-//                    return 3;
-//
-//                case -1: // Chữ ký không hợp lệ hoặc lỗi kỹ thuật
-//                default:
-//                    refTransaction.setStatus(TransactionStatus.failed);
-//                    transactionRepository.save(refTransaction);
-//                    throw new AppException(ErrorCode.PAYMENT_INVALID);
-//            }
-//        }
-//
-//        return 0; // Trường hợp khác, không thực hiện refund
+
             int result = processVnPayRefund(order, transaction, "AutoRefund");
             switch (result) {
                 case 1:
@@ -805,36 +761,36 @@ public class OrderService {
         return refundResult;
     }
 
-    @Transactional
-    public int confirmCancelOrder(String orderId) {
-
-        String employeeId = AppUtils.getEmployeeIdByJwt();
-
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
-
-        Transaction originalTransaction = transactionRepository.findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
-                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
-
-        if (!order.getOrderStatus().equals(OrderStatus.pending_cancellation))
-            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
-
-        int result = processVnPayRefund(order, originalTransaction, employeeId);
-
-        switch (result) {
-            case 1:
-                order.setOrderStatus(OrderStatus.cancelled);
-                orderRepository.save(order);
-                return 2;
-            case 2:
-                order.setOrderStatus(OrderStatus.cancelled);
-                orderRepository.save(order);
-                return 0;
-            case 0:
-            case 3:
-                return 3;
-        }
-        return -1;
-    }
+//    @Transactional
+//    public int confirmCancelOrder(String orderId) {
+//
+//        String employeeId = AppUtils.getEmployeeIdByJwt();
+//
+//        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+//
+//        Transaction originalTransaction = transactionRepository.findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
+//                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
+//
+//        if (!order.getOrderStatus().equals(OrderStatus.pending_cancellation))
+//            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
+//
+//        int result = processVnPayRefund(order, originalTransaction, employeeId);
+//
+//        switch (result) {
+//            case 1:
+//                order.setOrderStatus(OrderStatus.cancelled);
+//                orderRepository.save(order);
+//                return 2;
+//            case 2:
+//                order.setOrderStatus(OrderStatus.cancelled);
+//                orderRepository.save(order);
+//                return 0;
+//            case 0:
+//            case 3:
+//                return 3;
+//        }
+//        return -1;
+//    }
 
 
 
@@ -844,5 +800,64 @@ public class OrderService {
                         "code",s.name(),
                         "label",s.getLabel()
                 )).toList();
+    }
+
+    @Scheduled(fixedDelayString = "30000") // 30 giây
+    @Transactional
+    public void simulateGhnWebhook() {
+        // Tìm các đơn hàng đang ở trạng thái có thể được GHN cập nhật
+        List<OrderStatus> statusesToUpdate = Arrays.asList(
+                OrderStatus.ready_to_pick,
+                OrderStatus.shipping
+        );
+
+        List<Order> ordersToProcess = orderRepository.findByOrderStatusIn(statusesToUpdate);
+
+        for (Order order : ordersToProcess) {
+            if (random.nextDouble() < 0.7) { // 70% cơ hội cập nhật
+                OrderStatus nextStatus = getGhnNextStatus(order.getOrderStatus());
+
+                if (isValidGhnStatusTransition(order.getOrderStatus(), nextStatus)) {
+                    order.setOrderStatus(nextStatus);
+                    order.setUpdateDate(LocalDateTime.now());
+                    log.info("[GHN SIM] Đơn hàng ID: {} - Cập nhật từ {} -> {}",
+                            order.getId(), order.getOrderStatus(), nextStatus);
+                }
+            }
+        }
+    }
+
+    private OrderStatus getGhnNextStatus(OrderStatus currentStatus) {
+        if (currentStatus == OrderStatus.ready_to_pick) {
+            return OrderStatus.shipping; // Luôn chuyển sang shipping
+        }
+        if (currentStatus == OrderStatus.shipping) {
+            // Ngẫu nhiên chuyển sang Delivered, Cancelled, hoặc Returned
+            int choice = random.nextInt(3);
+            if (choice == 0) return OrderStatus.delivered;
+            if (choice == 1) return OrderStatus.cancelled;
+            return OrderStatus.returned;
+        }
+        return null;
+    }
+
+    private boolean isValidGhnStatusTransition(OrderStatus current, OrderStatus next) {
+        // Luồng chính: ready_to_pick -> shipping -> delivered
+        if (current == OrderStatus.ready_to_pick && next == OrderStatus.shipping) {
+            return true;
+        }
+        if (current == OrderStatus.shipping && next == OrderStatus.delivered) {
+            return true;
+        }
+
+        // Nếu GHN có thể gửi trạng thái hủy (cancelled) hoặc trả hàng (returned)
+        // từ trạng thái SHIPPING, ta cũng cho phép:
+        if (current == OrderStatus.shipping &&
+                (next == OrderStatus.cancelled || next == OrderStatus.returned || next == OrderStatus.partially_returned)) {
+            return true;
+        }
+
+        // Các trạng thái khác không được cập nhật qua mô phỏng GHN này
+        return false;
     }
 }

@@ -22,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,18 +44,27 @@ public class AccountService {
     private final CustomerMapper customerMapper;
     private final CustomerRepository customerRepository;
 
-    public PaginatedResponse<AccountResponse> getAllUsers(int page, int size, Account.AccountStatus status) {
+    public PaginatedResponse<AccountResponse> getAllUsers(int page, int size,
+                                                          Account.AccountStatus status,
+                                                          String phoneNumber) {
 
         Pageable pageable = PageRequest.of(page,size);
 
-        Page<Account> accounts;
 
-        if(status!= null){
-            accounts = accountRepository.findByStatus(status,pageable);
-        }
-        else {
-            accounts = accountRepository.findAll(pageable);
-        }
+
+        Specification<Account> spec = Specification.not(null);
+
+       if(status!=null){
+           spec = spec.and((root, query, criteriaBuilder) ->
+                   criteriaBuilder.equal(root.get("status"),status));
+       }
+
+       if(phoneNumber!=null){
+           spec = spec.and((root, query, criteriaBuilder) ->
+                   criteriaBuilder.like(criteriaBuilder.lower(root.get("phoneNumber")),"%"+phoneNumber.toLowerCase()+"%"));
+       }
+
+        Page<Account> accounts = accountRepository.findAll(spec,pageable);
 
         Page<AccountResponse> accountResponses = accounts
                 .map(

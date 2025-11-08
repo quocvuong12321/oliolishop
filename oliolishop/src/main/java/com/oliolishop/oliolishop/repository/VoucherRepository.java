@@ -20,8 +20,8 @@ public interface VoucherRepository extends JpaRepository<Voucher,String> {
 
     @Query("""
             SELECT v from Voucher v
-            WHERE (v.startDate < NOW() and v.endDate > NOW()) AND
-            v.amount > 0 AND
+            WHERE (v.startDate < NOW() AND v.endDate > NOW()) AND
+            v.amount > 0 AND v.status = Active AND
             :totalPrice >= v.minOrderValue
             """)
     Optional<List<Voucher>> findByTotalPrice(@Param("totalPrice") BigDecimal totalPrice);

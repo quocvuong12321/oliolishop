@@ -1,6 +1,5 @@
 package com.oliolishop.oliolishop.dto.order;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -23,4 +22,5 @@ public class OrderRequest {
     String voucherCode;
     BigDecimal feeShip;
     List<OrderItemRequest> orderItems;
+    boolean buyFromCart;
 }

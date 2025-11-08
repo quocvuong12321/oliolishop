@@ -58,22 +58,22 @@ public class OrderController {
 
     }
 
-    @PutMapping(ApiPath.Order.CONFIRM+ApiPath.BY_ID+ApiPath.Order.CANCEL_ORDER)
-    public ApiResponse<String> confirmCancelOrder(@PathVariable(name = "id")String orderId){
-
-        int result = orderService.confirmCancelOrder(orderId);
-
-        String message = switch (result){
-            case 0 ->MessageConstants.Cancel.PENDING_REFUND;
-            case 1 -> MessageConstants.Cancel.PENDING;
-            case 2 -> MessageConstants.Cancel.SUCCESS;
-            case 3 -> MessageConstants.Cancel.FAIL;
-            default -> MessageConstants.Cancel.CANT;
-        };
-        return ApiResponse.<String>builder()
-                .result(message)
-                .build();
-    }
+//    @PutMapping(ApiPath.Order.CONFIRM+ApiPath.BY_ID+ApiPath.Order.CANCEL_ORDER)
+//    public ApiResponse<String> confirmCancelOrder(@PathVariable(name = "id")String orderId){
+//
+//        int result = orderService.confirmCancelOrder(orderId);
+//
+//        String message = switch (result){
+//            case 0 ->MessageConstants.Cancel.PENDING_REFUND;
+//            case 1 -> MessageConstants.Cancel.PENDING;
+//            case 2 -> MessageConstants.Cancel.SUCCESS;
+//            case 3 -> MessageConstants.Cancel.FAIL;
+//            default -> MessageConstants.Cancel.CANT;
+//        };
+//        return ApiResponse.<String>builder()
+//                .result(message)
+//                .build();
+//    }
 
     @GetMapping(ApiPath.BY_ID)
     public ApiResponse<OrderResponse> getOrderById(@PathVariable(name = "id") String orderId) {

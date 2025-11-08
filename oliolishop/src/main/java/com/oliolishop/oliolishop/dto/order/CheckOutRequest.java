@@ -17,6 +17,6 @@ public class CheckOutRequest {
     List<CartItemRequest> cartItemRequests;
     String addressId;
     String voucherCode;
-
+    boolean buyFromCart;
 }
 

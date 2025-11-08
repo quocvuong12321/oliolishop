@@ -109,7 +109,7 @@ public class VoucherService {
         voucher.setDiscountPercent(request.getDiscountPercent());
         voucher.setMaxDiscountValue(request.getMaxDiscountValue());
         voucher.setMinOrderValue(request.getMinOrderValue());
-        if(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now()))
+        if(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now()) && voucher.getAmount()>0)
             voucher.setStatus(VoucherStatus.Active);
         Voucher updated = voucherRepository.save(voucher);
         VoucherResponse response = voucherMapper.response(updated);

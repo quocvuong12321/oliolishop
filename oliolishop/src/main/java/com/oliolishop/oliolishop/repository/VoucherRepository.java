@@ -20,11 +20,20 @@ public interface VoucherRepository extends JpaRepository<Voucher,String> {
 
     @Query("""
             SELECT v from Voucher v
-            WHERE (v.startDate < NOW() AND v.endDate > NOW()) AND
-            v.amount > 0 AND v.status = Active AND
-            :totalPrice >= v.minOrderValue
+            WHERE (v.startDate < NOW()
+            AND v.endDate > NOW())
+            AND v.amount > 0
+            AND v.status = Active
+            AND:totalPrice >= v.minOrderValue
+            AND (
+                        SELECT COUNT(o)
+                        FROM Order o
+                        WHERE o.voucher.id = v.id
+                          AND o.customer.id = :customerId
+                          AND o.orderStatus NOT IN ('cancelled', 'payment_failed', 'partially_returned', 'returned')
+                      ) < v.maxUsagePerUser
             """)
-    Optional<List<Voucher>> findByTotalPrice(@Param("totalPrice") BigDecimal totalPrice);
+    Optional<List<Voucher>> findByTotalPrice(@Param("totalPrice") BigDecimal totalPrice, @Param("customerId")String customerId);
 
     Page<Voucher> findByStatus(VoucherStatus status, Pageable pageable);
 

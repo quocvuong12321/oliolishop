@@ -26,6 +26,8 @@ public class VoucherRequest {
     BigDecimal minOrderValue;
     @Positive(message ="QUANTITY_POSITIVE")
     int amount;
+    @Positive(message ="QUANTITY_POSITIVE")
+    int maxUsagePerUser;
     LocalDateTime startDate;
     LocalDateTime endDate;
 

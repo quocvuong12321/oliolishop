@@ -6,6 +6,7 @@ import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.location.DistrictDTO;
 import com.oliolishop.oliolishop.dto.location.ProvinceDTO;
 import com.oliolishop.oliolishop.dto.location.WardDTO;
+import com.oliolishop.oliolishop.dto.location.WardDetailDTO;
 import com.oliolishop.oliolishop.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,6 +55,13 @@ public class LocationController {
         List<WardDTO> wards = locationService.getWardsByDistrictId(districtId);
         return ApiResponse.<List<WardDTO>>builder()
                 .result(wards)
+                .build();
+    }
+
+    @GetMapping(ApiPath.BY_ID+ApiPath.Location.DETAIL)
+    public ApiResponse<WardDTO> getDetailAddress(@PathVariable String id){
+        return ApiResponse.<WardDTO>builder()
+                .result(locationService.getWardDetailById(id))
                 .build();
     }
 }

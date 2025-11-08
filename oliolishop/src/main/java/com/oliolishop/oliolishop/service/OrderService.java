@@ -125,7 +125,7 @@ public class OrderService {
                 .paymentMethod(paymentMethodResponses)
                 .build();
 
-        List<Voucher> vouchers = voucherRepository.findByTotalPrice(response.getTotalAmount()).orElse(new ArrayList<>());
+        List<Voucher> vouchers = voucherRepository.findByTotalPrice(response.getTotalAmount(),customerId).orElse(new ArrayList<>());
 
         List<VoucherResponse> voucherResponses =vouchers
                 .stream().map(voucherMapper::response).toList();
@@ -370,16 +370,22 @@ public class OrderService {
         Voucher voucher = null;
         if (request.getVoucherCode() != null && !request.getVoucherCode().isEmpty()) {
             voucher = voucherRepository.findByVoucherCode(request.getVoucherCode()).orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
-            if (voucher.getAmount() <= 0)
+            if (voucher.getAmount() <= 0) {
+                voucher.setStatus(VoucherStatus.Inactive);
+                voucherRepository.save(voucher);
                 throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_VOUCHER);
-            if (!(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now())))
+            }
+            if (!(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now()))) {
+                voucher.setStatus(VoucherStatus.Inactive);
+                voucherRepository.save(voucher);
                 throw new AppException(ErrorCode.INVALID_VOUCHER);
+            }
         }
 
         Order order = orderMapper.toOrder(request);
         order.setId(UUID.randomUUID().toString());
         order.setCustomer(customer);
-        order.setVoucher(voucher);
+
         order.setFeeShip(request.getFeeShip());
         order.setOrderStatus(OrderStatus.pending_payment);
 //        order.setShippingAddress(request.getShippingAddress());
@@ -416,11 +422,13 @@ public class OrderService {
         order.setOrderItems(orderItems);
         order.setTotalAmount(totalAmount);
 
+
+
         BigDecimal voucherDiscount = BigDecimal.ZERO;
         if (voucher != null &&
                 totalAmount.compareTo(voucher.getMinOrderValue()) > 0) {
             order.setVoucherCode(voucher.getVoucherCode());
-
+            order.setVoucher(voucher);
             BigDecimal percentDiscount = BigDecimal
                     .valueOf(voucher.getDiscountPercent())
                     .multiply(totalAmount)
@@ -431,6 +439,7 @@ public class OrderService {
             voucherDiscount = percentDiscount.min(maxDiscount);
 
             voucher.setAmount(voucher.getAmount() - 1);
+            voucher.setUsedCount(voucher.getUsedCount()+1);
         }
 
         order.setVoucherDiscountAmount(voucherDiscount);
@@ -467,11 +476,12 @@ public class OrderService {
             itemResponse.setThumbnail(spu.getImage());
             itemResponse.setVariant(productSkuUtils.getVariant(sku));
             itemResponse.setRated(false);
+            itemResponse.setProductSpuId(spu.getId());
             orderItemResponses.add(itemResponse);
         });
 
         response.setOrderItems(orderItemResponses);
-
+        response.setCreateDate(order.getCreateDate());
         if (request.isBuyFromCart()){
             Cart cart = cartRepository.findByCustomerId(customerId).orElseThrow(() -> new AppException(ErrorCode.CART_NOT_EXISTED));
             List<CartItem> deleteCartItems = cart.getCartItems();
@@ -562,6 +572,7 @@ public class OrderService {
     public void checkPendingTransactions() {
         List<Transaction> pendingTransactions = transactionRepository.findByStatusAndTransactionType(TransactionStatus.pending, TransactionType.payment);
         LocalDateTime now = LocalDateTime.now();
+        int count =0;
         for (Transaction tx : pendingTransactions) {
             // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
             if (tx.getCreateDate().plusMinutes(15).isBefore(now)) {
@@ -576,9 +587,15 @@ public class OrderService {
                     sku.setSkuStock(currentStock + item.getQuantity());
                     skuItems.add(sku);
                 });
+                Voucher voucher = order.getVoucher();
+                if(voucher != null){
+                    voucher.setAmount(voucher.getAmount()+1);
+                    voucher.setUsedCount(voucher.getUsedCount()-1);
+                }
                 transactionRepository.save(tx);
                 orderRepository.save(order);
                 productSkuRepository.saveAll(skuItems);
+                count++;
             }
         }
     }
@@ -672,16 +689,30 @@ public class OrderService {
                     .findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
                     .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
 
+
             int result = processVnPayRefund(order, transaction, "AutoRefund");
             switch (result) {
+
                 case 1:
+                case 2:
+                    List<OrderItem> orderItems = order.getOrderItems();
+                    List<ProductSku> skuItems = new ArrayList<>();
                     order.setOrderStatus(OrderStatus.cancelled);
+                    orderItems.forEach(item -> {
+                        int currentStock = item.getProductSku().getSkuStock();
+                        ProductSku sku = item.getProductSku();
+                        sku.setSkuStock(currentStock + item.getQuantity());
+                        skuItems.add(sku);
+                    });
+                    Voucher voucher = order.getVoucher();
+                    if(voucher != null){
+                        voucher.setAmount(voucher.getAmount()+1);
+                        voucher.setUsedCount(voucher.getUsedCount()-1);
+                        voucherRepository.save(voucher);
+                    }
+                    productSkuRepository.saveAll(skuItems);
                     orderRepository.save(order);
                     return 2;
-                case 2:
-                    order.setOrderStatus(OrderStatus.cancelled);
-                    orderRepository.save(order);
-                    return 0;
                 case 0:
                 case 3:
                     return 3;

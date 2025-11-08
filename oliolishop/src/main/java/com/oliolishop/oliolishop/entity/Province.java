@@ -26,7 +26,7 @@ public class Province {
     String provinceEncode;
     Integer regionId;
     Integer areaId;
-    Boolean canUpdateCod; // tinyint(1)
+    Boolean canUpdateCod;
     Boolean status;
 
     @OneToMany(mappedBy = "province", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

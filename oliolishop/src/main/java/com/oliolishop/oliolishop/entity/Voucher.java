@@ -45,6 +45,10 @@ public class Voucher {
     @Column(name = "amount")
     Integer amount;
 
+    Integer usedCount;
+
+    Integer maxUsagePerUser;
+
     @Column(name = "create_date")
     LocalDateTime createDate;
 

@@ -91,7 +91,7 @@ public class VoucherService {
 
         voucher.setStatus(VoucherStatus.Active);
         voucher.setId(UUID.randomUUID().toString());
-
+        voucher.setUsedCount(0);
         Voucher saved = voucherRepository.save(voucher);
         VoucherResponse response = voucherMapper.response(saved);
         response.setStatus(saved.getStatus());
@@ -109,6 +109,7 @@ public class VoucherService {
         voucher.setDiscountPercent(request.getDiscountPercent());
         voucher.setMaxDiscountValue(request.getMaxDiscountValue());
         voucher.setMinOrderValue(request.getMinOrderValue());
+        voucher.setUsedCount(voucher.getUsedCount());
         if(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now()) && voucher.getAmount()>0)
             voucher.setStatus(VoucherStatus.Active);
         Voucher updated = voucherRepository.save(voucher);

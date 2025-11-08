@@ -23,6 +23,8 @@ public class VoucherResponse {
     LocalDateTime startDate;
     LocalDateTime endDate;
     int amount;
+    int usedCount;
+    int maxUsagePerUser;
     LocalDateTime createDate;
     LocalDateTime updateDate;
     VoucherStatus status;

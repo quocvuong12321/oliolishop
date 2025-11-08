@@ -3,9 +3,12 @@ package com.oliolishop.oliolishop.service;
 import com.oliolishop.oliolishop.dto.location.DistrictDTO;
 import com.oliolishop.oliolishop.dto.location.ProvinceDTO;
 import com.oliolishop.oliolishop.dto.location.WardDTO;
+import com.oliolishop.oliolishop.dto.location.WardDetailDTO;
 import com.oliolishop.oliolishop.entity.District;
 import com.oliolishop.oliolishop.entity.Province;
 import com.oliolishop.oliolishop.entity.Ward;
+import com.oliolishop.oliolishop.exception.AppException;
+import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.LocationMapper;
 import com.oliolishop.oliolishop.repository.DistrictRepository;
 import com.oliolishop.oliolishop.repository.ProvinceRepository;
@@ -49,6 +52,20 @@ public class LocationService {
     public List<WardDTO> getWardsByDistrictId(String districtId) {
         List<Ward> wards = wardRepository.findByDistrictId(districtId);
         return locationMapper.toWardDTOs(wards);
+    }
+
+//    @Cacheable(value = "wardDetail", key = "#wardId")
+    public WardDTO getWardDetailById(String wardId) {
+        // Tùy chọn 1: Dùng repository để tìm Ward (nếu Entity Ward có đủ mối quan hệ)
+        Ward ward = wardRepository.findByIdWithDetails(wardId) // Cần custom query trong repository
+                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXIST));
+
+        return WardDetailDTO.builder()
+                .district(locationMapper.toDistrictDTO(ward.getDistrict()))
+                .province(locationMapper.toProvinceDTO(ward.getDistrict().getProvince()))
+                .id(ward.getId())
+                .name(ward.getName())
+                .build();
     }
 
 

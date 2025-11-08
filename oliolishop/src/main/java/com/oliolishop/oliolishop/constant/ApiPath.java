@@ -93,6 +93,7 @@ public class ApiPath {
         public static final String PROVINCES = "/provinces";
         public static final String DISTRICTS_BY_PROVINCE = "/provinces/{provinceId}/districts";
         public static final String WARDS_BY_DISTRICT = "/districts/{districtId}/wards";
+        public static final String DETAIL="/detail";
     }
 
     public static final class Voucher{

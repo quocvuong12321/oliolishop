@@ -93,6 +93,11 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
         return "ROLE_CUSTOMER";
     }
 
+    @Override
+    protected Account.AccountStatus getStatus(Account user) {
+        return user.getStatus();
+    }
+
     public Boolean verifyOtp(VerifyOtpRequest request){
         String key = getRedisKeyOtp(request.getEmail(), request.getType());
 

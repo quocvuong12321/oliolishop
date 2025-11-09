@@ -104,10 +104,11 @@ public class ApiPath {
         public static final String ROOT = BASE+"/admin";
         public static final String EMPLOYEE = "/employee";
         public static final String EMPLOYEE_ROLE= "/role";
-
-
         public static final String CUSTOMER = "/customer";
     }
+
+    public static final String LOCK = "/lock";
+    public static final String UNLOCK = "/unlock";
 
     public static final class Statistic{
         public static final String ROOT = BASE+"/statistic";

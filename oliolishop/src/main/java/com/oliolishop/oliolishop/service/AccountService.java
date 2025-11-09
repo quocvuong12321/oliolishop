@@ -16,6 +16,8 @@ import com.oliolishop.oliolishop.mapper.CustomerMapper;
 import com.oliolishop.oliolishop.repository.AccountRepository;
 import com.oliolishop.oliolishop.repository.CustomerRepository;
 import com.oliolishop.oliolishop.repository.RoleRepository;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,7 +34,7 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AccountService {
 
 
@@ -46,25 +48,32 @@ public class AccountService {
 
     public PaginatedResponse<AccountResponse> getAllUsers(int page, int size,
                                                           Account.AccountStatus status,
-                                                          String phoneNumber) {
+                                                          String phoneNumber,
+                                                          String name) {
 
-        Pageable pageable = PageRequest.of(page,size);
+        Pageable pageable = PageRequest.of(page, size);
 
 
+        Specification<Account> spec = Specification.allOf();
 
-        Specification<Account> spec = Specification.not(null);
+        if (status != null) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("status"), status));
+        }
 
-       if(status!=null){
-           spec = spec.and((root, query, criteriaBuilder) ->
-                   criteriaBuilder.equal(root.get("status"),status));
-       }
+        if (phoneNumber != null) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("phoneNumber")), "%" + phoneNumber.toLowerCase() + "%"));
+        }
 
-       if(phoneNumber!=null){
-           spec = spec.and((root, query, criteriaBuilder) ->
-                   criteriaBuilder.like(criteriaBuilder.lower(root.get("phoneNumber")),"%"+phoneNumber.toLowerCase()+"%"));
-       }
+        if (name != null) {
+            spec = spec.and(((root, query, criteriaBuilder) -> {
+                Join<Account,Customer> customerJoin = root.join("customer", JoinType.INNER);
+                return criteriaBuilder.like(criteriaBuilder.lower(customerJoin.get("name")), "%" + name.toLowerCase() + "%");
+            }));
+        }
 
-        Page<Account> accounts = accountRepository.findAll(spec,pageable);
+        Page<Account> accounts = accountRepository.findAll(spec, pageable);
 
         Page<AccountResponse> accountResponses = accounts
                 .map(
@@ -128,8 +137,23 @@ public class AccountService {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_EXISTED));
 
+        if (account.getStatus().equals(Account.AccountStatus.Inactive))
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+
         // Chỉ vô hiệu hóa, không xóa khỏi DB
         account.setStatus(Account.AccountStatus.Inactive);
+        accountRepository.save(account);
+    }
+
+    @Transactional
+    public void enableAccount(String accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+
+        if (!account.getStatus().equals(Account.AccountStatus.Inactive))
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+
+        account.setStatus(Account.AccountStatus.Active);
         accountRepository.save(account);
     }
 

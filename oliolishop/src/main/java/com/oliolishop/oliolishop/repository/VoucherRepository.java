@@ -35,6 +35,15 @@ public interface VoucherRepository extends JpaRepository<Voucher,String> {
             """)
     Optional<List<Voucher>> findByTotalPrice(@Param("totalPrice") BigDecimal totalPrice, @Param("customerId")String customerId);
 
+    @Query("""
+             SELECT COUNT(o)
+                FROM Order o
+                WHERE o.voucher.id = :voucherId
+                AND o.customer.id = :customerId
+                AND o.orderStatus NOT IN ('cancelled', 'payment_failed', 'partially_returned', 'returned')
+            """)
+    int countUsagePerUser(String customerId,String voucherId);
+
     Page<Voucher> findByStatus(VoucherStatus status, Pageable pageable);
 
     Page<Voucher> findByNameContainingIgnoreCaseAndStatus(String name, VoucherStatus status, Pageable pageable);

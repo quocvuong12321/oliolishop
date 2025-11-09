@@ -44,6 +44,7 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     protected abstract String getUsername(T user);
     protected abstract String getPassword(T user);
     protected abstract String buildScope(T user);
+    protected abstract Account.AccountStatus getStatus(T user);
 
     @Override
     public AuthenticateResponse authenticate(AuthenticateRequest request) {
@@ -55,6 +56,10 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
         if (!passwordEncoder.matches(request.getPassword(), getPassword(user))) {
             throw new AppException(ErrorCode.PASSWORD_INCORRECT);
         }
+
+        if(!Account.AccountStatus.Active.equals(getStatus(user)))
+            throw new AppException(ErrorCode.ACCOUNT_HAS_BLOCKED);
+
 
         String accessToken = generateToken(user, TIME_ACCESS, TokenType.ACCESSTYPE);
         String refreshToken = generateToken(user, TIME_REFRESH, TokenType.REFRESHTYPE);

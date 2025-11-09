@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.dto.account;
 
 import com.oliolishop.oliolishop.dto.customer.CustomerResponse;
+import com.oliolishop.oliolishop.entity.Account;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,4 +16,5 @@ public class AccountResponse {
     String email;
     String phoneNumber;
     CustomerResponse customerResponse;
+    String status;
 }

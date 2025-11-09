@@ -25,10 +25,11 @@ public enum ErrorCode {
     PHONE_NUMBER_INVALID_FORMAT(1011,"Số điện thoại không đúng định dạng",HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_QUANTITY_PRODUCT(1012,"Sản phẩm không đủ số lượng",HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_QUANTITY_VOUCHER(1013,"Voucher không đủ số lượng",HttpStatus.BAD_REQUEST),
-    INVALID_VOUCHER(1014,"Voucher không hợp lê",HttpStatus.BAD_REQUEST),
+    VOUCHER_HAS_EXPIRED(1014,"Voucher đã hết hạn",HttpStatus.BAD_REQUEST),
     EMAIL_INVALID_FORMAT(1015,"Email không đúng định dạng",HttpStatus.BAD_REQUEST),
     START_DATE_MUST_BEFORE(1016,"Ngày bắt đầu phải trước hoặc bằng ngày kết thúc",HttpStatus.BAD_REQUEST),
     QUARTER_INVALID(1017,"Quý phải là 1-4",HttpStatus.BAD_REQUEST),
+    NOT_ENOUGH_USAGE_VOUCHER(1018,"Bạn đã hết lượt sử dụng voucher",HttpStatus.NOT_ACCEPTABLE),
     // 2xxx: auth (Lỗi xác thực và ủy quyền)
     UNAUTHENTICATED(2001,"Chưa được xác thực/Đăng nhập",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),
@@ -36,7 +37,7 @@ public enum ErrorCode {
     INVALID_TOKEN(2004,"Token không hợp lệ", HttpStatus.UNAUTHORIZED),
     INVALID_OTP(2005, "Mã OTP không hợp lệ",HttpStatus.BAD_REQUEST),
     OTP_EXPIRED(2006,"Mã OTP đã hết hạn",HttpStatus.UNAUTHORIZED),
-
+    ACCOUNT_HAS_BLOCKED(2007,"Tài khoản đã bị khóa",HttpStatus.LOCKED),
     // 3xxx: business logic (Lỗi nghiệp vụ)
     ACCOUNT_EXISTED(3001,"Tài khoản đã tồn tại",HttpStatus.CONFLICT),
     ACCOUNT_NOT_EXISTED(3002, "Tài khoản không tồn tại",HttpStatus.NOT_FOUND),

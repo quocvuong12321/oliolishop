@@ -26,8 +26,8 @@ public class PaymentController {
     @Autowired
     VNPayService vnPayService;
 
-    private static final String FRONTEND_SUCCESS_URL = "http://localhost:4200/checkout/confirm";
-    private static final String FRONTEND_FAIL_URL = "http://localhost:4200/payment/vnpay/fail";
+    private static final String FRONTEND_SUCCESS_URL = "http://localhost:4202/checkout/confirm";
+    private static final String FRONTEND_FAIL_URL = "http://localhost:4202/payment/vnpay/fail";
 
     @GetMapping(ApiPath.Payment.VNPAY)
     public ApiResponse<?> createVnPayPayment(@RequestParam String orderId,@RequestParam String paymentMethodId){

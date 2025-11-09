@@ -20,6 +20,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,18 +66,32 @@ public class EmployeeService {
     }
 
     // --- GET LIST & PAGINATION ---
-    public PaginatedResponse<EmployeeResponse> getAllEmployees(int page, int size, Account.AccountStatus status) {
+    public PaginatedResponse<EmployeeResponse> getAllEmployees(int page, int size, Account.AccountStatus status,String name,String phone) {
         // Có thể thêm lọc theo trạng thái enabled = true nếu cần
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<EmployeeResponse> employeePage;
+        Specification<Employee> spec = Specification.allOf();
+
+
         if (status != null) {
-            employeePage = employeeRepository.findByStatus(status, pageable).map(employeeMapper::toResponse);
-        } else {
-            employeePage = employeeRepository.findAll(pageable).map(employeeMapper::toResponse);
+           spec = spec.and((root, query, criteriaBuilder) ->
+                   criteriaBuilder.equal(root.get("status"),status));
+        }
+        if(name != null){
+            String pattern = "%"+name.toLowerCase()+"%";
+            spec=spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")),pattern));
         }
 
-        return PaginatedResponse.fromSpringPage(employeePage);
+        if(phone!=null){
+            String pattern = "%"+phone.toLowerCase()+"%";
+            spec=spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("phoneNumber")),pattern));
+        }
+
+        Page<Employee> employees = employeeRepository.findAll(spec,pageable);
+
+        return PaginatedResponse.fromSpringPage(employees.map(employeeMapper::toResponse));
     }
 
 
@@ -83,11 +99,25 @@ public class EmployeeService {
     public void disableEmployee(String id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_EXIST));
-
+        if(employee.getStatus().equals(Account.AccountStatus.Inactive))
+            throw new AppException(ErrorCode.INVALID_REQUEST);
         // Vô hiệu hóa tài khoản
         employee.setStatus(Account.AccountStatus.Inactive);
         employeeRepository.save(employee);
     }
+
+    @Transactional
+    public void enableEmployee(String id){
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_EXIST));
+
+        if(!employee.getStatus().equals(Account.AccountStatus.Inactive))
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        // Vô hiệu hóa tài khoản
+        employee.setStatus(Account.AccountStatus.Active);
+        employeeRepository.save(employee);
+    }
+
 
     @Transactional
     public EmployeeResponse updateEmployee(EmployeeUpdateRequest request){
@@ -137,6 +167,7 @@ public class EmployeeService {
         employee.setRole(r);
         employeeRepository.save(employee);
     }
+
 
 
 }

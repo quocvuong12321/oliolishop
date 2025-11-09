@@ -27,7 +27,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -125,9 +123,9 @@ public class OrderService {
                 .paymentMethod(paymentMethodResponses)
                 .build();
 
-        List<Voucher> vouchers = voucherRepository.findByTotalPrice(response.getTotalAmount(),customerId).orElse(new ArrayList<>());
+        List<Voucher> vouchers = voucherRepository.findByTotalPrice(response.getTotalAmount(), customerId).orElse(new ArrayList<>());
 
-        List<VoucherResponse> voucherResponses =vouchers
+        List<VoucherResponse> voucherResponses = vouchers
                 .stream().map(voucherMapper::response).toList();
         response.setVouchers(voucherResponses);
 
@@ -138,7 +136,7 @@ public class OrderService {
                     .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
 
             if (voucherApplied.getAmount() <= 0 || voucherApplied.getStatus().equals(VoucherStatus.Inactive)) {
-                Voucher expiredVoucher = (Voucher) vouchers.stream().filter(v->v.getId().equals(voucherApplied.getId()));
+                Voucher expiredVoucher = (Voucher) vouchers.stream().filter(v -> v.getId().equals(voucherApplied.getId()));
                 expiredVoucher.setStatus(VoucherStatus.Inactive);
                 voucherRepository.save(expiredVoucher);
                 throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_VOUCHER);
@@ -216,35 +214,7 @@ public class OrderService {
 
     }
 
-    //    public PaginatedResponse<OrderResponse> getOrderByCustomerId(OrderStatus orderStatus, int page, int size){
-//        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
-//
-//        String customerId = AppUtils.getCustomerIdByJwt();
-//
-//        Pageable pageable = PageRequest.of(page,size,sort);
-//
-//        Page<Order> orders = orderRepository.findByCustomerIdAndOrderStatus(customerId,orderStatus,pageable);
-//
-//        List<OrderResponse> responses = orders.map(item->{
-//            OrderResponse orderResponse = orderMapper.toResponse(item);
-//            orderResponse.setStatus(item.getOrderStatus());
-//
-//            List<OrderItemResponse> orderItemResponses = item.getOrderItems().stream().map(i->{
-//                OrderItemResponse itemResponse = orderItemMapper.toResponse(i);
-//                ProductSku sku = i.getProductSku();
-//                ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
-//                itemResponse.setName(spu.getName());
-//                itemResponse.setProductSkuId(sku.getId());
-//                itemResponse.setThumbnail(spu.getImage());
-//                itemResponse.setVariant(productSkuUtils.getVariant(sku));
-//                return itemResponse;
-//            }).toList();
-//            orderResponse.setOrderItems(orderItemResponses);
-//            return orderResponse;
-//        }).stream().toList();
-//
-//        return responses;
-//    }
+
     public PaginatedResponse<OrderResponse> getOrdersByCustomerId(List<OrderStatus> statuses, int page, int size) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
         String customerId = AppUtils.getCustomerIdByJwt();
@@ -267,7 +237,7 @@ public class OrderService {
 
                 ProductSku sku = i.getProductSku();
                 ProductSpu spu = productSpuRepository.findBySkuId(sku.getId());
-                boolean rated = ratingRepository.existsByCustomer_IdAndOrderItem_Id(customerId,i.getId());
+                boolean rated = ratingRepository.existsByCustomer_IdAndOrderItem_Id(customerId, i.getId());
 
                 itemResponse.setName(spu.getName());
                 itemResponse.setProductSkuId(sku.getId());
@@ -284,7 +254,6 @@ public class OrderService {
 
         return PaginatedResponse.fromSpringPage(responsePage);
     }
-
 
 
     public PaginatedResponse<OrderResponse> getOrdersByStatuses(List<OrderStatus> statuses, int page, int size) {
@@ -370,15 +339,16 @@ public class OrderService {
         Voucher voucher = null;
         if (request.getVoucherCode() != null && !request.getVoucherCode().isEmpty()) {
             voucher = voucherRepository.findByVoucherCode(request.getVoucherCode()).orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
-            if (voucher.getAmount() <= 0) {
+            if (voucher.getAmount() <= voucher.getUsedCount()) {
                 voucher.setStatus(VoucherStatus.Inactive);
-                voucherRepository.save(voucher);
                 throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_VOUCHER);
             }
             if (!(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now()))) {
                 voucher.setStatus(VoucherStatus.Inactive);
-                voucherRepository.save(voucher);
-                throw new AppException(ErrorCode.INVALID_VOUCHER);
+                throw new AppException(ErrorCode.VOUCHER_HAS_EXPIRED);
+            }
+            if (voucherRepository.countUsagePerUser(customerId, voucher.getId()) >= voucher.getMaxUsagePerUser()) {
+                throw new AppException(ErrorCode.NOT_ENOUGH_USAGE_VOUCHER);
             }
         }
 
@@ -388,7 +358,6 @@ public class OrderService {
 
         order.setFeeShip(request.getFeeShip());
         order.setOrderStatus(OrderStatus.pending_payment);
-//        order.setShippingAddress(request.getShippingAddress());
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
 
@@ -399,6 +368,10 @@ public class OrderService {
                 throw new AppException(ErrorCode.NOT_ENOUGH_QUANTITY_PRODUCT);
 
             sku.setSkuStock(sku.getSkuStock() - item.getQuantity());
+
+            if (sku.getSkuStock() <= 0) {
+                sku.setStatus(ProductSku.Status.Inactive);
+            }
 
             OrderItem orderItem = orderItemMapper.toOrderItem(item);
 
@@ -423,7 +396,6 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
 
 
-
         BigDecimal voucherDiscount = BigDecimal.ZERO;
         if (voucher != null &&
                 totalAmount.compareTo(voucher.getMinOrderValue()) > 0) {
@@ -438,8 +410,11 @@ public class OrderService {
 
             voucherDiscount = percentDiscount.min(maxDiscount);
 
-            voucher.setAmount(voucher.getAmount() - 1);
-            voucher.setUsedCount(voucher.getUsedCount()+1);
+            voucher.setUsedCount(voucher.getUsedCount() + 1);
+
+            if (voucher.getAmount() <= voucher.getUsedCount())
+                voucher.setStatus(VoucherStatus.Inactive);
+
         }
 
         order.setVoucherDiscountAmount(voucherDiscount);
@@ -481,8 +456,7 @@ public class OrderService {
         });
 
         response.setOrderItems(orderItemResponses);
-        response.setCreateDate(order.getCreateDate());
-        if (request.isBuyFromCart()){
+        if (request.isBuyFromCart()) {
             Cart cart = cartRepository.findByCustomerId(customerId).orElseThrow(() -> new AppException(ErrorCode.CART_NOT_EXISTED));
             List<CartItem> deleteCartItems = cart.getCartItems();
             Set<String> skus = request.getOrderItems().stream().map(OrderItemRequest::getProductSkuId).collect(Collectors.toSet());
@@ -572,31 +546,55 @@ public class OrderService {
     public void checkPendingTransactions() {
         List<Transaction> pendingTransactions = transactionRepository.findByStatusAndTransactionType(TransactionStatus.pending, TransactionType.payment);
         LocalDateTime now = LocalDateTime.now();
-        int count =0;
+
+        // Thu thập các Entity đã thay đổi
+        List<Transaction> transactionsToUpdate = new ArrayList<>();
+        List<Order> ordersToUpdate = new ArrayList<>();
+        List<ProductSku> skuItemsToUpdate = new ArrayList<>();
+
         for (Transaction tx : pendingTransactions) {
-            // Nếu quá hạn thanh toán (ví dụ hơn 15 phút từ createDate)
             if (tx.getCreateDate().plusMinutes(15).isBefore(now)) {
+
+                // 1. Cập nhật Transaction
                 tx.setStatus(TransactionStatus.failed);
+                transactionsToUpdate.add(tx);
+
+                // 2. Cập nhật Order
                 Order order = tx.getOrder();
-                List<OrderItem> orderItems = order.getOrderItems();
                 order.setOrderStatus(OrderStatus.payment_failed);
-                List<ProductSku> skuItems = new ArrayList<>();
-                orderItems.forEach(item -> {
-                    int currentStock = item.getProductSku().getSkuStock();
+                ordersToUpdate.add(order);
+
+                // 3. Hoàn trả Tồn kho
+                order.getOrderItems().forEach(item -> {
                     ProductSku sku = item.getProductSku();
-                    sku.setSkuStock(currentStock + item.getQuantity());
-                    skuItems.add(sku);
+                    sku.setSkuStock(sku.getSkuStock() + item.getQuantity());
+                    if(sku.getSkuStock()>0 && sku.getStatus().equals(ProductSku.Status.Inactive)){
+                        sku.setStatus(ProductSku.Status.Active);
+                    }
+                    skuItemsToUpdate.add(sku);
                 });
+
+                // 4. Hoàn trả Voucher
                 Voucher voucher = order.getVoucher();
-                if(voucher != null){
-                    voucher.setAmount(voucher.getAmount()+1);
-                    voucher.setUsedCount(voucher.getUsedCount()-1);
+                if (voucher != null) {
+                    // Voucher cũng là Managed Entity (qua Order), chỉ cần set
+                    voucher.setUsedCount(voucher.getUsedCount() - 1);
                 }
-                transactionRepository.save(tx);
-                orderRepository.save(order);
-                productSkuRepository.saveAll(skuItems);
-                count++;
             }
+        }
+
+        // 5. Lưu toàn bộ thay đổi sau khi vòng lặp kết thúc
+        if (!transactionsToUpdate.isEmpty()) {
+            transactionRepository.saveAll(transactionsToUpdate);
+        }
+        if (!ordersToUpdate.isEmpty()) {
+            orderRepository.saveAll(ordersToUpdate);
+        }
+        // Ghi chú: Việc save SKUItemsToUpdate có thể KHÔNG cần thiết
+        // nếu OrderItems được fetch join và SKU được fetch.
+        // Tuy nhiên, để đảm bảo (và vì bạn đã có code đó), ta giữ lại:
+        if (!skuItemsToUpdate.isEmpty()) {
+            productSkuRepository.saveAll(skuItemsToUpdate);
         }
     }
 
@@ -705,9 +703,8 @@ public class OrderService {
                         skuItems.add(sku);
                     });
                     Voucher voucher = order.getVoucher();
-                    if(voucher != null){
-                        voucher.setAmount(voucher.getAmount()+1);
-                        voucher.setUsedCount(voucher.getUsedCount()-1);
+                    if (voucher != null) {
+                        voucher.setUsedCount(voucher.getUsedCount() - 1);
                         voucherRepository.save(voucher);
                     }
                     productSkuRepository.saveAll(skuItems);
@@ -824,12 +821,11 @@ public class OrderService {
 //    }
 
 
-
-    public List<Map<String,String>> getAllOrderStatus(){
+    public List<Map<String, String>> getAllOrderStatus() {
         return Arrays.stream(OrderStatus.values())
-                .map(s->Map.of(
-                        "code",s.name(),
-                        "label",s.getLabel()
+                .map(s -> Map.of(
+                        "code", s.name(),
+                        "label", s.getLabel()
                 )).toList();
     }
 

@@ -48,4 +48,9 @@ public class EmployeeAuthenticationService extends BaseAuthenticationService<Emp
         return "ROLE_"+user.getRole().getName();
     }
 
+    @Override
+    protected Account.AccountStatus getStatus(Employee user) {
+        return user.getStatus();
+    }
+
 }

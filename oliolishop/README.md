@@ -26,12 +26,13 @@ docker build -f Dockerfile -t oliolishop:0.0.1 .
 ### Với Window
 ```bash
 
-docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -e IMAGE_DIR=/images -p 8080:8080 -v d:/HocTap/AI/crawl/images:/images oliolishop:0.0.1
+docker run -d --name olioli-service --env-file .env -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -e IMAGE_DIR=/images -p 8080:8080 -v d:/KhoaLuanTotNghiep/image_oliolishop/images:/images oliolishop:0.0.1
 
 ```
 ## Với Ubuntu
 ```bash
 docker run -d --name olioli-service \
+  --env-file .env
   -e DB_HOST=172.19.240.57 \
   -e REDIS_HOST=172.19.240.57 \
   -e IMAGE_DIR=/images \
@@ -45,8 +46,8 @@ docker run -d --name olioli-service \
 docker stop olioli-service
 docker rm olioli-service
 docker build -t oliolishop:0.0.1 .
-docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -e IMAGE_DIR=/images -p 8080:8080 -v d:/HocTap/AI/crawl/images:/images oliolishop:0.0.1
-
+#docker run -d --name olioli-service -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -e IMAGE_DIR=/images -p 8080:8080 -v d:/HocTap/AI/crawl/images:/images oliolishop:0.0.1
+docker run -d --name olioli-service --env-file .env -e DB_HOST={ipaddress} -e REDIS_HOST={ipaddress} -e IMAGE_DIR=/images -p 8080:8080 -v d:/KhoaLuanTotNghiep/image_oliolishop/images:/images oliolishop:0.0.1
 ```
 
 ### 5. Ghi chú

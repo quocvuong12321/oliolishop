@@ -42,6 +42,8 @@ public class CheckOutResponse {
 
     LocalDateTime expectedDeliveryTime;
 
+    BigDecimal loyalPoint;
+
     public BigDecimal getTotalAmount(){
         if(checkOutItemResponses.isEmpty())
             return BigDecimal.ZERO;

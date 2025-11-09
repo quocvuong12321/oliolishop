@@ -12,15 +12,6 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductSpuResponse {
-//    String id;
-//    String name;
-//    String image;
-//    String brandId;
-//    String categoryId;
-//    double originalPrice;
-//    double price;
-//    int discountRate;
-//    int sold;
      String id;          // product_spu_id
      String name;        // name
      String image;       // image
@@ -28,4 +19,6 @@ public class ProductSpuResponse {
      String categoryId;  // category_id
      double minPrice;    // min_price (MIN of sku.original_price)
      double maxPrice;    // max_price (MAX of sku.original_price)
+
+     double score;
 }

@@ -124,4 +124,15 @@ public class ProductSpuController {
                 .result("")
                 .build();
     }
+
+    @PostMapping(ApiPath.Spu.IMAGE_SEARCH)
+    public ApiResponse<PaginatedResponse<ProductSpuResponse>> imageSearch(@RequestParam(value = "file") MultipartFile file,
+                                                                          @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                          @RequestParam(value = "size", defaultValue = "20") int size
+    ){
+
+        return ApiResponse.<PaginatedResponse<ProductSpuResponse>>builder()
+                .result(productSpuService.searchProductsByImage(file,page,size))
+                .build();
+    }
 }

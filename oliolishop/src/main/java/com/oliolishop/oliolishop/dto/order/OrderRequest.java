@@ -22,5 +22,6 @@ public class OrderRequest {
     String voucherCode;
     BigDecimal feeShip;
     List<OrderItemRequest> orderItems;
+    BigDecimal loyalPoint;
     boolean buyFromCart;
 }

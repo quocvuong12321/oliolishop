@@ -22,10 +22,16 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.*;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.RestTemplate;
+
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -41,9 +47,9 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 //@RequiredArgsConstructor
 public class ProductSpuService {
-    private final RatingRepository ratingRepository;
-    private final ProductSkuRepository productSkuRepository;
-    private final DescriptionAttrRepository descriptionAttrRepository;
+    RatingRepository ratingRepository;
+    ProductSkuRepository productSkuRepository;
+    DescriptionAttrRepository descriptionAttrRepository;
     BrandRepository brandRepository;
     CategoryRepository categoryRepository;
     ProductSpuMapper productSpuMapper;
@@ -54,26 +60,11 @@ public class ProductSpuService {
     ProductSkuAttrMapper productSkuAttrMapper;
     DescriptionAttrMapper descriptionAttrMapper;
     DescriptionAttrService descriptionAttrService;
-    RedisService redisService;
+    private static final String FASTAPI_URL = "http://localhost:8000/search";
+    RestTemplate restTemplate = AppUtils.createUnsafeRestTemplate();
 
 
-    //    public List<ProductSpuResponse> getProducts(String categoryId,  String brandId ,double minPrice, double maxPrice, int page, int size) {
-//        List<ProductSpuProjection> query = productSpuRepository.findProducts(categoryId,brandId,minPrice,maxPrice, page, size);
-//        List<ProductSpuResponse> lstResponse = new ArrayList<>();
-//
-//        query.forEach(s->lstResponse.add(ProductSpuResponse.builder()
-//                        .id(s.getProductSpuId())
-//                        .brandId(s.getBrandId())
-//                        .categoryId(s.getCategoryId())
-//                        .maxPrice(s.getMaxPrice())
-//                        .minPrice(s.getMinPrice())
-//                        .image(s.getImage())
-//                        .name(s.getName())
-//                .build()));
-//
-//        return  lstResponse;
-//    }
-    public PaginatedResponse<ProductSpuResponse> getProducts(String categoryId,
+        public PaginatedResponse<ProductSpuResponse> getProducts(String categoryId,
                                                              String brandId,
                                                              Double minPrice,
                                                              Double maxPrice,
@@ -104,6 +95,80 @@ public class ProductSpuService {
                 .toList();
 
         return PaginatedResponse.fromSpringPage(new PageImpl<>(content, pageable, query.getTotalElements()));
+    }
+
+    public PaginatedResponse<ProductSpuResponse> searchProductsByImage(
+            MultipartFile imageFile,
+            int page,
+            int size
+    ) {
+        try {
+            // Gửi file đến FastAPI
+            ByteArrayResource resource = new ByteArrayResource(imageFile.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return imageFile.getOriginalFilename();
+                }
+            };
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", resource);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<ImageSearchResponseDTO> response =
+                    restTemplate.exchange(FASTAPI_URL, HttpMethod.POST, requestEntity, ImageSearchResponseDTO.class);
+
+            ImageSearchResponseDTO fastApiResponse = response.getBody();
+            if (fastApiResponse == null || fastApiResponse.getResults() == null || fastApiResponse.getResults().isEmpty()) {
+                return  PaginatedResponse.<ProductSpuResponse>builder()
+                        .page(page)
+                        .size(size)
+                        .content(Collections.emptyList())
+                        .totalElements(0)
+                        .build();
+            }
+
+            // Lấy danh sách SPU + score
+            Map<String, Double> scoreMap = fastApiResponse.getResults()
+                    .stream()
+                    .collect(Collectors.toMap(ImageSearchResultDTO::getSpu_id, ImageSearchResultDTO::getScore));
+
+            List<String> spuIds = new ArrayList<>(scoreMap.keySet());
+
+            // Truy vấn DB lấy thông tin sản phẩm
+            List<ProductSpuProjection> products = productSpuRepository.findByIdIn(spuIds);
+
+            // Chuyển thành ProductSpuResponse, gắn score
+            List<ProductSpuResponse> content = products.stream()
+                    .map(p -> ProductSpuResponse.builder()
+                            .id(p.getProductSpuId())
+                            .brandId(p.getBrandId())
+                            .categoryId(p.getCategoryId())
+                            .minPrice(p.getMinPrice())
+                            .maxPrice(p.getMaxPrice())
+                            .name(p.getName())
+                            .image(p.getImage())
+                            .score(scoreMap.getOrDefault(p.getProductSpuId(), 0.0))
+                            .build())
+                    .sorted(Comparator.comparingDouble(ProductSpuResponse::getScore).reversed())
+                    .collect(Collectors.toList());
+
+            //  Pagination thủ công
+            int start = Math.min(page * size, content.size());
+            int end = Math.min(start + size, content.size());
+            List<ProductSpuResponse> pageContent = content.subList(start, end);
+
+            return PaginatedResponse.fromSpringPage(
+                    new PageImpl<>(pageContent, PageRequest.of(page, size), content.size())
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi tìm kiếm sản phẩm bằng hình ảnh: " + e.getMessage(), e);
+        }
     }
 
 

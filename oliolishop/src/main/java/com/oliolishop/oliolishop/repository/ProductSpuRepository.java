@@ -75,6 +75,22 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
             Pageable pageable
     );
 
+    @Query("""
+              SELECT p.id AS productSpuId,
+                       p.name AS name,
+                       p.image AS image,
+                       p.brand.id AS brandId,
+                       p.category.id AS categoryId,
+                       MIN(s.originalPrice) AS minPrice,
+                       MAX(s.originalPrice) AS maxPrice
+                FROM ProductSpu p
+                JOIN p.productSkus s
+                WHERE p.id IN :ids
+                GROUP BY p.id, p.name, p.image, p.brand.id, p.category.id
+            """)
+    List<ProductSpuProjection> findByIdIn(@Param("ids") List<String> ids);
+
+
     @Query(
             value = "CALL GetTotalElements(:categoryId, :brandId, :minPrice, :maxPrice)",
             nativeQuery = true

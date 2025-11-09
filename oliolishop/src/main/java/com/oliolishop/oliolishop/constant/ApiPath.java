@@ -24,6 +24,7 @@ public class ApiPath {
         public static final String DETAIL = "/detail"+BY_ID;
         public static final String RATING = DETAIL+"/ratings";
         public static final String LIKE_RATING = RATING+"/like";
+        public static final String IMAGE_SEARCH = "image-search";
     }
 
 

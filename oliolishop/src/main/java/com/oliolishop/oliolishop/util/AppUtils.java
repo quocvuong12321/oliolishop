@@ -6,16 +6,23 @@ import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.service.CustomerAuthenticationService;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.cert.X509Certificate;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -240,5 +247,26 @@ public class AppUtils {
         ZoneId localZone = ZoneId.of("Asia/Ho_Chi_Minh");
         Instant instant = Instant.parse(dateTime);
         return LocalDateTime.ofInstant(instant,localZone);
+    }
+
+    public static RestTemplate createUnsafeRestTemplate() {
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        public X509Certificate[] getAcceptedIssuers() { return null; }
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+                    }
+            };
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+
+            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+            return new RestTemplate(factory);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

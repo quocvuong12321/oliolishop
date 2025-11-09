@@ -2,6 +2,7 @@ package com.oliolishop.oliolishop.service;
 
 import com.oliolishop.oliolishop.dto.ghn.GhnPreviewRequest;
 import com.oliolishop.oliolishop.dto.ghn.GhnPreviewResponse;
+import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,29 +18,10 @@ import java.security.cert.X509Certificate;
 @Slf4j
 public class GhnService {
 
-    private RestTemplate createUnsafeRestTemplate() {
-        try {
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        public X509Certificate[] getAcceptedIssuers() { return null; }
-                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-                    }
-            };
-            SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-            HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-
-            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-            return new RestTemplate(factory);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
 
-    private final RestTemplate restTemplate = createUnsafeRestTemplate();
+
+    private final RestTemplate restTemplate = AppUtils.createUnsafeRestTemplate();
     @Value("${ghn.token}")
     String ghnToken;
 

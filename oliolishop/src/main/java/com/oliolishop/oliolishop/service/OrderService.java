@@ -75,6 +75,7 @@ public class OrderService {
 
         String customerId = AppUtils.getCustomerIdByJwt();
 
+        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
         Map<String, Integer> skuQuantityMap = request.getCartItemRequests().stream()
                 .collect(Collectors.toMap(
                         CartItemRequest::getProductSkuId, // Key: productSkuId
@@ -184,6 +185,8 @@ public class OrderService {
         response.setFeeShip(feeShip);
         response.setExpectedDeliveryTime(AppUtils.pasteStringToDateTime(ghnPreviewResponse.getData().getExpected_delivery_time()));
         response.setFinalAmount(finalAmount.add(feeShip));
+        response.setLoyalPoint(customer.getLoyaltyPoints());
+
         return response;
     }
 
@@ -422,6 +425,7 @@ public class OrderService {
         BigDecimal finalAmount = totalAmount
                 .add(request.getFeeShip())
                 .subtract(voucherDiscount)
+                .subtract(request.getLoyalPoint())
                 .setScale(2, RoundingMode.HALF_UP);
 
         order.setFinalAmount(finalAmount);
@@ -579,7 +583,13 @@ public class OrderService {
                 if (voucher != null) {
                     // Voucher cũng là Managed Entity (qua Order), chỉ cần set
                     voucher.setUsedCount(voucher.getUsedCount() - 1);
+                    if (voucher.getUsedCount() < voucher.getAmount() && voucher.getStatus().equals(VoucherStatus.Inactive))
+                        voucher.setStatus(VoucherStatus.Active);
                 }
+                Customer customer = order.getCustomer();
+                BigDecimal refundLoyalPoint = order.getFinalAmount()
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                customer.setLoyaltyPoints(customer.getLoyaltyPoints().subtract(refundLoyalPoint));
             }
         }
 
@@ -676,13 +686,14 @@ public class OrderService {
         String customerId = AppUtils.getCustomerIdByJwt();
 
         Order order = orderRepository.findByIdAndCustomerId(orderId, customerId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
-
+        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_EXISTED));
 //        if (order.getOrderStatus().equals(OrderStatus.ready_to_pick)) {
 //            order.setOrderStatus(OrderStatus.pending_cancellation);
 //            orderRepository.save(order);
 //            return 1; // 1 yêu cầu hủy đã gửi, chờ xác nhận
 //        }
-        if (order.getOrderStatus().equals(OrderStatus.pending_confirmation) || order.getOrderStatus().equals(OrderStatus.confirmed)) {
+        if (order.getOrderStatus().equals(OrderStatus.pending_confirmation) ||
+                order.getOrderStatus().equals(OrderStatus.confirmed)) {
             Transaction transaction = transactionRepository
                     .findByOrderIdAndTransactionTypeAndStatus(orderId, TransactionType.payment, TransactionStatus.success)
                     .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_EXIST));
@@ -695,7 +706,6 @@ public class OrderService {
                 case 2:
                     List<OrderItem> orderItems = order.getOrderItems();
                     List<ProductSku> skuItems = new ArrayList<>();
-                    order.setOrderStatus(OrderStatus.cancelled);
                     orderItems.forEach(item -> {
                         int currentStock = item.getProductSku().getSkuStock();
                         ProductSku sku = item.getProductSku();
@@ -705,8 +715,14 @@ public class OrderService {
                     Voucher voucher = order.getVoucher();
                     if (voucher != null) {
                         voucher.setUsedCount(voucher.getUsedCount() - 1);
-                        voucherRepository.save(voucher);
+                        if(voucher.getUsedCount() < voucher.getAmount() && voucher.getStatus().equals(VoucherStatus.Inactive))
+                            voucher.setStatus(VoucherStatus.Active);
                     }
+
+                    order.setOrderStatus(OrderStatus.cancelled);
+                    BigDecimal refundLoyalPoint = order.getFinalAmount().divide(BigDecimal.valueOf(100),2,RoundingMode.HALF_UP);
+                    customer.setLoyaltyPoints(customer.getLoyaltyPoints().subtract(refundLoyalPoint));
+
                     productSkuRepository.saveAll(skuItems);
                     orderRepository.save(order);
                     return 2;

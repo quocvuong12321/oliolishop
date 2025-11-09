@@ -154,7 +154,7 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
 
         Account account = accountMapper.toAccount(request);
         account.setId(UUID.randomUUID().toString());
-
+        account.setStatus(Account.AccountStatus.Active);
         String customerId = UUID.randomUUID().toString();
         Customer customer = Customer.builder()
                 .id(customerId)

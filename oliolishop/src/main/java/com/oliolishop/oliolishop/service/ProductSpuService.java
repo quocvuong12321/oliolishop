@@ -16,12 +16,15 @@ import com.oliolishop.oliolishop.entity.ProductSpu;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.*;
-import com.oliolishop.oliolishop.repository.*;
+import com.oliolishop.oliolishop.repository.BrandRepository;
+import com.oliolishop.oliolishop.repository.CategoryRepository;
+import com.oliolishop.oliolishop.repository.ProductSpuRepository;
+import com.oliolishop.oliolishop.repository.RatingRepository;
 import com.oliolishop.oliolishop.util.AppUtils;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
@@ -29,9 +32,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -43,13 +45,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-//@RequiredArgsConstructor
 public class ProductSpuService {
     RatingRepository ratingRepository;
-    ProductSkuRepository productSkuRepository;
-    DescriptionAttrRepository descriptionAttrRepository;
     BrandRepository brandRepository;
     CategoryRepository categoryRepository;
     ProductSpuMapper productSpuMapper;
@@ -60,11 +58,29 @@ public class ProductSpuService {
     ProductSkuAttrMapper productSkuAttrMapper;
     DescriptionAttrMapper descriptionAttrMapper;
     DescriptionAttrService descriptionAttrService;
-    private static final String FASTAPI_URL = "http://localhost:8000/search";
+
+    String FASTAPI_URL;
+
+
     RestTemplate restTemplate = AppUtils.createUnsafeRestTemplate();
 
+    public ProductSpuService(RatingRepository ratingRepository, BrandRepository brandRepository, CategoryRepository categoryRepository, ProductSpuMapper productSpuMapper, BrandMapper brandMapper, CategoryService categoryService, CategoryMapper categoryMapper, ProductSpuRepository productSpuRepository, ProductSkuAttrMapper productSkuAttrMapper, DescriptionAttrMapper descriptionAttrMapper, DescriptionAttrService descriptionAttrService,@Value("${app.fast-api.base-url}") String FASTAPI_URL) {
+        this.ratingRepository = ratingRepository;
+        this.brandRepository = brandRepository;
+        this.categoryRepository = categoryRepository;
+        this.productSpuMapper = productSpuMapper;
+        this.brandMapper = brandMapper;
+        this.categoryService = categoryService;
+        this.categoryMapper = categoryMapper;
+        this.productSpuRepository = productSpuRepository;
+        this.productSkuAttrMapper = productSkuAttrMapper;
+        this.descriptionAttrMapper = descriptionAttrMapper;
+        this.descriptionAttrService = descriptionAttrService;
+        this.FASTAPI_URL = FASTAPI_URL;
+    }
 
-        public PaginatedResponse<ProductSpuResponse> getProducts(String categoryId,
+
+    public PaginatedResponse<ProductSpuResponse> getProducts(String categoryId,
                                                              String brandId,
                                                              Double minPrice,
                                                              Double maxPrice,
@@ -120,7 +136,7 @@ public class ProductSpuService {
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
             ResponseEntity<ImageSearchResponseDTO> response =
-                    restTemplate.exchange(FASTAPI_URL, HttpMethod.POST, requestEntity, ImageSearchResponseDTO.class);
+                    restTemplate.exchange(FASTAPI_URL+"/search", HttpMethod.POST, requestEntity, ImageSearchResponseDTO.class);
 
             ImageSearchResponseDTO fastApiResponse = response.getBody();
             if (fastApiResponse == null || fastApiResponse.getResults() == null || fastApiResponse.getResults().isEmpty()) {

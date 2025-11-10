@@ -12,16 +12,19 @@ import com.oliolishop.oliolishop.repository.VoucherRepository;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
@@ -133,6 +136,20 @@ public class VoucherService {
         VoucherResponse response = voucherMapper.response(voucher);
         response.setStatus(voucher.getStatus());
         return response;
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 0 0 * * *")
+//    @Scheduled(fixedRate = 60 * 1000) // 1p
+    public void inactiveExpiredVoucher(){
+        LocalDateTime now = LocalDateTime.now();
+        int count = voucherRepository.inactiveExpiredVouchers(now);
+
+        if (count > 0) {
+            log.info("Inactivated {} expired vouchers at {}", count, now);
+        } else {
+            log.info("ℹNo expired vouchers found at {}", now);
+        }
     }
 
 }

@@ -6,10 +6,13 @@ import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,4 +52,12 @@ public interface VoucherRepository extends JpaRepository<Voucher,String> {
     Page<Voucher> findByNameContainingIgnoreCaseAndStatus(String name, VoucherStatus status, Pageable pageable);
 
     Page<Voucher> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    @Modifying
+    @Query("""
+            UPDATE Voucher v
+            SET v.status = 'Inactive'
+            WHERE v.status = 'Active' AND v.endDate < :now
+            """)
+    int inactiveExpiredVouchers(@Param("now")LocalDateTime now);
 }

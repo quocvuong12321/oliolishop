@@ -25,16 +25,40 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
     /**
      * Xử lý các lỗi Runtime chưa được phân loại
      */
+//    @ExceptionHandler(value = RuntimeException.class)
+//    ResponseEntity<ApiResponse<Object>> handlingRuntimeException(RuntimeException exception){
+//        ApiResponse<Object> apiResponse = new ApiResponse<>();
+//
+//        log.info("Unhandled Exception: {}",exception.getMessage());
+//
+//        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
+//        apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+//        apiResponse.setStatus(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode().value());
+//        return ResponseEntity.badRequest().body(apiResponse);
+//    }
+
     @ExceptionHandler(value = RuntimeException.class)
     ResponseEntity<ApiResponse<Object>> handlingRuntimeException(RuntimeException exception){
-        ApiResponse<Object> apiResponse = new ApiResponse<>();
+        ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;
 
-        log.info("Unhandled Exception: {}",exception.getMessage());
+        log.error("Unhandled Runtime Exception: {}", exception.getMessage(), exception); // Dùng error level và in stack trace
 
-        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
-        apiResponse.setStatus(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode().value());
-        return ResponseEntity.badRequest().body(apiResponse);
+        // Tạo message trả về: Lấy message gốc của exception HOẶC message mặc định
+        String messageToReturn = exception.getMessage() != null && !exception.getMessage().isBlank()
+                ? exception.getMessage()
+                : errorCode.getMessage(); // Fallback nếu message gốc là null/empty
+
+        ApiResponse<Object> apiResponse = ApiResponse.builder()
+                .code(errorCode.getCode())
+                // **Quan trọng:** Trả về message gốc của lỗi runtime nếu có
+                .message(messageToReturn)
+                .status(errorCode.getStatusCode().value())
+                .build();
+
+        // **Quan trọng:** Dùng status code 500
+        return ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(apiResponse);
     }
 
     /**
@@ -59,52 +83,61 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
     ResponseEntity<ApiResponse<Object>> handlingValidation(MethodArgumentNotValidException exception) {
         try {
             log.info("Handling validation exception: {}", exception.getMessage());
-
             List<Map<String, Object>> errors = new ArrayList<>();
+            // Định nghĩa ErrorCode mặc định
+            ErrorCode defaultErrorCode = ErrorCode.UNCATEGORIZED_VALIDATION;
 
             for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
                 String enumKey = fieldError.getDefaultMessage();
-                ErrorCode errorCode = ErrorCode.INVALID_KEY;
+                ErrorCode errorCode = defaultErrorCode;
+                String errorMessageToReturn = enumKey; // Mặc định là message gốc
                 Map<String, Object> attributes = null;
 
                 try {
+                    // Cố gắng map sang ErrorCode tùy chỉnh
                     if (enumKey != null) {
                         errorCode = ErrorCode.valueOf(enumKey);
-
                         var constraintViolation = fieldError.unwrap(ConstraintViolation.class);
                         attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+
+                        // Nếu map thành công, sử dụng message đã được mapAttributes
+                        errorMessageToReturn = attributes != null
+                                ? mapAttributes(errorCode.getMessage(), attributes)
+                                : errorCode.getMessage();
                     }
                 } catch (Exception e) {
-                    // giữ nguyên INVALID_KEY nếu không map được
+                    // Không làm gì: errorCode giữ nguyên default (INVALID_KEY), errorMessageToReturn giữ nguyên message gốc
+                    log.warn("Could not map field error message '{}' to custom ErrorCode. Returning original message.", enumKey);
                 }
 
                 Map<String, Object> errorDetail = new HashMap<>();
                 errorDetail.put("field", fieldError.getField());
                 errorDetail.put("code", errorCode.getCode());
-                errorDetail.put("message",
-                        attributes != null
-                                ? mapAttributes(errorCode.getMessage(), attributes)
-                                : errorCode.getMessage());
+                errorDetail.put("message", errorMessageToReturn); // Sử dụng message đã xác định
 
                 errors.add(errorDetail);
             }
 
             ApiResponse<Object> apiResponse = new ApiResponse<>();
-            apiResponse.setCode(ErrorCode.INVALID_KEY.getCode());
+            apiResponse.setCode(defaultErrorCode.getCode());
             apiResponse.setMessage("Validation failed");
             apiResponse.setResult(errors);
-            apiResponse.setStatus(400); // Đặt status code rõ ràng
+            apiResponse.setStatus(400);
 
-            return ResponseEntity.status(400).body(apiResponse); // Đặt status code tường minh
+            return ResponseEntity.status(400).body(apiResponse);
         } catch (Exception e) {
-            log.error("Error in exception handler", e);
-            ApiResponse<Object> fallbackResponse = new ApiResponse<>();
-            fallbackResponse.setCode(9999);
-            fallbackResponse.setMessage("Unexpected error in validation: " + e.getMessage());
-            fallbackResponse.setStatus(400); // Đặt status code rõ ràng
-            return ResponseEntity.status(400).body(fallbackResponse);
+            log.error("Error in validation handler itself", e);
+            // Cập nhật lỗi fallback trong handler để trả về 500
+            ErrorCode internalError = ErrorCode.UNCATEGORIZED_EXCEPTION;
+            ApiResponse<Object> fallbackResponse = ApiResponse.builder()
+                    .code(internalError.getCode())
+                    .message("Internal validation handler error: " + e.getMessage())
+                    .status(internalError.getStatusCode().value())
+                    .build();
+            return ResponseEntity.status(internalError.getStatusCode()).body(fallbackResponse);
         }
     }
+
 
 
     /**
@@ -116,19 +149,27 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
         String enumKey = ex.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
                 .findFirst()
-                .orElse("VALIDATION_ERROR");
+                .orElse("VALIDATION_ERROR"); // Message mặc định nếu không có
+
+
+        ErrorCode errorCode = ErrorCode.UNCATEGORIZED_VALIDATION;
+        String messageToReturn = enumKey;
 
         // Thử chuyển đổi message thành ErrorCode
-        ErrorCode errorCode = ErrorCode.INVALID_KEY;
         try {
-            errorCode = ErrorCode.valueOf(enumKey);
+            ErrorCode mappedCode = ErrorCode.valueOf(enumKey);
+            // Nếu map thành công, cập nhật errorCode và message
+            errorCode = mappedCode;
+            messageToReturn = mappedCode.getMessage();
         } catch (IllegalArgumentException e) {
-            // Giữ nguyên INVALID_KEY nếu không map được
+            // Giữ nguyên INVALID_KEY và messageToReturn là enumKey (message gốc)
         }
 
         return ResponseEntity.badRequest().body(ApiResponse.builder()
                 .code(errorCode.getCode())
-                .message(errorCode.getMessage())
+                // **Quan trọng:** Trả về message đã xác định
+                .message(messageToReturn)
+                .status(errorCode.getStatusCode().value())
                 .build());
     }
 

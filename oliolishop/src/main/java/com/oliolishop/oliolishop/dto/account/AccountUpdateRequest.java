@@ -4,6 +4,7 @@ package com.oliolishop.oliolishop.dto.account;
 import com.oliolishop.oliolishop.entity.Customer;
 import com.oliolishop.oliolishop.validator.DobConstraint;
 import com.oliolishop.oliolishop.validator.ValidationRegex;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -18,7 +19,7 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AccountUpdateRequest {
 
-
+    @NotBlank
     String name;
     @DobConstraint(message = "DOB_INVALID",min = 16)
     LocalDate dob;

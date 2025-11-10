@@ -211,7 +211,7 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
         existCustomer.setDob(request.getDob());
         existCustomer.setGender(request.getGender());
 
-        if(!file.isEmpty()){
+        if (file != null && !file.isEmpty()){
             String avatarUrl = saveAvatar(existCustomer.getId(), file,imageDir,folderName);
             existCustomer.setImage(avatarUrl);
         }

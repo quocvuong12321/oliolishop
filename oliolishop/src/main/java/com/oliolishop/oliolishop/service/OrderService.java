@@ -425,7 +425,7 @@ public class OrderService {
         BigDecimal finalAmount = totalAmount
                 .add(request.getFeeShip())
                 .subtract(voucherDiscount)
-                .subtract(request.getLoyalPoint())
+                .subtract(request.getLoyalPoint()!=null?request.getLoyalPoint():BigDecimal.ZERO)
                 .setScale(2, RoundingMode.HALF_UP);
 
         order.setFinalAmount(finalAmount);

@@ -40,7 +40,6 @@ public class ImageController {
                     .resolve(filename)
                     .normalize();
 
-            System.out.println("Full path: " + filePath.toAbsolutePath());
 
             Resource resource = new UrlResource(filePath.toUri());
             if (!resource.exists() || !resource.isReadable()) {

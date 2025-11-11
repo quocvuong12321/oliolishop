@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.service;
 
 
+import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.banner.BannerRequest;
 import com.oliolishop.oliolishop.dto.banner.BannerResponse;
 import com.oliolishop.oliolishop.entity.Banner;
@@ -114,7 +115,7 @@ public class BannerService {
         bannerRepository.delete(banner);
     }
 
-    public List<BannerResponse> getBanners(String name, String categoryId, int page, int size) {
+    public PaginatedResponse<BannerResponse> getBanners(String name, String categoryId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createDate"));
 
         Specification<Banner> spec = (root, query, cb) -> cb.conjunction();
@@ -131,9 +132,9 @@ public class BannerService {
 
         Page<Banner> banners = bannerRepository.findAll(spec, pageable);
 
-        return banners.stream()
-                .map(bannerMapper::toResponse)
-                .toList();
+
+
+        return PaginatedResponse.fromSpringPage(banners.map(bannerMapper::toResponse));
     }
 
     public BannerResponse getBannerById(String bannerId){

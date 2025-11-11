@@ -4,6 +4,7 @@ package com.oliolishop.oliolishop.controller;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
+import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.banner.BannerRequest;
 import com.oliolishop.oliolishop.dto.banner.BannerResponse;
 import com.oliolishop.oliolishop.service.BannerService;
@@ -30,13 +31,13 @@ public class BannerController {
     }
 
     @GetMapping
-    public ApiResponse<List<BannerResponse>> getBanner(
+    public ApiResponse<PaginatedResponse<BannerResponse>> getBanner(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String name,
             @RequestParam (required = false)String categoryId
     ){
-        return ApiResponse.<List<BannerResponse>>builder()
+        return ApiResponse.<PaginatedResponse<BannerResponse>>builder()
                 .result(bannerService.getBanners(name,categoryId,page,size))
                 .build();
     }

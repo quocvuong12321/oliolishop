@@ -1,7 +1,6 @@
 package com.oliolishop.oliolishop.repository;
 
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuProjection;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
 import com.oliolishop.oliolishop.entity.ProductSku;
 import com.oliolishop.oliolishop.entity.ProductSpu;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -9,40 +8,27 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> {
 
 
-    //    @Query(
-//            value = "CALL GetProductList(:categoryId, :brandId, :minPrice, :maxPrice, :page, :size)",
-//            nativeQuery = true
-//    )
-//    List<ProductSpuProjection> findProducts(
-//            @Param("categoryId") String categoryId,
-//            @Param("brandId") String brandId,
-//            @Param("minPrice") double minPrice,
-//            @Param("maxPrice") double maxPrice,
-//            @Param("page") int page,
-//            @Param("size") int size
-//    );
+
     @Query(
             value = """
-                    SELECT 
+                    SELECT
                         spu.product_spu_id AS productSpuId,
                         spu.name AS name,
                         spu.category_id AS categoryId,
                         spu.brand_id AS brandId,
                         MIN(sku.original_price) AS minPrice,
                         MAX(sku.original_price) AS maxPrice,
-                        spu.image AS image
+                        spu.image AS image,
+                        spu.delete_status as deleteStatus
                     FROM product_spu spu
                     JOIN product_sku sku ON spu.product_spu_id = sku.product_spu_id
                     WHERE (:categoryId IS NULL OR spu.category_id = :categoryId)
@@ -60,7 +46,7 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
                     WHERE (:categoryId IS NULL OR spu.category_id = :categoryId)
                       AND (:brandId IS NULL OR spu.brand_id = :brandId)
                       AND (:search IS NULL OR spu.name LIKE CONCAT('%', :search, '%'))
-                      AND spu.delete_status = 'Active'
+                      AND (:deleteStatus IS NULL OR spu.delete_status = :deleteStatus)
                     HAVING (:minPrice IS NULL OR MIN(sku.original_price) >= :minPrice)
                        AND (:maxPrice IS NULL OR MIN(sku.original_price) <= :maxPrice)
                     """,
@@ -72,8 +58,27 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
             @Param("minPrice") Double minPrice,
             @Param("maxPrice") Double maxPrice,
             @Param("search") String search,
+            @Param("deleteStatus") String deleteStatus,
             Pageable pageable
     );
+
+    @Query( value = """ 
+                    SELECT
+                    spu.product_spu_id AS productSpuId,
+                    spu.name AS name,
+                    spu.category_id AS categoryId,
+                    spu.brand_id AS brandId,
+                    MIN(sku.original_price) AS minPrice,
+                    MAX(sku.original_price) AS maxPrice,
+                    spu.image AS image,
+                    spu.delete_status as deleteStatus
+                FROM product_spu spu
+                JOIN product_sku sku ON spu.product_spu_id = sku.product_spu_id
+                WHERE spu.product_spu_id = :id
+            """,
+            nativeQuery = true
+            )
+    Optional<ProductSpuProjection> findSpuById(@Param("id") String id);
 
     @Query("""
               SELECT p.id AS productSpuId,
@@ -85,7 +90,7 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
                        MAX(s.originalPrice) AS maxPrice
                 FROM ProductSpu p
                 JOIN p.productSkus s
-                WHERE p.id IN :ids
+                WHERE p.id IN :ids and p.deleteStatus = Active
                 GROUP BY p.id, p.name, p.image, p.brand.id, p.category.id
             """)
     List<ProductSpuProjection> findByIdIn(@Param("ids") List<String> ids);

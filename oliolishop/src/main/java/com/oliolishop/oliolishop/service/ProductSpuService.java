@@ -58,13 +58,13 @@ public class ProductSpuService {
     ProductSkuAttrMapper productSkuAttrMapper;
     DescriptionAttrMapper descriptionAttrMapper;
     DescriptionAttrService descriptionAttrService;
-
+    VectorApiService vectorApiService;
     String FASTAPI_URL;
 
 
     RestTemplate restTemplate = AppUtils.createUnsafeRestTemplate();
 
-    public ProductSpuService(RatingRepository ratingRepository, BrandRepository brandRepository, CategoryRepository categoryRepository, ProductSpuMapper productSpuMapper, BrandMapper brandMapper, CategoryService categoryService, CategoryMapper categoryMapper, ProductSpuRepository productSpuRepository, ProductSkuAttrMapper productSkuAttrMapper, DescriptionAttrMapper descriptionAttrMapper, DescriptionAttrService descriptionAttrService,@Value("${app.fast-api.base-url}") String FASTAPI_URL) {
+    public ProductSpuService(RatingRepository ratingRepository, BrandRepository brandRepository, CategoryRepository categoryRepository, ProductSpuMapper productSpuMapper, BrandMapper brandMapper, CategoryService categoryService, CategoryMapper categoryMapper, ProductSpuRepository productSpuRepository, ProductSkuAttrMapper productSkuAttrMapper, DescriptionAttrMapper descriptionAttrMapper, DescriptionAttrService descriptionAttrService,@Value("${app.fast-api.base-url}") String FASTAPI_URL, VectorApiService vectorApiService) {
         this.ratingRepository = ratingRepository;
         this.brandRepository = brandRepository;
         this.categoryRepository = categoryRepository;
@@ -77,7 +77,9 @@ public class ProductSpuService {
         this.descriptionAttrMapper = descriptionAttrMapper;
         this.descriptionAttrService = descriptionAttrService;
         this.FASTAPI_URL = FASTAPI_URL;
+        this.vectorApiService = vectorApiService;
     }
+
 
 
     public PaginatedResponse<ProductSpuResponse> getProducts(String categoryId,
@@ -86,7 +88,8 @@ public class ProductSpuService {
                                                              Double maxPrice,
                                                              int page,
                                                              int size,
-                                                             String search) {
+                                                             String search,
+                                                             ProductSpu.DeleteStatus status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "minPrice"));
 
         Page<ProductSpuProjection> query = productSpuRepository.findProducts(
@@ -95,6 +98,7 @@ public class ProductSpuService {
                 minPrice,
                 maxPrice,
                 search,
+                status.toString(),
                 pageable
         );
 
@@ -107,10 +111,27 @@ public class ProductSpuService {
                         .minPrice(s.getMinPrice())
                         .image(s.getImage())
                         .name(s.getName())
+                        .deleteStatus(s.getDeleteStatus())
                         .build())
                 .toList();
 
         return PaginatedResponse.fromSpringPage(new PageImpl<>(content, pageable, query.getTotalElements()));
+    }
+
+    public ProductSpuResponse getById(String id){
+
+        ProductSpuProjection s = productSpuRepository.findSpuById(id).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        return ProductSpuResponse.builder()
+                .id(s.getProductSpuId())
+                .brandId(s.getBrandId())
+                .categoryId(s.getCategoryId())
+                .maxPrice(s.getMaxPrice())
+                .minPrice(s.getMinPrice())
+                .image(s.getImage())
+                .name(s.getName())
+                .deleteStatus(s.getDeleteStatus())
+                .build();
     }
 
     public PaginatedResponse<ProductSpuResponse> searchProductsByImage(
@@ -205,7 +226,7 @@ public class ProductSpuService {
                         .id(s.getId())
                         .productSpuId(spu.getId())
                         .skuCode(s.getSkuCode())
-                        .sort(s.getSort())
+                        .sort((int)s.getSort())
                         .originalPrice(s.getOriginalPrice())
                         .image(s.getImage())
                         .skuStock(s.getSkuStock())
@@ -262,44 +283,9 @@ public class ProductSpuService {
     }
 
 
-//    protected List<ProductSpuResponse> productsSameBrand(String brandId) {
-//        List<ProductSpuResponse> lstResponse = new ArrayList<>();
-//
-//        productSpuRepository.findProducts(null, brandId, 0, 9999999, 0, 20).forEach(
-//                s -> lstResponse.add(ProductSpuResponse.builder()
-//                        .id(s.getProductSpuId())
-//                        .brandId(s.getBrandId())
-//                        .categoryId(s.getCategoryId())
-//                        .maxPrice(s.getMaxPrice())
-//                        .minPrice(s.getMinPrice())
-//                        .image(s.getImage())
-//                        .name(s.getName())
-//                        .build()));
-//        return lstResponse;
-//
-//    }
-//
-//    protected List<ProductSpuResponse> productsSameCategory(String categoryId) {
-//
-//        List<ProductSpuResponse> lstResponse = new ArrayList<>();
-//
-//        productSpuRepository.findProducts(categoryId, null, 0, 9999999, 0, 20).forEach(
-//                s -> lstResponse.add(ProductSpuResponse.builder()
-//                        .id(s.getProductSpuId())
-//                        .brandId(s.getBrandId())
-//                        .categoryId(s.getCategoryId())
-//                        .maxPrice(s.getMaxPrice())
-//                        .minPrice(s.getMinPrice())
-//                        .image(s.getImage())
-//                        .name(s.getName())
-//                        .build()));
-//        return lstResponse;
-//
-//    }
-
     protected List<ProductSpuResponse> productsSameBrand(String brandId) {
         Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "minPrice"));
-        return productSpuRepository.findProducts(null, brandId, null, null, null, pageable)
+        return productSpuRepository.findProducts(null, brandId, null, null, null,  ProductSpu.DeleteStatus.Active.toString(),pageable)
                 .stream()
                 .map(s -> ProductSpuResponse.builder()
                         .id(s.getProductSpuId())
@@ -315,7 +301,7 @@ public class ProductSpuService {
 
     protected List<ProductSpuResponse> productsSameCategory(String categoryId) {
         Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "minPrice"));
-        return productSpuRepository.findProducts(categoryId, null, null, null, null, pageable)
+        return productSpuRepository.findProducts(categoryId, null, null, null, null, ProductSpu.DeleteStatus.Active.toString(), pageable)
                 .stream()
                 .map(s -> ProductSpuResponse.builder()
                         .id(s.getProductSpuId())
@@ -371,15 +357,20 @@ public class ProductSpuService {
 
         spu.setSold(0);
 
+
         ProductSpuCreateResponse resp = productSpuMapper.toSpuCreateResponse(productSpuRepository.save(spu));
 
         resp.setMedia(media);
 
         resp.setDescriptionAttrs(descriptionAttrService.createDescriptionAttrs(request.getDescriptionAttrRequests(), spu));
 
+        vectorApiService.addProductVectorsAsync(lstMedia, files);
+
         return resp;
 
     }
+
+
 
 
     public List<String> saveProductImages(String key, String spuId, List<MultipartFile> files, String imageDir) {
@@ -477,7 +468,30 @@ public class ProductSpuService {
         // Trả về response
         ProductSpuCreateResponse resp = productSpuMapper.toSpuCreateResponse(saved);
         resp.setMedia(updatedMedia);
+
+
+        vectorApiService.updateProductVectorsAsync(spuId,deleted,newUrls,newFiles);
+
         return resp;
     }
+
+
+    public void inActiveProduct(String productSpuId){
+        ProductSpu spu = productSpuRepository.findById(productSpuId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        spu.setDeleteStatus(ProductSpu.DeleteStatus.Deleted);
+
+        productSpuRepository.save(spu);
+    }
+
+    public void ActiveProduct(String productSpuId){
+        ProductSpu spu = productSpuRepository.findById(productSpuId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXIST));
+
+        spu.setDeleteStatus(ProductSpu.DeleteStatus.Active);
+
+        productSpuRepository.save(spu);
+    }
+
+
 
 }

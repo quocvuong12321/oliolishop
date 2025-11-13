@@ -23,7 +23,6 @@ public class CategoryController {
 
     @GetMapping
     public ApiResponse<Set<CategoryResponse>> getCategories() throws JsonProcessingException {
-        log.info("you are in controller ");
         return ApiResponse.<Set<CategoryResponse>>builder()
                 .result(categoryService.loadParent())
                 .build();

@@ -7,13 +7,12 @@ import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.productspu.ProductDetailResponse;
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateRequest;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
 import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateResponse;
+import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
 import com.oliolishop.oliolishop.dto.rating.RatingResponse;
-import com.oliolishop.oliolishop.repository.ProductSpuRepository;
+import com.oliolishop.oliolishop.entity.ProductSpu;
 import com.oliolishop.oliolishop.service.ProductSpuService;
 import com.oliolishop.oliolishop.service.RatingService;
-import jakarta.websocket.server.PathParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @Slf4j
@@ -46,24 +44,39 @@ public class ProductSpuController {
                                          @RequestParam(defaultValue = "0") double minPrice,
                                          @RequestParam(defaultValue = "99999999") double maxPrice,
                                          @RequestParam(required = false) String brandId,
-                                         @RequestParam(required = false) String search
-    ) {
-        PaginatedResponse<ProductSpuResponse> pages = productSpuService.getProducts(categoryId, brandId, minPrice, maxPrice, page, size, search);
+                                         @RequestParam(required = false) String search,
+                                         @RequestParam(defaultValue = "Active")ProductSpu.DeleteStatus status
+                                         ) {
+        PaginatedResponse<ProductSpuResponse> pages = productSpuService.getProducts(categoryId, brandId, minPrice, maxPrice, page, size, search,status);
 //        int totalElements = productSpuService.getTotalElements(categoryId, brandId, minPrice, maxPrice);
 //        int totalPages = (int) Math.ceil((double) totalElements / size);
         return ApiResponse.builder()
                 .result(
-//                        PaginatedResponse.<ProductSpuResponse>builder()
-//                                .content(pages)
-//                                .totalPages(totalPages)
-//                                .page(page)
-//                                .size(size)
-//                                .totalElements(totalElements)
-//                                .hasPreviousPage(page > 0)
-//                                .hasNextPage(page < totalPages - 1)
-//                                .build()
                         pages
                 )
+                .build();
+    }
+
+    @GetMapping(ApiPath.BY_ID)
+    public ApiResponse<ProductSpuResponse> getById(@PathVariable(name = "id")String id){
+        return ApiResponse.<ProductSpuResponse>builder()
+                .result(productSpuService.getById(id))
+                .build();
+    }
+
+    @PatchMapping(ApiPath.BY_ID + ApiPath.Spu.DELETE)
+    public ApiResponse<String> deleteProduct(@PathVariable(name = "id") String id){
+        productSpuService.inActiveProduct(id);
+        return ApiResponse.<String>builder()
+                .result(String.format(MessageConstants.SUCCESS,"Xóa sản phẩm"))
+                .build();
+    }
+
+    @PatchMapping(ApiPath.BY_ID+ApiPath.Spu.ACTIVE)
+    public ApiResponse<String> activeProduct(@PathVariable(name = "id") String id){
+        productSpuService.ActiveProduct(id);
+        return ApiResponse.<String>builder()
+                .result(String.format(MessageConstants.SUCCESS,"Kích hoạt sản phẩm"))
                 .build();
     }
 

@@ -8,4 +8,5 @@ public interface ProductSpuProjection {
     Double getMinPrice();
     Double getMaxPrice();
     String getImage();
+    String getDeleteStatus();
 }

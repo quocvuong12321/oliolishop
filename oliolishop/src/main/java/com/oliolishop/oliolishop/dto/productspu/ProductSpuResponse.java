@@ -1,10 +1,7 @@
 package com.oliolishop.oliolishop.dto.productspu;
 
-import com.oliolishop.oliolishop.entity.Category;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,6 +16,6 @@ public class ProductSpuResponse {
      String categoryId;  // category_id
      double minPrice;    // min_price (MIN of sku.original_price)
      double maxPrice;    // max_price (MAX of sku.original_price)
-
      double score;
+     String deleteStatus;
 }

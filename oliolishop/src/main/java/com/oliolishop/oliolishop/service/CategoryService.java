@@ -15,7 +15,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,23 +64,6 @@ public class CategoryService {
         //        lstChildren.forEach(c -> c.setParent(id));
         return categoryRepository.findChildren(cate.getId()).stream().map(categoryMapper::toCategoryResponse).collect(Collectors.toSet());
     }
-
-//    private void findAllCategory(CategoryResponse c){
-//        findChildren(c.getId());
-//        if (!c.isLeaf()){
-//            findAllCategory(c.get);
-//        }
-//    }
-
-
-//    public Set<CategoryAllResponse> findAll(){
-//        Set<CategoryAllResponse> set= new HashSet<>();
-//
-//
-//
-//
-//
-//    }
 
 
 

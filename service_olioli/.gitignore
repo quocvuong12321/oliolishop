@@ -1,0 +1,96 @@
+# =========================================
+# Python
+# =========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+service_olioli/app/ViT_best_model.pth
+# =========================================
+# FastAPI / Uvicorn / Gunicorn
+# =========================================
+*.log
+*.pid
+*.db
+*.sqlite3
+instance/
+uploads/
+temp/
+tmp/
+cache/
+
+# Nếu dùng SQLite để test local
+*.sqlite
+*.sqlite3
+
+# =========================================
+# Redis dump hoặc cache
+# =========================================
+dump.rdb
+*.rdb
+
+# =========================================
+# VSCode / PyCharm / IDE files
+# =========================================
+.vscode/
+.idea/
+*.iml
+
+# =========================================
+# OS files
+# =========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================================
+# Docker
+# =========================================
+# Docker build artifacts
+*.tar
+*.img
+*.bak
+*.tmp
+*.swp
+
+# Docker volumes, nếu có mount local
+data/
+db_data/
+redis_data/
+
+# =========================================
+# Testing
+# =========================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.*
+.cache
+pytest_cache/
+test-results/
+
+# =========================================
+# Jupyter / Colab (nếu có)
+# =========================================
+*.ipynb_checkpoints
+.ipynb_checkpoints/
+
+# =========================================
+# Build artifacts
+# =========================================
+build/
+dist/
+.eggs/
+*.egg-info/
+*.egg
+
+# =========================================
+# Project-specific
+# =========================================
+# Nếu bạn có thư mục static, media hoặc output
+media/
+staticfiles/
+logs/
+output/
+temp_upload/

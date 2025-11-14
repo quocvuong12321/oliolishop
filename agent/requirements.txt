@@ -1,0 +1,27 @@
+# FastAPI framework
+fastapi==0.116.1
+uvicorn==0.35.0
+
+# Data validation
+pydantic==2.11.7
+
+# Environment variables
+python-dotenv==1.1.1
+
+# JWT authentication
+PyJWT==2.10.1
+
+# MySQL database
+PyMySQL==1.1.1
+cryptography==45.0.5
+
+# HTTP requests
+requests==2.32.4
+
+# Google AI SDK
+google-generativeai==0.8.5
+google-ai-generativelanguage==0.6.15
+
+# Additional dependencies for Google ADK
+google-adk==1.8.0
+protobuf==5.29.5

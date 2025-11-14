@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  product-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: product-agent-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - API_BASE_URL=${API_BASE_URL:-http://host.docker.internal:8080/oliolishop/api}
+    volumes:
+      - ./product_agent:/app/product_agent
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: product-agent-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=12345
+      - MYSQL_DATABASE=olioli
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

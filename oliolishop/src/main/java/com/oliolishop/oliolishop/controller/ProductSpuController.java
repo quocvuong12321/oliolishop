@@ -5,10 +5,7 @@ import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
-import com.oliolishop.oliolishop.dto.productspu.ProductDetailResponse;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateRequest;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuCreateResponse;
-import com.oliolishop.oliolishop.dto.productspu.ProductSpuResponse;
+import com.oliolishop.oliolishop.dto.productspu.*;
 import com.oliolishop.oliolishop.dto.rating.RatingResponse;
 import com.oliolishop.oliolishop.entity.ProductSpu;
 import com.oliolishop.oliolishop.service.ProductSpuService;
@@ -146,6 +143,20 @@ public class ProductSpuController {
 
         return ApiResponse.<PaginatedResponse<ProductSpuResponse>>builder()
                 .result(productSpuService.searchProductsByImage(file,page,size))
+                .build();
+    }
+
+    @GetMapping(ApiPath.Spu.BEST_SELLING)
+    public ApiResponse<List<ProductSpuProjection>> getBestSellingProduct(){
+        return ApiResponse.<List<ProductSpuProjection>>builder()
+                .result(productSpuService.getBestSellingProduct())
+                .build();
+    }
+
+    @GetMapping(ApiPath.Spu.NEW_PRODUCT)
+    public ApiResponse<List<ProductSpuProjection>> getNewProduct(){
+        return ApiResponse.<List<ProductSpuProjection>>builder()
+                .result(productSpuService.getNewProduct())
                 .build();
     }
 }

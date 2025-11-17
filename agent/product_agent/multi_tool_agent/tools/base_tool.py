@@ -31,7 +31,7 @@ class BaseAPITool:
     ) -> Dict[str, Any]:
         """Hàm xử lý chung cho tất cả phương thức HTTP."""
         try:
-            # ✅ Thay thế path variables (VD: /order/{id})
+            # Thay thế path variables (VD: /order/{id})
             if path_vars:
                 endpoint = endpoint.format(**path_vars)
 
@@ -49,7 +49,7 @@ class BaseAPITool:
             response.raise_for_status()
             data = response.json()
 
-            # ✅ Chuẩn hóa phản hồi từ backend
+            # Chuẩn hóa phản hồi từ backend
             if data.get("code") != 1000:
                 return self.error(data.get("message", "API trả về lỗi."))
 

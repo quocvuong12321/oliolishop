@@ -27,6 +27,8 @@ public class ApiPath {
         public static final String IMAGE_SEARCH = "image-search";
         public static final String DELETE = "/delete";
         public static final String ACTIVE = "/active";
+        public static final String NEW_PRODUCT = "/new-product";
+        public static final String BEST_SELLING = "/best-selling";
     }
 
 
@@ -124,6 +126,11 @@ public class ApiPath {
 
     public static final class Banner{
         public static final String ROOT = BASE + "/banner";
+    }
+
+    public static final class Agent{
+        public static final String ROOT = BASE + "/chat";
+        public static final String CLEAN = "/clean";
     }
 
 }

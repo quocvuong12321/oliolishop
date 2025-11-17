@@ -9,4 +9,5 @@ public interface ProductSpuProjection {
     Double getMaxPrice();
     String getImage();
     String getDeleteStatus();
+    Integer getTotalQuantitySold();
 }

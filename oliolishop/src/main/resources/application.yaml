@@ -52,6 +52,7 @@ app:
   image-dir: ${IMAGE_DIR:D:/HocTap/AI/crawl/images}
   fast-api:
     base-url: http://${FAST_API_HOST:0.0.0.0}:${FAST_API_PORT:8000}
+    agent-url: http://${FAST_API_HOST:0.0.0.0}:${AGENT_PORT:8001}/api/chat
 
 ghn:
   token: ${GHN_TOKEN:de1ce88f-9f3a-11f0-bdaf-ae7fa045a771}

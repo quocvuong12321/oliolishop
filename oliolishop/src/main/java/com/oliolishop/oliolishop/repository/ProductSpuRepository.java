@@ -165,5 +165,49 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
             WHERE sku.id IN :skuIds
             """)
     List<ProductSpu> findAllBySkuIds(@Param("skuIds") List<String> skuIds);
+
+
+    @Query(value = """
+            SELECT
+            spu.product_spu_id as productSpuId,
+            spu.name as name,
+            spu.category_id as categoryId,
+            spu.brand_id as brandId,
+            MIN(sku.original_price) as minPrice,
+            MAX(sku.original_price) as maxPrice,
+            spu.image as image,
+            spu.delete_status as deleteStatus,
+            SUM(oi.quantity) AS totalQuantitySold
+            FROM `order` o
+            JOIN order_item oi ON o.order_id = oi.order_id
+            JOIN product_sku sku ON sku.product_sku_id = oi.product_sku_id
+            JOIN product_spu spu ON spu.product_spu_id = sku.product_spu_id
+            WHERE o.order_status = "delivered"
+            GROUP BY spu.product_spu_id
+            ORDER BY totalQuantitySold DESC
+            LIMIT 8
+            """,nativeQuery = true)
+    List<ProductSpuProjection> getBestSellingProduct();
+
+
+    @Query(value = """
+            SELECT
+                spu.product_spu_id as productSpuId,
+                spu.name as name,
+                spu.category_id as categoryId,
+                spu.brand_id as brandId,
+                MIN(sku.original_price) as minPrice,
+                MAX(sku.original_price) as maxPrice,
+                spu.image as image,
+                spu.delete_status as deleteStatus
+            FROM product_spu spu
+            JOIN product_sku sku ON spu.product_spu_id = sku.product_spu_id
+            WHERE spu.delete_status = "Active"
+            GROUP BY spu.product_spu_id
+            ORDER BY spu.create_date DESC
+            LIMIT 8
+            """,nativeQuery = true)
+    List<ProductSpuProjection> getNewProduct();
+
 }
 

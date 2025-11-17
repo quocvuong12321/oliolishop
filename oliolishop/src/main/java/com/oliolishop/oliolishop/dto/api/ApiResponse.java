@@ -19,18 +19,4 @@ public class ApiResponse<T> {
     @Builder.Default
     int status = 200;
 
-//    public static <T> ApiResponse<T> success(T result) {
-//        return ApiResponse.<T>builder()
-//                .result(result)
-//                .code(1000)
-//                .message("Successfully")
-//                .build();
-//    }
-
-//    public static <T> ApiResponse<T> error(int code, String message) {
-////        ApiResponse<T> res = new ApiResponse<>();
-////        res.code = code;
-////        res.message = message;
-////        return res;
-//    }
 }

@@ -492,6 +492,16 @@ public class ProductSpuService {
         productSpuRepository.save(spu);
     }
 
+    public List<ProductSpuProjection> getBestSellingProduct(){
+
+        return productSpuRepository.getBestSellingProduct();
+
+    }
+
+    public List<ProductSpuProjection> getNewProduct(){
+        return productSpuRepository.getNewProduct();
+    }
+
 
 
 }

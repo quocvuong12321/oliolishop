@@ -8,13 +8,6 @@ pydantic==2.11.7
 # Environment variables
 python-dotenv==1.1.1
 
-# JWT authentication
-PyJWT==2.10.1
-
-# MySQL database
-PyMySQL==1.1.1
-cryptography==45.0.5
-
 # HTTP requests
 requests==2.32.4
 

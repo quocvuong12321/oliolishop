@@ -86,7 +86,7 @@ docker build -t product-agent:latest .
 ```bash
 docker run -d \
   --name product-agent \
-  -p 8000:8000 \
+  -p 8001:8001 \
   product-agent:latest
 ```
 
@@ -97,7 +97,7 @@ docker run -d \
 docker logs -f product-agent
 
 # Test API health check
-curl http://localhost:8000/api/chat/health
+curl http://localhost:8001/api/chat/health
 
 # Truy cập API Docs
 # Mở trình duyệt: http://localhost:8000/docs

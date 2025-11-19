@@ -7,6 +7,8 @@ import com.oliolishop.oliolishop.dto.agent.ChatResponse;
 import com.oliolishop.oliolishop.dto.agent.HistoryChatResponse;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.entity.HistoryChat;
+import com.oliolishop.oliolishop.exception.AppException;
+import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.HistoryChatMapper;
 import com.oliolishop.oliolishop.repository.HistoryChatRepository;
 import com.oliolishop.oliolishop.util.AppUtils;
@@ -71,6 +73,10 @@ public class ChatService {
 
         String customerId = AppUtils.getCustomerIdByJwt();
 
+        boolean checkSession = historyChatRepository.existsBySessionIdAndCustomerId(request.getSessionId(),customerId);
+        if(!checkSession)
+            throw new AppException(ErrorCode.CHAT_SESSION_INVALID);
+
         HistoryChat chat = historyChatMapper.toHistoryChat(request);
 
         chat.setCustomerId(customerId);
@@ -93,7 +99,7 @@ public class ChatService {
         if(chatResponse !=null) {
             HistoryChat entityChatResponse = HistoryChat.builder()
                     .role(HistoryChat.RoleChat.assistant)
-                    .message(chatResponse.getAssistant_message())
+                    .message(chatResponse.getAssistantMessage())
                     .customerId(customerId)
                     .sessionId(request.getSessionId())
                     .build();
@@ -111,7 +117,6 @@ public class ChatService {
 
     @Transactional
     private HistoryChatResponse createNewSession(String customerId){
-
 
         String MESSAGE_DEFAULT = "Xin chào";
 

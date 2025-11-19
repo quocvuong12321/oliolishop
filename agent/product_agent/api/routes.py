@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from multi_tool_agent import agent
 from google.genai import types
 from google.adk.runners import InMemoryRunner
@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Verify GOOGLE_API_KEY
 logger.info(f"GOOGLE_API_KEY exists: {bool(os.getenv('GOOGLE_API_KEY'))}")
-logger.info(f"Agent loaded: {agent}")
-logger.info(f"Agent type: {type(agent)}")
+
 
 # Khởi tạo runner 1 lần duy nhất khi module load
 runner = InMemoryRunner(agent=agent)
@@ -32,7 +31,7 @@ class ChatResponse(BaseModel):
     sessionId: str = Field(..., alias="session_id")
     userMessage: str = Field(..., alias="user_message")
     assistantMessage: str = Field(..., alias="assistant_message")
-    timeStamp: str = Field(..., alias="timestamp")
+    timestamp: str = Field(..., alias="timestamp")
     
     class Config:
         populate_by_name = True
@@ -60,8 +59,6 @@ async def chat(request: ChatRequest):
     """Gửi tin nhắn và nhận phản hồi từ agent"""
     
     try:
-        logger.info(f"Calling agent with message: {request.message}, user_id: {request.user_id}, session_id: {request.session_id}")
-
         # Kiểm tra và tạo session nếu chưa tồn tại
         session = await runner.session_service.get_session(
             app_name=runner.app_name,
@@ -70,16 +67,13 @@ async def chat(request: ChatRequest):
         )
         
         if not session:
-            logger.info(f"Session not found, creating new session: {request.session_id}")
             try:
                 session = await runner.session_service.create_session(
                     app_name=runner.app_name,
                     user_id=request.user_id,
                     session_id=request.session_id
                 )
-                logger.info(f"Successfully created new session: {session.id}")
             except Exception as create_error:
-                logger.error(f"Failed to create session: {create_error}", exc_info=True)
                 raise HTTPException(status_code=500, detail=f"Cannot create session: {str(create_error)}")
         else:
             logger.info(f"Using existing session: {session.id}")
@@ -98,7 +92,6 @@ async def chat(request: ChatRequest):
             session_id=request.session_id,
             new_message=new_message
         ):
-            logger.info(f"Event author: {event.author}, partial: {event.partial}")
             
             # Parse event content - chỉ lấy final response
             if not event.partial and hasattr(event, 'content') and event.content:
@@ -107,17 +100,16 @@ async def chat(request: ChatRequest):
                         if hasattr(part, 'text') and part.text:
                             assistant_message += part.text
                             
-        logger.info(f"Final agent response: {assistant_message}")
         
         # Fallback nếu không có response
         if not assistant_message:
             assistant_message = "Xin lỗi, tôi không nhận được phản hồi. Vui lòng thử lại."
-        
+        timestamp_str = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
         return ChatResponse(
             session_id=request.session_id,
             user_message=request.message,
             assistant_message=assistant_message,
-            timestamp=datetime.now().isoformat()
+            timestamp=timestamp_str
         )
             
     except HTTPException:

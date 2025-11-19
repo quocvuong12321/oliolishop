@@ -26,6 +26,8 @@ public interface HistoryChatRepository extends JpaRepository<HistoryChat,Long> {
             """)
     String findSessionId(@Param("customerId") String customerId);
 
+    boolean existsBySessionIdAndCustomerId(String sessionId,String customerId);
+
     @Transactional
     @Modifying
     @Query("DELETE FROM HistoryChat h WHERE h.sessionId = :sessionId")

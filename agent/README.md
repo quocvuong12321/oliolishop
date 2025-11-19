@@ -38,7 +38,7 @@ Trợ lý AI thời trang thông minh sử dụng Google Gemini để tư vấn 
 ```
 ┌──────────────────────────────────────────┐
 │          Frontend Application            │
-│         (Angular/Vue/Mobile App)           │
+│         (Angular/Vue/Mobile App)         │
 └─────────────────┬────────────────────────┘
                   │ JWT Token
                   ↓
@@ -52,13 +52,17 @@ Trợ lý AI thời trang thông minh sử dụng Google Gemini để tư vấn 
 │  │  │  Search  │  Status  │Stylist │ │  │
 │  │  └──────────┴──────────┴────────┘ │  │
 │  └────────────────────────────────────┘  │
+│  ┌────────────────────────────────────┐  │
+│  │   Google ADK Session Service      │  │
+│  │   (DatabaseSessionService)        │  │
+│  └────────────────────────────────────┘  │
 └─────────┬───────────────────┬────────────┘
           │                   │
      ┌────┴────┐         ┌────┴─────┐
      ↓         ↓         ↓          ↓
 ┌─────────┐ ┌─────────┐ ┌──────────┐
 │  MySQL  │ │ Spring  │ │  Google  │
-│Database │ │Boot API │ │ Gemini   │
+│(ADK DB) │ │Boot API │ │ Gemini   │
 └─────────┘ └─────────┘ └──────────┘
 ```
 
@@ -100,12 +104,13 @@ Agent: "Tôi gợi ý phong cách smart casual cho bạn:
 ### Backend
 - **FastAPI** 0.116.1 - Web framework hiệu năng cao
 - **Google Gemini 2.0** - AI model xử lý ngôn ngữ tự nhiên
-- **Google ADK** 1.8.0 - AI Development Kit
+- **Google ADK** 1.8.0 - AI Development Kit với session management
 - **Uvicorn** 0.35.0 - ASGI server
 
 ### Database & Storage
-- **MySQL** 8.0 - Lưu trữ lịch sử chat và session
-- **PyMySQL** 1.1.1 - MySQL connector
+- **MySQL** 8.0 - Lưu trữ sessions và events (managed by Google ADK)
+- **SQLAlchemy** 2.0.36 - ORM cho database
+- **PyMySQL** 1.1.1 - MySQL driver
 
 ### Authentication & Security
 - **PyJWT** 2.10.1 - JWT token handling
@@ -121,7 +126,8 @@ Agent: "Tôi gợi ý phong cách smart casual cho bạn:
 - **Số endpoint API**: 8
 - **Mô hình AI**: Google Gemini 2.0 Flash
 - **Ngôn ngữ hỗ trợ**: Tiếng Việt
-- **Session timeout**: 100 tin nhắn/session
+- **Session management**: Google ADK DatabaseSessionService
+- **Database**: MySQL với 3 tables (sessions, events, app_states, user_states)
 
 ## 🎨 Điểm nổi bật
 

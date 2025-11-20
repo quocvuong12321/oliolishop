@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.controller;
 
 
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class VoucherController {
     @Autowired
     VoucherService voucherService;
+
 
     @GetMapping
     public ApiResponse<?> getVoucher( @RequestParam(required = false) String searchKey,
@@ -39,6 +41,7 @@ public class VoucherController {
                 .build();
     }
 
+    @CheckPermission("VOUCHER_CREATE")
     @PostMapping
     public ApiResponse<VoucherResponse> createVoucher(@Valid @RequestBody VoucherRequest request){
 
@@ -47,6 +50,7 @@ public class VoucherController {
                 .build();
     }
 
+    @CheckPermission("VOUCHER_UPDATE")
     @PutMapping(ApiPath.BY_ID)
     public ApiResponse<VoucherResponse> updateVoucher(@Valid @RequestBody VoucherRequest request,@PathVariable String id){
 
@@ -55,6 +59,7 @@ public class VoucherController {
                 .build();
     }
 
+    @CheckPermission("VOUCHER_DELETE")
     @DeleteMapping(ApiPath.BY_ID)
     public ApiResponse<String> deleteVoucher(@PathVariable String id){
 

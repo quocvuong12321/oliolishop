@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.controller;
 
 
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.productsku.ProductUpdateRequest;
@@ -17,6 +18,7 @@ public class ProductSkuController {
     @Autowired
     ProductSkuService productSkuService;
 
+    @CheckPermission("PRODUCT_SKU_CREATE")
     @PostMapping(ApiPath.BY_ID)
     public ApiResponse<Void> createSkus(@PathVariable("id") String spuId){
 

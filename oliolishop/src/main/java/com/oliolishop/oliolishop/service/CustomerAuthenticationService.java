@@ -9,6 +9,8 @@ import com.oliolishop.oliolishop.dto.account.AccountUpdateRequest;
 import com.oliolishop.oliolishop.dto.authenticate.*;
 import com.oliolishop.oliolishop.entity.Account;
 import com.oliolishop.oliolishop.entity.Customer;
+import com.oliolishop.oliolishop.entity.Employee;
+import com.oliolishop.oliolishop.entity.Role;
 import com.oliolishop.oliolishop.enums.OtpType;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
@@ -30,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -73,6 +76,12 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
         builder.claim("customerId",user.getCustomer().getId());
     }
 
+
+    @Override
+    protected Set<String> getPermission(Account user){
+        return Set.of();
+    }
+
     @Override
     protected Account findUserByUsername(String username) {
         return accountRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_EXISTED));
@@ -97,6 +106,7 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
     protected Account.AccountStatus getStatus(Account user) {
         return user.getStatus();
     }
+
 
     public Boolean verifyOtp(VerifyOtpRequest request){
         String key = getRedisKeyOtp(request.getEmail(), request.getType());

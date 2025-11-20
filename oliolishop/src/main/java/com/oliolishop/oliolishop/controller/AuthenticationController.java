@@ -59,6 +59,8 @@ public class AuthenticationController {
                                 .authenticated(true)
                                 .accessToken(responseAuth.getAccessToken())
                                 .refreshToken(MessageConstants.REFRESH_TOKE_SAVED)
+                                .role(responseAuth.getRole())
+                                .permissions(responseAuth.getPermissions())
                                 .build()
                 )
                 .build();

@@ -2,6 +2,7 @@ package com.oliolishop.oliolishop.controller;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.category.CategoryRequest;
@@ -35,6 +36,7 @@ public class CategoryController {
                 .build();
     }
 
+    @CheckPermission("CATEGORY_CREATE")
     @PostMapping
     public ApiResponse<CategoryResponse> createCategory(@RequestBody CategoryRequest request) {
         return ApiResponse.<CategoryResponse>builder()
@@ -42,6 +44,7 @@ public class CategoryController {
                 .build();
     }
 
+    @CheckPermission("CATEGORY_UPDATE")
     @PutMapping(ApiPath.BY_ID)
     public ApiResponse<CategoryResponse> updateCategory(@PathVariable(name = "id") String id, @RequestBody CategoryRequest request) {
         return ApiResponse.<CategoryResponse>builder()
@@ -49,6 +52,7 @@ public class CategoryController {
                 .build();
     }
 
+    @CheckPermission("CATEGORY_DELETE")
     @DeleteMapping(ApiPath.BY_ID)
     public ApiResponse<Boolean> deleteCategory(@PathVariable(name = "id") String id) {
         categoryService.deleteCategory(id);

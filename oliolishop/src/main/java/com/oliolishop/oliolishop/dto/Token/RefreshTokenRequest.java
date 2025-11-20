@@ -4,6 +4,8 @@ package com.oliolishop.oliolishop.dto.Token;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

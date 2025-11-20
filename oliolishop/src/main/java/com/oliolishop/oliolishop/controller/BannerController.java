@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.controller;
 
 
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
@@ -23,12 +24,15 @@ public class BannerController {
     private String imageDir;
     @Autowired
     BannerService bannerService;
+
+    @CheckPermission("BANNER_CREATE")
     @PostMapping
     public ApiResponse<BannerResponse> createBanner(@RequestPart BannerRequest request, @RequestPart MultipartFile file){
         return ApiResponse.<BannerResponse>builder()
                 .result(bannerService.createBanner(request,file,imageDir,ApiPath.FOLDER_IMAGE_BANNER))
                 .build();
     }
+
 
     @GetMapping
     public ApiResponse<PaginatedResponse<BannerResponse>> getBanner(
@@ -49,6 +53,7 @@ public class BannerController {
                 .build();
     }
 
+    @CheckPermission("BANNER_DELETE")
     @DeleteMapping(ApiPath.BY_ID)
     public ApiResponse<String> deleteBannerById(@PathVariable String id){
         bannerService.deleteBanner(id,imageDir);
@@ -57,6 +62,7 @@ public class BannerController {
                 .build();
     }
 
+    @CheckPermission("BANNER_UPDATE")
     @PutMapping(ApiPath.BY_ID)
     public ApiResponse<BannerResponse> updateBanner(@PathVariable String id,
                                                     @RequestPart BannerRequest request,

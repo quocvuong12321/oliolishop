@@ -1,5 +1,7 @@
 package com.oliolishop.oliolishop.configuration;
 
+import com.oliolishop.oliolishop.constant.ApiPath;
+import com.oliolishop.oliolishop.constant.EndPoint;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,16 +27,30 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+    private static final String PREFIX = "/api";
 
-    private final String[] PUBLIC_ENDPOINTS= {"/users", "/auth/token", "/auth/refresh",
-            "/auth/introspect"};
+    private final String[] PUBLIC_ENDPOINTS= {"/auth",
+            "/auth/register",
+            "/auth/register/send-otp",
+            "/auth/send-otp",
+            "/auth/reset-password",
+            "/auth/refresh",
+            "/auth/verify-otp",
+            "/auth",
+
+            "/brand"
+    };
+
+
+
+
 
     @Value("${jwt.signerKey}")
     private String signerKey;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
+        HttpSecurity httpSecurity1 = httpSecurity
                 // Kích hoạt CORS, tự lấy CorsConfigurationSource bean
                 .cors(Customizer.withDefaults())
                 // Tắt CSRF cho REST API
@@ -44,15 +60,18 @@ public class SecurityConfig {
                         // Cho phép preflight OPTIONS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Cho phép tất cả endpoint (tạm thời)
-                        .anyRequest().permitAll()
+//                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.GET, EndPoint.prefix(EndPoint.GET_PUBLIC,PREFIX )).permitAll()
+                                .requestMatchers(HttpMethod.POST,EndPoint.prefix(EndPoint.POST_PUBLIC,PREFIX)).permitAll()
+                                .anyRequest().authenticated()
                 )
 
-        .oauth2ResourceServer(
-                oauth2 ->
-                        oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-        );
+                .oauth2ResourceServer(
+                        oauth2 ->
+                                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())
+                                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                );
 
         return  httpSecurity.build();
     }

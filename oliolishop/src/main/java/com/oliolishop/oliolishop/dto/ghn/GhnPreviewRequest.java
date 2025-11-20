@@ -11,9 +11,9 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GhnPreviewRequest {
     String client_order_code;
-    String from_ward_name;
-    String from_district_name;
-    String from_province_name;
+//    String from_ward_name;
+//    String from_district_name;
+//    String from_province_name;
     String from_address;
     String to_name;
     String to_phone;

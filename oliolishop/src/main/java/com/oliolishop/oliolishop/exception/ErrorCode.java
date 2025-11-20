@@ -40,6 +40,7 @@ public enum ErrorCode {
     INVALID_OTP(2005, "Mã OTP không hợp lệ",HttpStatus.BAD_REQUEST),
     OTP_EXPIRED(2006,"Mã OTP đã hết hạn",HttpStatus.UNAUTHORIZED),
     ACCOUNT_HAS_BLOCKED(2007,"Tài khoản đã bị khóa",HttpStatus.LOCKED),
+
     // 3xxx: business logic (Lỗi nghiệp vụ)
     ACCOUNT_EXISTED(3001,"Tài khoản đã tồn tại",HttpStatus.CONFLICT),
     ACCOUNT_NOT_EXISTED(3002, "Tài khoản không tồn tại",HttpStatus.NOT_FOUND),

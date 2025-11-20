@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.controller;
 
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
@@ -41,6 +42,7 @@ public class OrderController {
 
     }
 
+    @CheckPermission("ORDER_UPDATE")
     @PutMapping(ApiPath.Order.CONFIRM + ApiPath.BY_ID)
     public ApiResponse<String> confirmOrder(@PathVariable(name = "id") String orderId) {
         orderService.confirmOrder(orderId);
@@ -48,6 +50,7 @@ public class OrderController {
                 .result(MessageConstants.ORDER_CONFIRM_SUCCESSFULLY)
                 .build();
     }
+
 
     @PostMapping(ApiPath.Order.CREATE_SHIPPING)
     public ApiResponse<GhnPreviewResponse> createShipping(@RequestParam(name = "orderId")String orderId){
@@ -75,6 +78,7 @@ public class OrderController {
 //                .build();
 //    }
 
+    @CheckPermission("ORDER_READ")
     @GetMapping(ApiPath.BY_ID)
     public ApiResponse<OrderResponse> getOrderById(@PathVariable(name = "id") String orderId) {
 
@@ -96,16 +100,8 @@ public class OrderController {
 
     }
 
+    @CheckPermission("ORDER_READ")
     @GetMapping(ApiPath.Order.SEARCH)
-//    public ApiResponse<PaginatedResponse<OrderResponse>> getOrdersByStatuses(
-//            @RequestParam(required = false) List<OrderStatus> statuses,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size
-//    ) {
-//        return ApiResponse.<PaginatedResponse<OrderResponse>>builder()
-//                .result((orderService.searchOrders(statuses, page, size)))
-//                .build();
-//    }
     public ApiResponse<PaginatedResponse<OrderResponse>> searchOrder(
             @ModelAttribute OrderSearchCriteria orderSearchCriteria,
             @RequestParam(defaultValue = "0") int page,
@@ -127,6 +123,7 @@ public class OrderController {
                 .result(response)
                 .build();
     }
+
 
     @PostMapping(ApiPath.Order.CANCEL_ORDER)
     public ApiResponse<String> cancelOrder(@Valid @RequestBody CancelOrderRequest request) {

@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.controller;
 
 
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
@@ -61,6 +62,7 @@ public class ProductSpuController {
                 .build();
     }
 
+    @CheckPermission("PRODUCT_SPU_DELETE")
     @PatchMapping(ApiPath.BY_ID + ApiPath.Spu.DELETE)
     public ApiResponse<String> deleteProduct(@PathVariable(name = "id") String id){
         productSpuService.inActiveProduct(id);
@@ -85,6 +87,7 @@ public class ProductSpuController {
                 .build();
     }
 
+    @CheckPermission("PRODUCT_SPU_CREATE")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ProductSpuCreateResponse> createProduct(
             @RequestPart("product") ProductSpuCreateRequest request,
@@ -96,6 +99,7 @@ public class ProductSpuController {
                 .build();
     }
 
+    @CheckPermission("PRODUCT_SPU_UPDATE")
     @PutMapping(value = ApiPath.BY_ID)
     public ApiResponse<ProductSpuCreateResponse> updateProduct(
             @PathVariable String id,

@@ -3,6 +3,9 @@ package com.oliolishop.oliolishop.service;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
+import com.oliolishop.oliolishop.entity.Employee;
+import com.oliolishop.oliolishop.entity.Permission;
+import com.oliolishop.oliolishop.entity.Role;
 import jakarta.servlet.http.Cookie;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -27,6 +30,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -45,6 +49,7 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     protected abstract String getPassword(T user);
     protected abstract String buildScope(T user);
     protected abstract Account.AccountStatus getStatus(T user);
+    protected abstract Set<String> getPermission(T user);
 
     @Override
     public AuthenticateResponse authenticate(AuthenticateRequest request) {
@@ -66,12 +71,16 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
 
         refreshTokenService.storeRefreshToken(getUsername(user), refreshToken, (int)TIME_REFRESH/60);
 
+        String role = buildScope(user);
 
+        Set<String> permissions=getPermission(user);
 
         return AuthenticateResponse.builder()
                 .authenticated(true)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .role(role)
+                .permissions(permissions)
                 .build();
     }
 
@@ -134,6 +143,8 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
 
         return AccessTokenResponse.builder()
                 .accessToken(newAccessToken)
+                .role(buildScope(user))
+                .permissions(getPermission(user))
                 .build();
     }
 
@@ -161,11 +172,11 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
         }
 
         T user = findUserByUsername(username);
-        String newAccessToken = generateToken(user, TIME_ACCESS, TokenType.ACCESSTYPE);
+//        String newAccessToken = generateToken(user, TIME_ACCESS, TokenType.ACCESSTYPE);
 
-        return AccessTokenResponse.builder()
-                .accessToken(newAccessToken)
-                .build();
+
+
+        return generateNewAccessToken(refreshToken);
     }
 
     @Override

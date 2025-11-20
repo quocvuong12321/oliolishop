@@ -5,12 +5,14 @@ import com.oliolishop.oliolishop.dto.employee.ChangePasswordRequest;
 import com.oliolishop.oliolishop.dto.employee.EmployeeCreateRequest;
 import com.oliolishop.oliolishop.dto.employee.EmployeeResponse;
 import com.oliolishop.oliolishop.dto.employee.EmployeeUpdateRequest;
+import com.oliolishop.oliolishop.dto.role.RoleResponse;
 import com.oliolishop.oliolishop.entity.Account;
 import com.oliolishop.oliolishop.entity.Employee;
 import com.oliolishop.oliolishop.entity.Role;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
 import com.oliolishop.oliolishop.mapper.EmployeeMapper;
+import com.oliolishop.oliolishop.mapper.RoleMapper;
 import com.oliolishop.oliolishop.repository.EmployeeRepository;
 import com.oliolishop.oliolishop.repository.RoleRepository;
 import com.oliolishop.oliolishop.util.AppUtils;
@@ -26,6 +28,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -35,6 +40,7 @@ public class EmployeeService {
     EmployeeRepository employeeRepository;
     private final RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
+    private final RoleMapper roleMapper;
 
     @Transactional
     public EmployeeResponse createEmployee(EmployeeCreateRequest request) {
@@ -167,6 +173,12 @@ public class EmployeeService {
         employee.setRole(r);
         employeeRepository.save(employee);
     }
+
+
+    public Set<RoleResponse> getRoles(){
+        return roleRepository.findAll().stream().map(roleMapper::toResponse).collect(Collectors.toSet());
+    }
+
 
 
 

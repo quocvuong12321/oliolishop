@@ -31,7 +31,7 @@ public class ApplicationInitConfig {
         return args -> {
             if (employeeRepository.findByUsername("admin").isEmpty()) {
 
-                Role r = roleRepository.findById(RoleEnum.ROLE_ADMIN.name())
+                Role r = roleRepository.findById(RoleEnum.ADMIN.name())
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXIST));
 
                 String username = "admin";
@@ -40,6 +40,7 @@ public class ApplicationInitConfig {
                         .role(r)
                         .username(username)
                         .password(passwordEncoder.encode("admin"))
+                        .status(Account.AccountStatus.Active)
                         .build();
 
                 employeeRepository.save(employeeAdmin);

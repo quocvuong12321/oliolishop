@@ -10,17 +10,20 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 public class EmployeeAuthenticationService extends BaseAuthenticationService<Employee>{
     EmployeeRepository employeeRepository;
-
+    PermissionService permissionService;
     public EmployeeAuthenticationService(
             EmployeeRepository employeeRepository,
-        RefreshTokenService refreshTokenService
+            RefreshTokenService refreshTokenService, PermissionService permissionService
     ) {
         super(refreshTokenService);
         this.employeeRepository=employeeRepository;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -52,5 +55,11 @@ public class EmployeeAuthenticationService extends BaseAuthenticationService<Emp
     protected Account.AccountStatus getStatus(Employee user) {
         return user.getStatus();
     }
+
+    @Override
+    protected Set<String> getPermission(Employee user) {
+        return permissionService.getPermissionsByRole(buildScope(user).replace("ROLE_",""));
+    }
+
 
 }

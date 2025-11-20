@@ -41,10 +41,10 @@ public class EmployeeController {
 
         AuthenticateResponse responseAuth = authenticationService.authenticate(request);
         Cookie cookie = new Cookie("refreshToken-employee",responseAuth.getRefreshToken());
-        cookie.setMaxAge((int)(BaseAuthenticationService.TIME_REFRESH*60));
+        cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setMaxAge((int)(BaseAuthenticationService.TIME_REFRESH*60));
         response.addCookie(cookie);
 
         return ApiResponse.<AuthenticateResponse>builder()
@@ -53,6 +53,8 @@ public class EmployeeController {
                                 .authenticated(true)
                                 .accessToken(responseAuth.getAccessToken())
                                 .refreshToken(MessageConstants.REFRESH_TOKE_SAVED)
+                                .permissions(responseAuth.getPermissions())
+                                .role(responseAuth.getRole())
                                 .build()
                 )
                 .build();

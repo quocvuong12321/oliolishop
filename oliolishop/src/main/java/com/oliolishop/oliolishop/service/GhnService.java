@@ -28,14 +28,7 @@ public class GhnService {
     @Value("${ghn.shop-id}")
     String shopId;
 
-    @Value("${ghn.from.ward-name}")
-    String fromWardName;
-    @Value("${ghn.from.district-name}")
-    String fromDistrictName;
-    @Value("${ghn.from.province-name}")
-    String fromProvinceName;
-    @Value(("${ghn.from.detail-address}"))
-    String detailAddress;
+
 
     private static final String PREVIEW_URL =
             "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/preview";
@@ -45,10 +38,7 @@ public class GhnService {
 
     public GhnPreviewResponse getPreview(GhnPreviewRequest request) {
 
-        request.setFrom_address(detailAddress);
-        request.setFrom_province_name(fromProvinceName);
-        request.setFrom_district_name(fromDistrictName);
-        request.setFrom_ward_name(fromWardName);
+
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("token", ghnToken);
@@ -64,10 +54,7 @@ public class GhnService {
     }
 
     public GhnPreviewResponse createOrder(GhnPreviewRequest request){
-        request.setFrom_address(detailAddress);
-        request.setFrom_province_name(fromProvinceName);
-        request.setFrom_district_name(fromDistrictName);
-        request.setFrom_ward_name(fromWardName);
+
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("token",ghnToken);

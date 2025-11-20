@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.controller;
 
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
@@ -8,10 +9,7 @@ import com.oliolishop.oliolishop.dto.brand.BrandResponse;
 import com.oliolishop.oliolishop.service.BrandService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.PublicKey;
 
 
 @RestController
@@ -48,6 +46,7 @@ public class BrandController {
                 .build();
     }
 
+    @CheckPermission("BRAND_UPDATE")
     @PutMapping(ApiPath.BY_ID)
     public ApiResponse<BrandResponse> updateBrand(@PathVariable("id") String id,
                                                   @RequestBody BrandRequest request){
@@ -56,6 +55,7 @@ public class BrandController {
                 .build();
     }
 
+    @CheckPermission("BRAND_CREATE")
     @PostMapping
     public ApiResponse<BrandResponse> createBrand(@RequestBody BrandRequest request){
         return ApiResponse.<BrandResponse>builder()
@@ -63,6 +63,7 @@ public class BrandController {
                 .build();
     }
 
+    @CheckPermission("BRAND_DELETE")
     @DeleteMapping(ApiPath.BY_ID)
     public ApiResponse<Boolean> deleteBrand(@PathVariable("id")String id){
         brandService.deleteBrand(id);

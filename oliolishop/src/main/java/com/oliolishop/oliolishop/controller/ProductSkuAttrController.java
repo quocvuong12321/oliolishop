@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.controller;
 
+import com.oliolishop.oliolishop.configuration.CheckPermission;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
 import com.oliolishop.oliolishop.dto.productskuattr.Request.ProductSkuGenerateRequest;
@@ -26,6 +27,8 @@ public class ProductSkuAttrController {
     @Value("${app.image-dir}")
     private String imageDir; // D:/HocTap/AI/crawl/images
 
+
+    @CheckPermission("PRODUCT_SKU_CREATE")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<?> createSkuAttr(
             @RequestPart(value = "request") ProductSkuGenerateRequest request,

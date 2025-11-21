@@ -168,5 +168,5 @@ public class RatingService {
         RatingLike ratingLike = ratingLikeRepository.findByCustomer_IdAndRating_Id(customerId,ratingId);
 
         ratingLikeRepository.delete(ratingLike);
-    }d
+    }
 }

@@ -1,30 +1,34 @@
 from google.adk.tools.function_tool import FunctionTool
 from typing import Dict, Any, Optional
 from .base_tool import BaseAPITool
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ProductTool(BaseAPITool):
     """Tool: Gọi API để lấy danh sách sản phẩm."""
 
     def fetch_products(
-            self, 
+            self,
             search_term: Optional[str] = None,
             min_price: Optional[float] = None,
             max_price: Optional[float] = None
-                       
-                       ) -> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
-        Tool: Gọi API để lấy danh sách sản phẩm. Hãy phân tích câu hỏi của người dùng để xác định từ khóa tìm kiếm, khoảng giá (nếu có).
+        Tool: Gọi API để lấy danh sách sản phẩm. Hãy phân tích câu hỏi của người dùng để xác định từ khóa tìm kiếm, khoảng giá (nếu có). (Public API - không cần xác thực).
         
         Args: 
-            search_term (Optional[str]): Từ khóa tìm kiếm sản phẩm.
-            min_price (Optional[float]): Giá tối thiểu.
-            max_price (Optional[float]): Giá tối đa.
+            search_term (Optional[str]): Từ khóa tìm kiếm sản phẩm
+            min_price (Optional[float]): Giá tối thiểu
+            max_price (Optional[float]): Giá tối đa
 
         Returns:
-            Dict[str, Any]: Dữ liệu gồm danh sách sản phẩm và thông tin phân trang.
+            Dict[str, Any]: Danh sách sản phẩm và thông tin phân trang
+        """
 
-        CÁCH XỬ LÝ KẾT QUẢ:
+        """
+         CÁCH XỬ LÝ KẾT QUẢ:
         1. Nhận dữ liệu sản phẩm từ API (nằm trong result.content)
         2. Phân tích và trình bày thông tin sản phẩm một cách rõ ràng
         3. Hiển thị giá cả theo định dạng: minPrice - maxPrice VND
@@ -35,33 +39,57 @@ class ProductTool(BaseAPITool):
         "Tôi tìm thấy X sản phẩm cho bạn. Dưới đây là một số sản phẩm nổi bật:
         1. Tên sản phẩm - Giá: XX,XXX - XX,XXX VND - Id: XXXXX
         2. Tên sản phẩm - Giá: XX,XXX VND - Id: XXXXX
+
+        Và tại Id sản phẩm hãy để link đến trang chi tiết sản phẩm: http://localhost:4202/product/{product_id}
         """
+
+        logger.info("=" * 80)
+        logger.info("FETCH_PRODUCTS CALLED")
+        logger.info(f"Search: {search_term}, Price: {min_price}-{max_price}")
+        logger.info("=" * 80)
+        
         params = {
             "page": 0, 
-                  "size": 10,
-                  }
+            "size": 10,
+        }
         if search_term:
             params["search"] = search_term
-
         if min_price is not None:
             params["minPrice"] = min_price
         if max_price is not None:
             params["maxPrice"] = max_price
 
-
+        # Gọi API
         api_result = self.get("/spu", params=params)
+        
 
         if api_result["status"] != "success":
+            logger.error(f"API error: {api_result.get('message')}")
             return {"error": api_result["message"]}
 
         result_data = api_result["result"]
-        products = result_data.get("content", [])
+        logger.info(f"Result data type: {type(result_data)}")
+        
+        # Spring API pagination format: result.content là array
+        products = []
+        total_elements = 0
+        
+        if isinstance(result_data, dict) and "content" in result_data:
+            products = result_data.get("content", [])
+            total_elements = result_data.get("totalElements", 0)
+            logger.info(f"Pagination info: page={result_data.get('page')}, totalPages={result_data.get('totalPages')}")
+        else:
+            logger.warning(f"Unexpected result format: {result_data}")
+            products = result_data if isinstance(result_data, list) else []
+            total_elements = len(products)
 
+        logger.info(f"Parsed {len(products)} products, total: {total_elements}")
+        
         return {
             "status": "success",
             "products": products,
             "total_products": len(products),
-            "total_elements": result_data.get("totalElements", 0),
+            "total_elements": total_elements,
             "filters": {
                 "search_term": search_term,
                 "min_price": min_price,

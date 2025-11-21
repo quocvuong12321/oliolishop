@@ -78,7 +78,7 @@ public class OrderController {
 //                .build();
 //    }
 
-    @CheckPermission("ORDER_READ")
+//    @CheckPermission("ORDER_READ")
     @GetMapping(ApiPath.BY_ID)
     public ApiResponse<OrderResponse> getOrderById(@PathVariable(name = "id") String orderId) {
 

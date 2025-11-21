@@ -1,8 +1,11 @@
 import os
-import requests
+import httpx
+import logging
 from typing import Dict, Any, Optional
 from pathlib import Path
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 # Load .env từ thư mục product_agent
 env_path = Path(__file__).parent.parent.parent / '.env'
@@ -10,85 +13,107 @@ load_dotenv(dotenv_path=env_path)
 
 
 class BaseAPITool:
-    """Lớp cơ sở để gọi API (GET, POST, PUT, DELETE, PATCH) và chuẩn hóa phản hồi."""
-
-    def __init__(self, base_url: Optional[str] = None):
-        # Đọc từ environment variable
-        self.base_url = base_url or os.getenv("API_BASE_URL", "http://localhost:8080/oliolishop/api")
-        print(f"BaseAPITool initialized with base_url: {self.base_url}")
-
-    # =============================
-    # 🔹 Generic Request Handler
-    # =============================
-    def _request(
-        self,
-        method: str,
-        endpoint: str,
+    """Base class cho các tool gọi API"""
+    
+    def __init__(self):
+        self.base_url = os.getenv('API_BASE_URL', 'http://localhost:8080/api')
+        self.timeout = 30.0
+    
+    def get(
+        self, 
+        endpoint: str, 
         params: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-        path_vars: Optional[Dict[str, Any]] = None,
+        token: Optional[str] = None,
+        path_vars: Optional[Dict[str, Any]] = None  # Thêm path_vars
     ) -> Dict[str, Any]:
-        """Hàm xử lý chung cho tất cả phương thức HTTP."""
+        """GET request với optional token và path variables"""
+        headers = {}
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        
+        # Replace path variables in endpoint
+        if path_vars:
+            for key, value in path_vars.items():
+                endpoint = endpoint.replace(f"{{{key}}}", str(value))
+        
         try:
-            # ✅ Thay thế path variables (VD: /order/{id})
-            if path_vars:
-                endpoint = endpoint.format(**path_vars)
-
-            url = f"{self.base_url}{endpoint}"
-
-            response = requests.request(
-                method=method.upper(),
-                url=url,
-                params=params,
-                data=data,
-                json=json,
-                timeout=30
-            )
-
-            response.raise_for_status()
-            data = response.json()
-
-            # ✅ Chuẩn hóa phản hồi từ backend
-            if data.get("code") != 1000:
-                return self.error(data.get("message", "API trả về lỗi."))
-
-            return self.success({
-                "result": data.get("result", {}),
-                "message": data.get("message", "Thành công."),
-                "status_code": data.get("status", response.status_code)
-            })
-
-        except requests.Timeout:
-            return self.error("Yêu cầu API quá thời gian chờ (timeout).")
-        except requests.ConnectionError:
-            return self.error("Không thể kết nối tới API (Connection Error).")
+            with httpx.Client(timeout=self.timeout) as client:
+                response = client.get(
+                    f"{self.base_url}{endpoint}",
+                    params=params,
+                    headers=headers
+                )
+                response.raise_for_status()
+                
+                # Parse Spring API response format
+                response_json = response.json()
+                logger.info(f"Raw API response: {response_json}")
+                
+                # Spring API format: {code, message, result, status}
+                if "code" in response_json and "result" in response_json:
+                    if response_json["code"] == 1000:  # Success code
+                        return {
+                            "status": "success",
+                            "result": response_json["result"]
+                        }
+                    else:
+                        return {
+                            "status": "error",
+                            "message": response_json.get("message", "Unknown error")
+                        }
+                
+                # Fallback: treat as success if no Spring format
+                return {
+                    "status": "success",
+                    "result": response_json
+                }
+                
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error: {e}")
+            logger.error(f"Response body: {e.response.text}")
+            return {
+                "status": "error",
+                "message": f"HTTP {e.response.status_code}: {e.response.text}"
+            }
         except Exception as e:
-            return self.error(f"Lỗi không xác định: {str(e)}")
-
-    # =============================
-    # 🔹 Các phương thức cụ thể
-    # =============================
-    def get(self, endpoint: str, **kwargs) -> Dict[str, Any]:
-        return self._request("GET", endpoint, **kwargs)
-
-    def post(self, endpoint: str, **kwargs) -> Dict[str, Any]:
-        return self._request("POST", endpoint, **kwargs)
-
-    def put(self, endpoint: str, **kwargs) -> Dict[str, Any]:
-        return self._request("PUT", endpoint, **kwargs)
-
-    def patch(self, endpoint: str, **kwargs) -> Dict[str, Any]:
-        return self._request("PATCH", endpoint, **kwargs)
-
-    def delete(self, endpoint: str, **kwargs) -> Dict[str, Any]:
-        return self._request("DELETE", endpoint, **kwargs)
-
-    # =============================
-    # 🔹 Chuẩn hóa phản hồi
-    # =============================
-    def success(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        return {"status": "success", **data}
-
-    def error(self, message: str) -> Dict[str, Any]:
-        return {"status": "error", "message": message}
+            logger.error(f"API call failed: {str(e)}")
+            return {
+                "status": "error",
+                "message": str(e)
+            }
+    
+    def post(
+        self, 
+        endpoint: str, 
+        json_data: Optional[Dict[str, Any]] = None,
+        token: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """POST request với optional token"""
+        headers = {}
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        
+        try:
+            with httpx.Client(timeout=self.timeout) as client:
+                response = client.post(
+                    f"{self.base_url}{endpoint}",
+                    json=json_data,
+                    headers=headers
+                )
+                response.raise_for_status()
+                return {
+                    "status": "success",
+                    "result": response.json()
+                }
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error: {e}")
+            return {
+                "status": "error",
+                "message": f"HTTP {e.response.status_code}: {e.response.text}"
+            }
+        except Exception as e:
+            logger.error(f"API call failed: {str(e)}")
+            return {
+                "status": "error",
+                "message": str(e)
+            }

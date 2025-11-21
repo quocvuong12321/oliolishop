@@ -10,6 +10,7 @@ from multi_tool_agent import agent
 from google.genai import types
 from google.adk.runners import Runner
 from google.adk.sessions import DatabaseSessionService
+from multi_tool_agent.tools.auth_context import auth_context
 
 # Load .env
 env_path = Path(__file__).parent.parent / '.env'
@@ -107,7 +108,10 @@ async def health_check():
 
 
 @router.post("/session/new", response_model=SessionResponse)
-async def start_new_chat(current_user: dict = Depends(get_current_user)):
+async def start_new_chat(
+    current_user: dict = Depends(get_current_user),
+    authorization: Optional[str] = Header(None)
+):
     """Bắt đầu cuộc hội thoại mới - xóa session cũ và tạo session mới"""
     username = current_user.get('sub')
     customer_id = current_user.get('customerId')
@@ -117,6 +121,9 @@ async def start_new_chat(current_user: dict = Depends(get_current_user)):
     
     if not customer_id:
         raise HTTPException(status_code=400, detail="Customer ID not found in token")
+    
+    # Lấy token từ header
+    token = authorization.split(" ")[1] if authorization and " " in authorization else authorization
     
     try:
         user_id = str(customer_id)
@@ -136,11 +143,11 @@ async def start_new_chat(current_user: dict = Depends(get_current_user)):
             )
             logger.info(f"Deleted old session: {old_session.id}")
         
-        # Tạo session mới
+        # Tạo session mới với token trong state
         new_session = await session_service.create_session(
             app_name=agent_name,
             user_id=user_id,
-            state={"username": username, "customer_id": customer_id}
+            state={"username": username, "customer_id": customer_id, "auth_token": token}
         )
         
         return SessionResponse(
@@ -155,6 +162,7 @@ async def start_new_chat(current_user: dict = Depends(get_current_user)):
 @router.get("/session", response_model=SessionResponse)
 async def get_or_create_session(
     current_user: dict = Depends(get_current_user),
+    authorization: Optional[str] = Header(None),  # Thêm để lấy token
     include_history: bool = True,  # Thêm param để load history
     history_limit: int = 50
 ):
@@ -167,6 +175,9 @@ async def get_or_create_session(
     
     if not customer_id:
         raise HTTPException(status_code=400, detail="Customer ID not found in token")
+    
+    # Lấy token từ header
+    token = authorization.split(" ")[1] if authorization and " " in authorization else authorization
     
     try:
         user_id = str(customer_id)
@@ -216,11 +227,11 @@ async def get_or_create_session(
                                 created_at=datetime.fromtimestamp(event.timestamp).isoformat()
                             ))
         else:
-            # Tạo session mới nếu chưa có
+            # Tạo session mới nếu chưa có với token
             new_session = await session_service.create_session(
                 app_name=agent_name,
                 user_id=user_id,
-                state={"username": username, "customer_id": customer_id}
+                state={"username": username, "customer_id": customer_id, "auth_token": token}
             )
             session_id = new_session.id
             history_data = []  # Session mới không có history
@@ -236,7 +247,11 @@ async def get_or_create_session(
         raise HTTPException(status_code=500, detail=f"Error getting session: {str(e)}")
 
 @router.post("", response_model=ChatResponse)
-async def chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
+async def chat(
+    request: ChatRequest, 
+    current_user: dict = Depends(get_current_user),
+    authorization: Optional[str] = Header(None)
+):
     """Gửi tin nhắn và nhận phản hồi từ agent"""
     username = current_user.get('sub')
     customer_id = current_user.get('customerId')
@@ -247,41 +262,59 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
     if not customer_id:
         raise HTTPException(status_code=400, detail="Customer ID not found in token")
     
+    # Set token
+    token = authorization.split(" ")[1] if authorization and " " in authorization else authorization
+    auth_context.set_token(token)
+    logger.info(f"Token set: {token[:20]}...")
+    
     try:
         user_id = str(customer_id)
         
-        # Gọi agent sử dụng Runner
         try:
-            logger.info(f"Calling agent with message: {request.message}")
+            logger.info(f"Message: {request.message}")
             
-            # Tạo message content
             new_message = types.Content(
                 role='user',
                 parts=[types.Part(text=request.message)]
             )
             
-            # Collect response từ agent
             assistant_message = ""
+            tool_calls_count = 0
             
             async for event in runner.run_async(
                 user_id=user_id,
                 session_id=request.session_id,
                 new_message=new_message
             ):
-                logger.info(f"Event author: {event.author}, partial: {event.partial}")
+                # Log mọi event để debug
+                logger.info(f"Event: author={event.author}, partial={event.partial}")
                 
-                # Parse event content - chỉ lấy final response
-                if not event.partial and hasattr(event, 'content') and event.content:
-                    if hasattr(event.content, 'parts') and event.content.parts:
-                        for part in event.content.parts:
-                            if hasattr(part, 'text') and part.text:
-                                assistant_message += part.text
-                                
-            logger.info(f"Final agent response: {assistant_message}")
+                # Check tool calls trong content
+                if hasattr(event, 'content') and event.content:
+                    logger.info(f"Event has content with {len(event.content.parts)} parts")
+                    
+                    for part in event.content.parts:
+                        # Log part type
+                        logger.info(f"Part type: {type(part)}")
+                        
+                        # Check function call
+                        if hasattr(part, 'function_call') and part.function_call:
+                            tool_calls_count += 1
+                            logger.info(f"TOOL CALLED: {part.function_call.name}")
+                            logger.info(f"Args: {part.function_call.args}")
+                        
+                        # Collect text response
+                        if hasattr(part, 'text') and part.text and not event.partial:
+                            assistant_message += part.text
+            
+            logger.info(f"Total tool calls: {tool_calls_count}")
+            logger.info(f"Response: {assistant_message}")
                 
         except Exception as agent_error:
-            logger.error(f"Error calling agent: {agent_error}", exc_info=True)
-            assistant_message = f"Xin lỗi, tôi gặp lỗi khi xử lý yêu cầu của bạn: {str(agent_error)}"
+            logger.error(f"Agent error: {agent_error}", exc_info=True)
+            assistant_message = f"Xin lỗi, tôi gặp lỗi: {str(agent_error)}"
+        finally:
+            auth_context.clear_token()
         
         return ChatResponse(
             session_id=request.session_id,
@@ -291,8 +324,9 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
         )
         
     except Exception as e:
-        logger.error(f"Error in chat endpoint: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
+        logger.error(f"Error: {str(e)}", exc_info=True)
+        auth_context.clear_token()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/history/{session_id}", response_model=List[HistoryResponse])
 async def get_history(

@@ -25,10 +25,10 @@ class ProductTool(BaseAPITool):
 
         Returns:
             Dict[str, Any]: Danh sách sản phẩm và thông tin phân trang
-        """
 
-        """
+
          CÁCH XỬ LÝ KẾT QUẢ:
+         LUÔN LUÔN TRẢ VỀ DẠNG DANH SÁCH SẢN PHẨM RÕ RÀNG VÀ CÓ ID SẢN PHẨM
         1. Nhận dữ liệu sản phẩm từ API (nằm trong result.content)
         2. Phân tích và trình bày thông tin sản phẩm một cách rõ ràng
         3. Hiển thị giá cả theo định dạng: minPrice - maxPrice VND
@@ -36,18 +36,14 @@ class ProductTool(BaseAPITool):
         5. Nếu có lỗi, thông báo cho người dùng một cách chuyên nghiệp
 
         VÍ DỤ TRẢ LỜI:
-        "Tôi tìm thấy X sản phẩm cho bạn. Dưới đây là một số sản phẩm nổi bật:
-        1. Tên sản phẩm - Giá: XX,XXX - XX,XXX VND - Id: XXXXX
-        2. Tên sản phẩm - Giá: XX,XXX VND - Id: XXXXX
-
-        Và tại Id sản phẩm hãy để link đến trang chi tiết sản phẩm: http://localhost:4202/product/{product_id}
+        "Olioli tìm thấy X sản phẩm cho bạn. Dưới đây là một số sản phẩm nổi bật:
+        1. Tên sản phẩm - Giá: XX,XXX - XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a>
+        2. Tên sản phẩm - Giá: XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a>
+        "
         """
 
-        logger.info("=" * 80)
-        logger.info("FETCH_PRODUCTS CALLED")
-        logger.info(f"Search: {search_term}, Price: {min_price}-{max_price}")
-        logger.info("=" * 80)
-        
+
+
         params = {
             "page": 0, 
             "size": 10,

@@ -14,14 +14,9 @@ class FashionStylistTool:
         """
         Tìm kiếm thông tin thời trang mới nhất, xu hướng, outfit tham khảo từ Google.
         Sử dụng google_search tool để lấy dữ liệu.
-        Args:
-            query (str): Từ khóa tìm kiếm.
-        
-        returns:
-            Dict[str, Any]: Kết quả tìm kiếm từ Google.
         """
-        
 
+    
     def suggest_outfit(
         self,
         gender: Optional[str] = None,
@@ -96,4 +91,4 @@ suggest_outfit_tool = FunctionTool(
     
 )
 suggest_by_google_search_tool = FunctionTool(
-    stylist_tool_instance.google_search)
+   stylist_tool_instance.google_search)

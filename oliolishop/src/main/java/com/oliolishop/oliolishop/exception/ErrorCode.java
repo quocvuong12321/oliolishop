@@ -30,7 +30,7 @@ public enum ErrorCode {
     START_DATE_MUST_BEFORE(1016,"Ngày bắt đầu phải trước hoặc bằng ngày kết thúc",HttpStatus.BAD_REQUEST),
     QUARTER_INVALID(1017,"Quý phải là 1-4",HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_USAGE_VOUCHER(1018,"Bạn đã hết lượt sử dụng voucher",HttpStatus.NOT_ACCEPTABLE),
-
+    DUPLICATE_PERMISSION(1019,"Permission Id đã tồn tại",HttpStatus.CONFLICT),
     UNCATEGORIZED_VALIDATION(1999,"Lỗi valid không xác định",HttpStatus.BAD_REQUEST),
     // 2xxx: auth (Lỗi xác thực và ủy quyền)
     UNAUTHENTICATED(2001,"Chưa được xác thực/Đăng nhập",HttpStatus.UNAUTHORIZED),

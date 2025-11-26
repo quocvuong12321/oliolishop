@@ -1,6 +1,8 @@
 package com.oliolishop.oliolishop.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.oliolishop.oliolishop.dto.authenticate.AuthenticateRequest;
+import com.oliolishop.oliolishop.dto.authenticate.AuthenticateResponse;
 import com.oliolishop.oliolishop.entity.Account;
 import com.oliolishop.oliolishop.entity.Employee;
 import com.oliolishop.oliolishop.exception.AppException;
@@ -24,6 +26,28 @@ public class EmployeeAuthenticationService extends BaseAuthenticationService<Emp
         super(refreshTokenService);
         this.employeeRepository=employeeRepository;
         this.permissionService = permissionService;
+    }
+
+
+    @Override
+    public AuthenticateResponse authenticate(AuthenticateRequest request) {
+
+        Employee employee = findUserByUsername(request.getUsername());
+
+        AuthenticateResponse base= super.authenticate(request);
+
+        AuthenticateResponse response = AuthenticateResponse.builder()
+                .authenticated(base.isAuthenticated())
+                .role(base.getRole())
+                .permissions(base.getPermissions())
+                .accessToken(base.getAccessToken())
+                .refreshToken(base.getRefreshToken())
+                .build();
+
+        response.setMustChangePassword(employee.isMustChangePassword());
+
+//        System.out.println("DEBUG mustChangePassword = " + response.isMustChangePassword());
+        return response;
     }
 
     @Override

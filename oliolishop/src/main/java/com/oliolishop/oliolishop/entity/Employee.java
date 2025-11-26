@@ -33,4 +33,13 @@ public class Employee {
 
     @Enumerated(EnumType.STRING)
     Account.AccountStatus status;
+
+    boolean mustChangePassword;
+
+    @PrePersist
+    public void prePersist() {
+        if (!this.mustChangePassword) {  // hoặc null nếu dùng Boolean
+            this.mustChangePassword = true;
+        }
+    }
 }

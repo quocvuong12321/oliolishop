@@ -1,4 +1,4 @@
-package com.oliolishop.oliolishop.dto.agent;
+package com.oliolishop.oliolishop.dto.permission;
 
 
 import lombok.*;
@@ -9,9 +9,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ChatRequest {
+public class PermissionRequest {
 
-    String sessionId;
-    String message;
+    String id;
+    String name;
+    String permission;
 
 }

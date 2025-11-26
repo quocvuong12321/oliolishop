@@ -55,6 +55,7 @@ public class EmployeeController {
                                 .refreshToken(MessageConstants.REFRESH_TOKE_SAVED)
                                 .permissions(responseAuth.getPermissions())
                                 .role(responseAuth.getRole())
+                                .mustChangePassword(responseAuth.isMustChangePassword())
                                 .build()
                 )
                 .build();

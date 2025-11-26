@@ -846,30 +846,30 @@ public class OrderService {
                 )).toList();
     }
 
-    @Scheduled(fixedDelayString = "30000") // 30 giây
-    @Transactional
-    public void simulateGhnWebhook() {
-        // Tìm các đơn hàng đang ở trạng thái có thể được GHN cập nhật
-        List<OrderStatus> statusesToUpdate = Arrays.asList(
-                OrderStatus.ready_to_pick,
-                OrderStatus.shipping
-        );
-
-        List<Order> ordersToProcess = orderRepository.findByOrderStatusIn(statusesToUpdate);
-
-        for (Order order : ordersToProcess) {
-            if (random.nextDouble() < 0.7) { // 70% cơ hội cập nhật
-                OrderStatus nextStatus = getGhnNextStatus(order.getOrderStatus());
-
-                if (isValidGhnStatusTransition(order.getOrderStatus(), nextStatus)) {
-                    order.setOrderStatus(nextStatus);
-                    order.setUpdateDate(LocalDateTime.now());
-                    log.info("[GHN SIM] Đơn hàng ID: {} - Cập nhật từ {} -> {}",
-                            order.getId(), order.getOrderStatus(), nextStatus);
-                }
-            }
-        }
-    }
+//    @Scheduled(fixedDelayString = "30000") // 30 giây
+//    @Transactional
+//    public void simulateGhnWebhook() {
+//        // Tìm các đơn hàng đang ở trạng thái có thể được GHN cập nhật
+//        List<OrderStatus> statusesToUpdate = Arrays.asList(
+//                OrderStatus.ready_to_pick,
+//                OrderStatus.shipping
+//        );
+//
+//        List<Order> ordersToProcess = orderRepository.findByOrderStatusIn(statusesToUpdate);
+//
+//        for (Order order : ordersToProcess) {
+//            if (random.nextDouble() < 0.7) { // 70% cơ hội cập nhật
+//                OrderStatus nextStatus = getGhnNextStatus(order.getOrderStatus());
+//
+//                if (isValidGhnStatusTransition(order.getOrderStatus(), nextStatus)) {
+//                    order.setOrderStatus(nextStatus);
+//                    order.setUpdateDate(LocalDateTime.now());
+//                    log.info("[GHN SIM] Đơn hàng ID: {} - Cập nhật từ {} -> {}",
+//                            order.getId(), order.getOrderStatus(), nextStatus);
+//                }
+//            }
+//        }
+//    }
 
     private OrderStatus getGhnNextStatus(OrderStatus currentStatus) {
         if (currentStatus == OrderStatus.ready_to_pick) {
@@ -903,5 +903,29 @@ public class OrderService {
 
         // Các trạng thái khác không được cập nhật qua mô phỏng GHN này
         return false;
+    }
+
+    public void updateOrderStatusToDelivered(String orderId){
+
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        if (!order.getOrderStatus().equals(OrderStatus.shipping))
+            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
+
+        order.setOrderStatus(OrderStatus.delivered);
+
+        orderRepository.save(order);
+    }
+
+
+    public void updateOrderStatusToShipping(String orderId){
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        if (!order.getOrderStatus().equals(OrderStatus.ready_to_pick))
+            throw new AppException(ErrorCode.ORDER_STATUS_INVALID);
+
+        order.setOrderStatus(OrderStatus.shipping);
+
+        orderRepository.save(order);
     }
 }

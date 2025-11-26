@@ -22,6 +22,7 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+
     @GetMapping
     public ApiResponse<Set<CategoryResponse>> getCategories() throws JsonProcessingException {
         return ApiResponse.<Set<CategoryResponse>>builder()

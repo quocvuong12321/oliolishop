@@ -17,4 +17,5 @@ public class AuthenticateResponse {
     String refreshToken;
     String role;
     Set<String> permissions;
+    boolean mustChangePassword;
 }

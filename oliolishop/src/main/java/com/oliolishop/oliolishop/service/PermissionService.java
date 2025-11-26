@@ -1,10 +1,13 @@
 package com.oliolishop.oliolishop.service;
 
 
+import com.oliolishop.oliolishop.dto.permission.PermissionRequest;
+import com.oliolishop.oliolishop.dto.permission.PermissionResponse;
 import com.oliolishop.oliolishop.entity.Permission;
 import com.oliolishop.oliolishop.entity.Role;
 import com.oliolishop.oliolishop.exception.AppException;
 import com.oliolishop.oliolishop.exception.ErrorCode;
+import com.oliolishop.oliolishop.mapper.PermissionMapper;
 import com.oliolishop.oliolishop.repository.PermissionRepository;
 import com.oliolishop.oliolishop.repository.RoleRepository;
 import lombok.AccessLevel;
@@ -24,6 +27,7 @@ public class PermissionService {
     RedisService redisService;
     final String ROLE_KEY_PREFIX = "role_permissions:";
     private final RoleRepository roleRepository;
+    private final PermissionMapper permissionMapper;
 
     public Set<String> getPermissionsByRole(String roleName) {
         String key = ROLE_KEY_PREFIX + roleName;
@@ -47,6 +51,16 @@ public class PermissionService {
        redisService.set(key, new ArrayList<>(permissionNames), 30*60);
 
         return permissionNames;
+    }
+
+    public PermissionResponse createPermission(PermissionRequest request){
+
+        if(permissionRepository.existsById(request.getId()))
+            throw new AppException(ErrorCode.DUPLICATE_PERMISSION);
+        Permission newPerm = permissionMapper.toPermission(request);
+
+        return permissionMapper.toResponse(permissionRepository.save(newPerm));
+
     }
 
 }

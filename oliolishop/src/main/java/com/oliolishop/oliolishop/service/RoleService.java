@@ -2,6 +2,7 @@ package com.oliolishop.oliolishop.service;
 
 
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
+import com.oliolishop.oliolishop.dto.role.RoleRequest;
 import com.oliolishop.oliolishop.dto.role.RoleResponse;
 import com.oliolishop.oliolishop.entity.Role;
 import com.oliolishop.oliolishop.mapper.RoleMapper;
@@ -35,5 +36,6 @@ public class RoleService {
         Role role = roleRepository.findByName(name);
         return roleMapper.toResponse(role);
     }
+
 
 }

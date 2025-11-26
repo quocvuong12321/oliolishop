@@ -61,22 +61,6 @@ public class OrderController {
 
     }
 
-//    @PutMapping(ApiPath.Order.CONFIRM+ApiPath.BY_ID+ApiPath.Order.CANCEL_ORDER)
-//    public ApiResponse<String> confirmCancelOrder(@PathVariable(name = "id")String orderId){
-//
-//        int result = orderService.confirmCancelOrder(orderId);
-//
-//        String message = switch (result){
-//            case 0 ->MessageConstants.Cancel.PENDING_REFUND;
-//            case 1 -> MessageConstants.Cancel.PENDING;
-//            case 2 -> MessageConstants.Cancel.SUCCESS;
-//            case 3 -> MessageConstants.Cancel.FAIL;
-//            default -> MessageConstants.Cancel.CANT;
-//        };
-//        return ApiResponse.<String>builder()
-//                .result(message)
-//                .build();
-//    }
 
 //    @CheckPermission("ORDER_READ")
     @GetMapping(ApiPath.BY_ID)
@@ -156,5 +140,26 @@ public class OrderController {
                 .result(orderService.getAllOrderStatus())
                 .build();
     }
+
+    @PatchMapping(ApiPath.BY_ID+ ApiPath.Order.DELIVERED)
+    public ApiResponse<String> updateStatusToDelivered(@PathVariable String id){
+        orderService.updateOrderStatusToDelivered(id);
+
+        return ApiResponse.<String>builder()
+                .result( String.format(MessageConstants.SUCCESS,"Cập nhật trạng thái"))
+                .build();
+
+    }
+
+    @PatchMapping(ApiPath.BY_ID+ ApiPath.Order.SHIPPING)
+    public ApiResponse<String> updateStatusToShipping(@PathVariable String id){
+        orderService.updateOrderStatusToShipping(id);
+
+        return ApiResponse.<String>builder()
+                .result( String.format(MessageConstants.SUCCESS,"Cập nhật trạng thái"))
+                .build();
+    }
+
+
 
 }

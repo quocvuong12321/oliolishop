@@ -1,5 +1,6 @@
 package com.oliolishop.oliolishop.service;
 
+import com.oliolishop.oliolishop.constant.MessageConstants;
 import com.oliolishop.oliolishop.dto.api.PaginatedResponse;
 import com.oliolishop.oliolishop.dto.employee.ChangePasswordRequest;
 import com.oliolishop.oliolishop.dto.employee.EmployeeCreateRequest;
@@ -23,7 +24,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,12 +35,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EmployeeService {
-    String defaultPassword = "abcd123456";
     EmployeeMapper employeeMapper;
     EmployeeRepository employeeRepository;
     private final RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
     private final RoleMapper roleMapper;
+    EmailService emailService;
 
     @Transactional
     public EmployeeResponse createEmployee(EmployeeCreateRequest request) {
@@ -49,15 +49,15 @@ public class EmployeeService {
 
         employee.setUsername(request.getPhoneNumber());
 
-
-
-        employee.setPassword(passwordEncoder.encode(defaultPassword));
+        employee.setPassword(passwordEncoder.encode(MessageConstants.DEFAULT_PASSWORD));
 
         employee.setStatus(Account.AccountStatus.Active);
 
         Role r = roleRepository.findById(request.getRoleId()).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXIST));
 
         employee.setRole(r);
+
+        emailService.sendAccountEmployee(request.getEmail(),employee.getName(),employee.getUsername());
 
         return employeeMapper.toResponse(employeeRepository.save(employee));
 
@@ -147,7 +147,7 @@ public class EmployeeService {
         String employeeId = AppUtils.getEmployeeIdByJwt();
 
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_EXIST));
-        if (request.getNewPassword().equals(defaultPassword))
+        if (request.getNewPassword().equals(MessageConstants.DEFAULT_PASSWORD))
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         if(!passwordEncoder.matches(request.getOldPassword(),employee.getPassword()))
             throw new AppException(ErrorCode.PASSWORD_INCORRECT);

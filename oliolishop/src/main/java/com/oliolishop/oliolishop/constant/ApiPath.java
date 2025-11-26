@@ -84,6 +84,9 @@ public class ApiPath {
         public static final String CREATE_SHIPPING = "/shipping";
         public static final String ORDER_STATUS = "/order-statuses";
         public static final String SEARCH ="/search";
+        public static final String UPDATE_STATUS = "/update-status";
+        public static final String DELIVERED = "/delivered";
+        public static final String SHIPPING = "/shipping";
 
     }
 

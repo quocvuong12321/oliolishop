@@ -1,10 +1,5 @@
 package com.oliolishop.oliolishop.constant;
 
-import com.oliolishop.oliolishop.entity.Rating;
-
-import java.util.HashMap;
-import java.util.Map;
-
 public class ApiPath {
 
 

@@ -152,7 +152,7 @@ public class EmployeeService {
         if(!passwordEncoder.matches(request.getOldPassword(),employee.getPassword()))
             throw new AppException(ErrorCode.PASSWORD_INCORRECT);
         employee.setPassword(passwordEncoder.encode(request.getNewPassword()));
-
+        employee.setMustChangePassword(false);
         employeeRepository.save(employee);
 
     }

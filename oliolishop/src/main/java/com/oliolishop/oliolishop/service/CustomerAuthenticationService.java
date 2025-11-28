@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -249,8 +250,8 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
         File outputFile = uploadPath.resolve(newFileName).toFile();
 
         // 3. Xử lý ảnh bằng Thumbnails: Cắt và Resize
-        try {
-            Thumbnails.of(file.getInputStream())
+        try (InputStream inputStream = file.getInputStream()){
+            Thumbnails.of(inputStream)
                     // Cắt xén (Crop): Cắt ảnh thành hình vuông từ tâm
                     .crop(net.coobird.thumbnailator.geometry.Positions.CENTER)
                     .size(500, 500)
@@ -258,7 +259,7 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
                     .toFile(outputFile);
         } catch (IOException e) {
             // Log lỗi
-            throw new IOException("Failed to process and save avatar file.", e);
+            throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
         }
 
         // 4. Trả về đường dẫn để lưu vào Database

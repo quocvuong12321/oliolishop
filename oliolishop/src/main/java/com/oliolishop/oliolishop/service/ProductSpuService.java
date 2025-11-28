@@ -209,9 +209,6 @@ public class ProductSpuService {
     }
 
 
-    public Integer getTotalElements(String categoryId, String brandId, double minPrice, double maxPrice) {
-        return productSpuRepository.getTotalElements(categoryId, brandId, minPrice, maxPrice);
-    }
 
     public ProductDetailResponse detailProduct(String id) {
         ProductSpu spu = productSpuRepository.findDetailById(id, ProductSku.Status.Active)

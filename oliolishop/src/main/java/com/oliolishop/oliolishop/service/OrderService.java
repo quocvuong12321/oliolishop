@@ -219,7 +219,7 @@ public class OrderService {
 
 
     public PaginatedResponse<OrderResponse> getOrdersByCustomerId(List<OrderStatus> statuses, int page, int size) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
+        Sort sort = Sort.by(Sort.Direction.DESC, "updateDate", "createDate");
         String customerId = AppUtils.getCustomerIdByJwt();
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -298,7 +298,7 @@ public class OrderService {
 
     public PaginatedResponse<OrderResponse> searchOrders(OrderSearchCriteria criteria, int page, int size) {
         // 1. Thiết lập phân trang và sắp xếp
-        Sort sort = Sort.by(Sort.Direction.DESC, "createDate");
+        Sort sort = Sort.by(Sort.Direction.DESC, "updateDate","createDate");
         Pageable pageable = PageRequest.of(page, size, sort);
 
         // 2. Xây dựng Specification
@@ -478,7 +478,9 @@ public class OrderService {
 
     @Transactional
     public String createVnPayPayment(String orderId, String paymentMethodId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+        String customerId = AppUtils.getCustomerIdByJwt();
+
+        Order order = orderRepository.findByIdAndCustomerId(orderId,customerId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
 
         if (!order.getOrderStatus().equals(OrderStatus.pending_payment))
             throw new AppException(ErrorCode.ORDER_PAID);
@@ -495,8 +497,10 @@ public class OrderService {
                 .transactionType(TransactionType.payment)
                 .status(TransactionStatus.pending)
                 .vnpTxnRef(transactionId)
-                .paymentMethod(PaymentMethod.builder()
-                        .id(paymentMethodId).build())
+                .paymentMethod(PaymentMethod
+                        .builder()
+                        .id(paymentMethodId)
+                        .build())
                 .build();
 
         transactionRepository.save(transaction);

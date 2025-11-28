@@ -73,7 +73,7 @@ public class CartService {
             cartItemRepository.save(hadItem);
         } else {
             CartItem cartItem = cartItemMapper.toCartItem(request);
-            cartItem.setThumbnail(p.getImage());
+            cartItem.setThumbnail(p.getSpu().getImage());
             cartItem.setVariant(productSkuUtils.getVariant(p));
             cartItem.setCart(cart);
             cartItem.setPrice(p.getOriginalPrice());

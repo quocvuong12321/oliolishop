@@ -113,6 +113,7 @@ public class VoucherService {
         voucher.setMaxDiscountValue(request.getMaxDiscountValue());
         voucher.setMinOrderValue(request.getMinOrderValue());
         voucher.setUsedCount(voucher.getUsedCount());
+        voucher.setMaxUsagePerUser(request.getMaxUsagePerUser());
         if(voucher.getStartDate().isBefore(LocalDateTime.now()) && voucher.getEndDate().isAfter(LocalDateTime.now()) && voucher.getAmount()>0)
             voucher.setStatus(VoucherStatus.Active);
         Voucher updated = voucherRepository.save(voucher);

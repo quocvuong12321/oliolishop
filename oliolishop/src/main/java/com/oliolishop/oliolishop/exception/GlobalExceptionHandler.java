@@ -2,6 +2,8 @@ package com.oliolishop.oliolishop.exception;
 
 
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -65,8 +67,10 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
      * Xử lý các lỗi do mình định nghĩa và chủ động throw ra (AppException)
      */
     @ExceptionHandler(value = AppException.class)
-    ResponseEntity<ApiResponse<Object>> handlingAppException(AppException exception){
+    ResponseEntity<ApiResponse<Object>> handlingAppException(AppException exception, HttpServletResponse response){
         ErrorCode errorCode=exception.getErrorCode();
+
+
         ApiResponse<Object> apiResponse = ApiResponse.builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
@@ -76,6 +80,38 @@ public class GlobalExceptionHandler { //Class chịu trách nhiệm handling exc
         return ResponseEntity
                 .status(errorCode.getStatusCode())
                 .body(apiResponse);
+    }
+
+    @ExceptionHandler(value = AuthCookieExpiredException.class)
+    ResponseEntity<ApiResponse<Object>> handlingAuthCookieExpiredException(AuthCookieExpiredException exception,
+                                                                           HttpServletResponse response){
+
+        ErrorCode errorCode = exception.getErrorCode();
+        String expiredCookieName = exception.getCookieName(); // Lấy tên cookie cần xóa
+
+        // 1. Logic xóa Cookie
+        clearCookie(response, expiredCookieName); // Sử dụng hàm hỗ trợ bên dưới
+
+        // 2. Định hình Response
+        ApiResponse<Object> apiResponse = ApiResponse.builder()
+                .code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .status(errorCode.getStatusCode().value())
+                .build();
+
+        return ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(apiResponse);
+    }
+
+    // Hàm hỗ trợ xóa cookie
+    private void clearCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

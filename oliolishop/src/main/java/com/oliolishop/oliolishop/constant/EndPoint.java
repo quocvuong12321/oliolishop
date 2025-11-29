@@ -18,6 +18,7 @@ public class EndPoint {
             "/banner/**",
             "/payment/vnpay/return",
             "/locations/**",
+            "/policy/**"
     };
 
     public static final String[] POST_PUBLIC = {

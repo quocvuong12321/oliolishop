@@ -4,6 +4,7 @@ package com.oliolishop.oliolishop.controller;
 import com.nimbusds.jose.JOSEException;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
+import com.oliolishop.oliolishop.constant.TokenType;
 import com.oliolishop.oliolishop.dto.Token.AccessTokenResponse;
 import com.oliolishop.oliolishop.dto.Token.RefreshTokenRequest;
 import com.oliolishop.oliolishop.dto.api.ApiResponse;
@@ -63,6 +64,13 @@ public class EmployeeController {
     @PostMapping(ApiPath.Employee.LOGOUT)
     public ResponseEntity<Void> logout() throws ParseException, JOSEException {
         authenticationService.logout();
+
+        Cookie cookie = new Cookie(TokenType.COOKIE_REFRESH_EMPLOYEE, null); // Đặt giá trị là null
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);         // Phải giống khi tạo
+        cookie.setPath("/");            // Phải giống khi tạo
+        cookie.setMaxAge(0);
+
         return ResponseEntity.ok().build();
     }
 
@@ -76,7 +84,7 @@ public class EmployeeController {
 
         String refreshToken = null;
         for(var cookie: cookies){
-            if("refreshToken-employee".equals(cookie.getName())){
+            if(TokenType.COOKIE_REFRESH_EMPLOYEE.equals(cookie.getName())){
                 refreshToken = cookie.getValue();
                 break;
             }

@@ -6,6 +6,8 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.oliolishop.oliolishop.entity.Employee;
 import com.oliolishop.oliolishop.entity.Permission;
 import com.oliolishop.oliolishop.entity.Role;
+import com.oliolishop.oliolishop.exception.AuthCookieExpiredException;
+import com.oliolishop.oliolishop.util.ClearCookies;
 import jakarta.servlet.http.Cookie;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -40,8 +42,8 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     @NonFinal
     @Value("${jwt.signerKey}")
     protected  String SIGNER_KEY;
-    public static final long TIME_ACCESS = 15;       // 15 phút
-    public static final long TIME_REFRESH = 24 * 60; // 24 giờ
+    public static final long TIME_ACCESS = 20;       // 20 phút
+    public static final long TIME_REFRESH = 20 * 24 * 60; // 20 ngày
 
 
     protected abstract T findUserByUsername(String username);
@@ -50,6 +52,8 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     protected abstract String buildScope(T user);
     protected abstract Account.AccountStatus getStatus(T user);
     protected abstract Set<String> getPermission(T user);
+    protected abstract String getCookieTokenType();
+
 
     @Override
     public AuthenticateResponse authenticate(AuthenticateRequest request) {
@@ -67,9 +71,9 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
 
 
         String accessToken = generateToken(user, TIME_ACCESS, TokenType.ACCESSTYPE);
-        String refreshToken = generateToken(user, TIME_REFRESH, TokenType.REFRESHTYPE);
+        String refreshToken = generateToken(user, TIME_REFRESH , TokenType.REFRESHTYPE);
 
-        refreshTokenService.storeRefreshToken(getUsername(user), refreshToken, (int)TIME_REFRESH/60);
+        refreshTokenService.storeRefreshToken(getUsername(user), refreshToken, (int)TIME_REFRESH);
 
         String role = buildScope(user);
 
@@ -109,37 +113,52 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
     // 👇 Hook method để class con override nếu muốn thêm payload
     protected abstract void addIdClaims(JWTClaimsSet.Builder builder, T user);
 
-    public AccessTokenResponse generateNewAccessToken(RefreshTokenRequest refreshToken)
-            throws ParseException, JOSEException {
 
-        SignedJWT signedJWT = SignedJWT.parse(refreshToken.getRefreshToken());
+    private JWTClaimsSet validateAndExtractClaims(String token) throws ParseException, JOSEException {
+        SignedJWT signedJWT = SignedJWT.parse(token);
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
+        // 1. Kiểm tra chữ ký
         if (!signedJWT.verify(verifier)) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
         JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
-        Date expiryDate = claims.getExpirationTime();
 
-        if (expiryDate.before(new Date())) {
-            throw new AppException(ErrorCode.REFRESH_TOKEN_EXPIRED);
-        }
-
+        // 2. Kiểm tra loại token (phải là Refresh Token)
         String type = claims.getStringClaim("type");
         if (!TokenType.REFRESHTYPE.equals(type)) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
+        // 3. Kiểm tra tính hợp lệ trong hệ thống (DB/Cache)
         String username = claims.getSubject();
-        T user = findUserByUsername(username);
-
-        boolean valid = refreshTokenService.validateRefreshToken(username, refreshToken.getRefreshToken());
+        boolean valid = refreshTokenService.validateRefreshToken(username, token);
         if (!valid) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
-        String newAccessToken = generateToken(user, 15, TokenType.ACCESSTYPE);
+        return claims;
+    }
+
+    public AccessTokenResponse generateNewAccessToken(String refreshToken)
+            throws ParseException, JOSEException {
+
+
+
+        JWTClaimsSet claims = validateAndExtractClaims(refreshToken);
+        Date expiryDate = claims.getExpirationTime();
+
+        if (expiryDate.before(new Date())) {
+            throw new AuthCookieExpiredException(ErrorCode.REFRESH_TOKEN_EXPIRED, getCookieTokenType());
+        }
+
+
+        String username = claims.getSubject();
+        T user = findUserByUsername(username);
+
+
+        String newAccessToken = generateToken(user, TIME_ACCESS, TokenType.ACCESSTYPE);
 
         return AccessTokenResponse.builder()
                 .accessToken(newAccessToken)
@@ -150,33 +169,7 @@ public abstract class BaseAuthenticationService<T> implements AuthenticationServ
 
     @Override
     public AccessTokenResponse refreshAccessToken(RefreshTokenRequest refreshToken) throws ParseException, JOSEException {
-        SignedJWT signedJWT = SignedJWT.parse(refreshToken.getRefreshToken());
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-        if (!signedJWT.verify(verifier)) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
-        }
-
-        JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
-        if (claims.getExpirationTime().before(new Date())) {
-            throw new AppException(ErrorCode.REFRESH_TOKEN_EXPIRED);
-        }
-
-        if (!claims.getStringClaim("type").equals(TokenType.REFRESHTYPE)) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
-        }
-
-        String username = claims.getSubject();
-        boolean valid = refreshTokenService.validateRefreshToken(username, refreshToken.getRefreshToken());
-        if (!valid) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
-        }
-
-        T user = findUserByUsername(username);
-//        String newAccessToken = generateToken(user, TIME_ACCESS, TokenType.ACCESSTYPE);
-
-
-
-        return generateNewAccessToken(refreshToken);
+        return generateNewAccessToken(refreshToken.getRefreshToken());
     }
 
     @Override

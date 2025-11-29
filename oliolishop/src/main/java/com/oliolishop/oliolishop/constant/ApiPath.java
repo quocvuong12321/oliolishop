@@ -12,7 +12,7 @@ public class ApiPath {
     public static final String FOLDER_IMAGE_AVATAR = "images_avatar";
     public static final String FOLDER_IMAGE_RATING = "images_rating";
     public static final String FOLDER_IMAGE_BANNER = "images_banner";
-
+    public static final String FOLDER_PDF_POLICIES = "pdf_policy";
     //Endpoint cho api
     public static final class Spu{
         public static final String ROOT = BASE + "/spu";
@@ -129,6 +129,14 @@ public class ApiPath {
     public static final class Agent{
         public static final String ROOT = BASE + "/chat";
         public static final String CLEAN = "/clean";
+    }
+
+    public static final class Policy{
+        public static final String ROOT = BASE + "/policy";
+        public static final String PDF = "/pdf";
+        public static final String CREATE = "/create";
+        public static final String DELETE = "/delete";
+        public static final String UPDATE = "/update";
     }
 
 }

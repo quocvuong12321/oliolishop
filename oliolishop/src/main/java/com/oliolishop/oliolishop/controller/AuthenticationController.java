@@ -4,6 +4,7 @@ package com.oliolishop.oliolishop.controller;
 import com.nimbusds.jose.JOSEException;
 import com.oliolishop.oliolishop.constant.ApiPath;
 import com.oliolishop.oliolishop.constant.MessageConstants;
+import com.oliolishop.oliolishop.constant.TokenType;
 import com.oliolishop.oliolishop.dto.Token.AccessTokenResponse;
 import com.oliolishop.oliolishop.dto.Token.RefreshTokenRequest;
 import com.oliolishop.oliolishop.dto.account.AccountRequest;
@@ -46,7 +47,7 @@ public class AuthenticationController {
 
         AuthenticateResponse responseAuth = authenticationService.authenticate(request);
 
-        Cookie cookie = new Cookie("refreshToken", responseAuth.getRefreshToken());
+        Cookie cookie = new Cookie(TokenType.COOKIE_REFRESH_CUSTOMER, responseAuth.getRefreshToken());
         cookie.setHttpOnly(true);          // JS không đọc được
         cookie.setSecure(true);            // HTTPS
         cookie.setPath("/");               // Phạm vi cookie
@@ -65,13 +66,6 @@ public class AuthenticationController {
                 )
                 .build();
     }
-
-    //    @PostMapping("/refresh")
-//    public ApiResponse<AccessTokenResponse> refresh(@RequestBody RefreshTokenRequest request) throws ParseException, JOSEException {
-//        return ApiResponse.<AccessTokenResponse>builder()
-//                .result(authenticationService.generateNewAccessToken(request))
-//                .build();
-//    }
     @PostMapping("/refresh")
     public ApiResponse<AccessTokenResponse> refresh(HttpServletRequest request) throws ParseException, JOSEException {
         // Lấy cookie refreshToken
@@ -80,20 +74,13 @@ public class AuthenticationController {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
-        String refreshToken = null;
-        for (Cookie cookie : cookies) {
-            if ("refreshToken".equals(cookie.getName())) {
-                refreshToken = cookie.getValue();
-                break;
-            }
-        }
-
+        String refreshToken = extractRefreshTokenFromCookie(request);
         if (refreshToken == null) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
         // Sinh access token mới
-        AccessTokenResponse newAccessToken = authenticationService.generateNewAccessToken(
+        AccessTokenResponse newAccessToken = authenticationService.refreshAccessToken(
                 new RefreshTokenRequest(refreshToken)
         );
 
@@ -102,9 +89,32 @@ public class AuthenticationController {
                 .build();
     }
 
+    private String extractRefreshTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (TokenType.COOKIE_REFRESH_CUSTOMER.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+
+
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() throws ParseException, JOSEException {
+    public ResponseEntity<Void> logout(HttpServletResponse response) throws ParseException, JOSEException {
         authenticationService.logout();
+
+        // 2. Xóa Cookie Refresh Token khỏi trình duyệt
+        Cookie cookie = new Cookie(TokenType.COOKIE_REFRESH_CUSTOMER, null); // Đặt giá trị là null
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);         // Phải giống khi tạo
+        cookie.setPath("/");            // Phải giống khi tạo
+        cookie.setMaxAge(0);            // Thiết lập MaxAge = 0 để yêu cầu trình duyệt xóa ngay lập tức
+
+        response.addCookie(cookie);     // Gửi header Set-Cookie mới đến trình duyệt
         return ResponseEntity.ok().build();
     }
 

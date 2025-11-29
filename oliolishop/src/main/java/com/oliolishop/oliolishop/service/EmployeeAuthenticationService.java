@@ -1,6 +1,7 @@
 package com.oliolishop.oliolishop.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.oliolishop.oliolishop.constant.TokenType;
 import com.oliolishop.oliolishop.dto.authenticate.AuthenticateRequest;
 import com.oliolishop.oliolishop.dto.authenticate.AuthenticateResponse;
 import com.oliolishop.oliolishop.entity.Account;
@@ -83,6 +84,11 @@ public class EmployeeAuthenticationService extends BaseAuthenticationService<Emp
     @Override
     protected Set<String> getPermission(Employee user) {
         return permissionService.getPermissionsByRole(buildScope(user).replace("ROLE_",""));
+    }
+
+    @Override
+    protected String getCookieTokenType() {
+        return TokenType.COOKIE_REFRESH_EMPLOYEE;
     }
 
 

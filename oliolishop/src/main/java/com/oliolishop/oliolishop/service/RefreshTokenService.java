@@ -28,9 +28,9 @@ public class RefreshTokenService {
         }
     }
 
-    public void storeRefreshToken(String userName, String refreshToken, int durationHours) {
+    public void storeRefreshToken(String userName, String refreshToken, int durationMinutes) {
         String hashedToken = sha256(refreshToken);
-        long timeExpire = (long)durationHours*60*60;
+        long timeExpire = (long)durationMinutes*60;
 //        redisTemplate.opsForValue().set("refresh:" + userName, hashedToken, durationHours, TimeUnit.HOURS);
         redisService.set(KEY+userName,hashedToken,timeExpire);
     }

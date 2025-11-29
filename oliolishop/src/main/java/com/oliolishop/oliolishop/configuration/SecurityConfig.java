@@ -27,7 +27,7 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
-    private static final String PREFIX = "/api";
+    private static final String PREFIX = ApiPath.BASE;
 
     private final String[] PUBLIC_ENDPOINTS= {"/auth",
             "/auth/register",
@@ -59,8 +59,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép preflight OPTIONS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Cho phép tất cả endpoint (tạm thời)
-//                        .anyRequest().permitAll()
                         .requestMatchers(HttpMethod.GET, EndPoint.prefix(EndPoint.GET_PUBLIC,PREFIX )).permitAll()
                                 .requestMatchers(HttpMethod.POST,EndPoint.prefix(EndPoint.POST_PUBLIC,PREFIX)).permitAll()
                                 .anyRequest().authenticated()

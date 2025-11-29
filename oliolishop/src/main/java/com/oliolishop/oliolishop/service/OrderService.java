@@ -136,7 +136,7 @@ public class OrderService {
             VoucherResponse voucherApplied = voucherResponses.stream().filter(voucherResponse -> voucherResponse.getVoucherCode().equals(request.getVoucherCode())).findFirst()
                     .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
 
-            if (voucherApplied.getAmount() <= 0 || voucherApplied.getStatus().equals(VoucherStatus.Inactive)) {
+            if (voucherApplied.getAmount() <= 0 || voucherApplied.getStatus().equals(VoucherStatus.Inactive) || voucherApplied.getEndDate().isBefore(LocalDateTime.now())) {
                 Voucher expiredVoucher = (Voucher) vouchers.stream().filter(v -> v.getId().equals(voucherApplied.getId()));
                 expiredVoucher.setStatus(VoucherStatus.Inactive);
                 voucherRepository.save(expiredVoucher);

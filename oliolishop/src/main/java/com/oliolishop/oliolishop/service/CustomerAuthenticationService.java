@@ -84,6 +84,11 @@ public class CustomerAuthenticationService extends BaseAuthenticationService<Acc
     }
 
     @Override
+    protected String getCookieTokenType() {
+        return TokenType.COOKIE_REFRESH_CUSTOMER;
+    }
+
+    @Override
     protected Account findUserByUsername(String username) {
         return accountRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_EXISTED));
     }

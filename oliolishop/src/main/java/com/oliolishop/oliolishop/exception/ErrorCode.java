@@ -33,6 +33,7 @@ public enum ErrorCode {
     DUPLICATE_PERMISSION(1019,"Permission Id đã tồn tại",HttpStatus.CONFLICT),
     INVALID_IMAGE_FORMAT(1020,"Định dạng ảnh không hợp lệ",HttpStatus.BAD_REQUEST),
     UNCATEGORIZED_VALIDATION(1999,"Lỗi valid không xác định",HttpStatus.BAD_REQUEST),
+
     // 2xxx: auth (Lỗi xác thực và ủy quyền)
     UNAUTHENTICATED(2001,"Chưa được xác thực/Đăng nhập",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),
@@ -73,7 +74,10 @@ public enum ErrorCode {
     CREATE_SHIPPING_FAIL(3028,"Tạo đơn vận chuyển thất bại", HttpStatus.BAD_REQUEST),
     EMPLOYEE_NOT_EXIST(3029, "Nhân viên không tồn tại", HttpStatus.BAD_REQUEST),
     BANNER_NOT_EXIST(3030,"Banner không tồn tại",HttpStatus.BAD_REQUEST),
-    CHAT_SESSION_INVALID(3031,"Session không hợp lệ hoặc không tồn tại",HttpStatus.NOT_FOUND),
+    POLICY_NOT_EXIST(3031,"Chính sách không tồn tại", HttpStatus.NOT_FOUND),
+    PDF_NOT_FOUND(3032,"Không tìm thấy file pdf",HttpStatus.NOT_FOUND),
+    POLICY_EXISTED(3033, "Chính sách đã tồn tại",HttpStatus.CONFLICT),
+
     // Lỗi chung khi vi phạm ràng buộc DB (ví dụ: để fallback)
     DATABASE_INTEGRITY_VIOLATION(4000, "Vi phạm ràng buộc dữ liệu cơ sở. Vui lòng kiểm tra lại.", HttpStatus.CONFLICT),
     FOREIGN_KEY_VIOLATION(4001, "Không thể thực hiện do có dữ liệu liên quan đang sử dụng.", HttpStatus.CONFLICT),

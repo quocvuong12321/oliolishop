@@ -18,6 +18,7 @@ from .tools.order_status import fetch_order_status_tool
 from .tools.fashion_stylist import suggest_outfit_tool, suggest_by_google_search_tool
 from .tools.product_rating import get_product_rating_tool
 from .tools.contact import suggest_contact_info_tool
+from .tools.policy_tool import fetch_policy_pdf_tool, fetch_all_policies_tool
 
 
 
@@ -60,6 +61,11 @@ root_agent = Agent(
          `suggest_by_google_search_tool` 
        - Kết hợp kết quả Google Search vào câu trả lời một cách tự nhiên và gợi mở.
 
+    6. **Tra cứu chính sách của shop:**
+       - Nếu người dùng hỏi về chính sách chung hoặc muốn xem các chính sách, hãy gọi `fetch_all_policies_tool` để lấy danh sách và liệt kê cho khách hàng.
+       - Nếu người dùng hỏi cụ thể về một chính sách (ví dụ: bảo mật, đổi trả...), hãy truyền item vào `fetch_policy_pdf_tool` để lấy file PDF và trả lời ngắn gọn, đầy đủ ý cho khách hàng.
+       - Nếu khách hàng hỏi thẳng chính sách nào đó mà không rõ item, hãy gọi `fetch_all_policies_tool` để lấy danh sách, phân tích ngữ nghĩa câu hỏi để xác định đúng item phù hợp, sau đó tra cứu chi tiết bằng `fetch_policy_pdf_tool`.
+
     **Cách trả lời:**
     - Luôn phân tích kỹ yêu cầu người dùng để xác định đúng tool cần dùng.  
     - Kết hợp giọng văn chuyên nghiệp của stylist thật (ví dụ: "Tôi gợi ý bạn phối áo linen trắng với quần beige để tạo cảm giác nhẹ nhàng và tinh tế.").  
@@ -75,7 +81,9 @@ root_agent = Agent(
         get_product_rating_tool,
         suggest_outfit_tool, 
         suggest_by_google_search_tool,
-        suggest_contact_info_tool
+        suggest_contact_info_tool,
+        fetch_policy_pdf_tool,
+        fetch_all_policies_tool
         ],
 
 )

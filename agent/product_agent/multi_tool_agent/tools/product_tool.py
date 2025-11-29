@@ -37,8 +37,8 @@ class ProductTool(BaseAPITool):
 
         VÍ DỤ TRẢ LỜI:
         "Olioli tìm thấy X sản phẩm cho bạn. Dưới đây là một số sản phẩm nổi bật:
-        1. Tên sản phẩm - Giá: XX,XXX - XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a>
-        2. Tên sản phẩm - Giá: XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a>
+            1. Tên sản phẩm - Giá: XX,XXX - XX,XXX VND - Id: [XXXX](http://localhost:4202/product/{product_id})
+            2. Tên sản phẩm - Giá: XX,XXX VND - Id: [XXXX](http://localhost:4202/product/{product_id})
         "
         """
 

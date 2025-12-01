@@ -15,10 +15,9 @@ if not os.getenv('GOOGLE_API_KEY'):
 from google.adk.agents import Agent
 from .tools.product_tool import fetch_products_tool
 from .tools.order_status import fetch_order_status_tool
-from .tools.fashion_stylist import suggest_outfit_tool, suggest_by_google_search_tool
+from .tools.fashion_stylist import suggest_outfit_tool
 from .tools.product_rating import get_product_rating_tool
 from .tools.contact import suggest_contact_info_tool
-from .tools.policy_tool import fetch_policy_pdf_tool, fetch_all_policies_tool
 
 
 
@@ -55,22 +54,13 @@ root_agent = Agent(
          `suggest_outfit(gender="giới tính", style="phong cách", occasion="dịp sử dụng", budget_min=giá_tối_thiểu, budget_max=giá_tối_đa)`
        - Nếu thiếu thông tin (ví dụ không rõ phong cách, giới tính hoặc dịp sử dụng), hãy **hỏi lại người dùng** trước khi tư vấn.
 
-    5. **Tìm xu hướng hoặc tham khảo thời trang mới nhất:**  
-       - Khi người dùng hỏi về *xu hướng thời trang hiện tại, phong cách hot, outfit theo mùa*,  
-         hoặc bạn cần thông tin bổ sung để tư vấn chính xác hơn, hãy:  
-         `suggest_by_google_search_tool` 
-       - Kết hợp kết quả Google Search vào câu trả lời một cách tự nhiên và gợi mở.
-
-    6. **Tra cứu chính sách của shop:**
-       - Nếu người dùng hỏi về chính sách chung hoặc muốn xem các chính sách, hãy gọi `fetch_all_policies_tool` để lấy danh sách và liệt kê cho khách hàng.
-       - Nếu người dùng hỏi cụ thể về một chính sách (ví dụ: bảo mật, đổi trả...), hãy truyền item vào `fetch_policy_pdf_tool` để lấy file PDF và trả lời ngắn gọn, đầy đủ ý cho khách hàng.
-       - Nếu khách hàng hỏi thẳng chính sách nào đó mà không rõ item, hãy gọi `fetch_all_policies_tool` để lấy danh sách, phân tích ngữ nghĩa câu hỏi để xác định đúng item phù hợp, sau đó tra cứu chi tiết bằng `fetch_policy_pdf_tool`.
 
     **Cách trả lời:**
     - Luôn phân tích kỹ yêu cầu người dùng để xác định đúng tool cần dùng.  
     - Kết hợp giọng văn chuyên nghiệp của stylist thật (ví dụ: "Tôi gợi ý bạn phối áo linen trắng với quần beige để tạo cảm giác nhẹ nhàng và tinh tế.").  
     - Khi phân tích đánh giá, hãy khách quan và trung thực
     - Nếu người dùng hỏi về sản phẩm thực tế → gợi ý bằng sản phẩm shop (fetch_products).  
+    - Lưu ý các câu trả lời dạng liệt kê như 1. ... 2. ... thì nên thêm thẻ br để xuống dòng nha
     - Nếu không trả lời được những câu hỏi ngoài phạm vi thời trang và mua sắm, hãy lịch sự từ chối và sử dụng suggest_contact_info_tool để cung cấp thông tin liên hệ hỗ trợ thêm.
     **Mục tiêu cuối cùng:**  
     Giúp khách hàng cảm thấy tự tin, nổi bật và tìm được phong cách phù hợp nhất với cá tính và nhu cầu của họ.
@@ -80,10 +70,7 @@ root_agent = Agent(
         fetch_order_status_tool, 
         get_product_rating_tool,
         suggest_outfit_tool, 
-        suggest_by_google_search_tool,
-        suggest_contact_info_tool,
-        fetch_policy_pdf_tool,
-        fetch_all_policies_tool
+        suggest_contact_info_tool
         ],
 
 )

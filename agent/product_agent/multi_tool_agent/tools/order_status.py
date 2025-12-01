@@ -33,11 +33,12 @@ class OrderStatusTool(BaseAPITool):
         "Tôi đã tìm thấy đơn {order_id} của bạn. Dưới đây là thông tin chi tiết:
         - Trạng thái đơn hàng: {status}
         - Sản phẩm:
-          1. Tên sản phẩm - Giá: XX,XXX VND - Số lượng: X
-          2. Tên sản phẩm - Giá: XX,XXX VND - Số lượng: X
+          1. Tên sản phẩm - Giá: XX,XXX VND - Số lượng: X - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a></br>
+          2. Tên sản phẩm - Giá: XX,XXX VND - Số lượng: X - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a></br>
         - Tổng tiền: XX,XXX VND
         - Địa chỉ giao hàng: {address}
 
+        Nhớ có thẻ br cho những đoạn cần xuống dòng nha
         """
         logger.info("=" * 80)
         logger.info("GET_ORDER_STATUS CALLED")

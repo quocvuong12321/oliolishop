@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     curl \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -18,6 +19,7 @@ WORKDIR /app/product_agent
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+ENV TZ=Asia/Ho_Chi_Minh
 
 EXPOSE 8001
 

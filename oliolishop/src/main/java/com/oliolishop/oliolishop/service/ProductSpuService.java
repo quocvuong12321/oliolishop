@@ -236,7 +236,9 @@ public class ProductSpuService {
                 spu.getAttrs().stream().map(descriptionAttrMapper::toResponse).collect(Collectors.toSet());
 
         Set<ProductSkuAttrResponse> skuAttrs =
-                spu.getSkuAttrs().stream().map(productSkuAttrMapper::toResponse).collect(Collectors.toSet());
+                spu.getSkuAttrs().stream().map(productSkuAttrMapper::toResponse).toList().stream().sorted(
+                        Comparator.comparing(ProductSkuAttrResponse::getValue)
+                ).collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Breadcrumb
         Category category = spu.getCategory();

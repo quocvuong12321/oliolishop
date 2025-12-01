@@ -10,13 +10,7 @@ class FashionStylistTool:
     def __init__(self):
         super().__init__()
 
-    def google_search(self, query: str) -> Dict[str, Any]:
-        """
-        Tìm kiếm thông tin thời trang mới nhất, xu hướng, outfit tham khảo từ Google.
-        Sử dụng google_search tool để lấy dữ liệu.
-        """
 
-    
     def suggest_outfit(
         self,
         gender: Optional[str] = None,
@@ -88,7 +82,5 @@ stylist_tool_instance = FashionStylistTool()
 
 suggest_outfit_tool = FunctionTool(
     stylist_tool_instance.suggest_outfit
-    
 )
-suggest_by_google_search_tool = FunctionTool(
-   stylist_tool_instance.google_search)
+

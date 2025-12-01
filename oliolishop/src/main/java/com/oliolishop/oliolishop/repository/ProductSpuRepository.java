@@ -137,7 +137,7 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
             WHERE o.order_status = "delivered"
             GROUP BY spu.product_spu_id
             ORDER BY totalQuantitySold DESC
-            LIMIT 8
+            LIMIT 20
             """,nativeQuery = true)
     List<ProductSpuProjection> getBestSellingProduct();
 
@@ -157,7 +157,7 @@ public interface ProductSpuRepository extends JpaRepository<ProductSpu, String> 
             WHERE spu.delete_status = "Active"
             GROUP BY spu.product_spu_id
             ORDER BY spu.create_date DESC
-            LIMIT 8
+            LIMIT 20
             """,nativeQuery = true)
     List<ProductSpuProjection> getNewProduct();
 

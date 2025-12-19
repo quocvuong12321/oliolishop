@@ -29,7 +29,8 @@ public class EndPoint {
             "/auth/verify-otp",
             "/auth/register/**",
             "/employee/login",
-            "/employee/refresh"
+            "/employee/refresh",
+            "/spu/image-search"
     };
 
     public static String[] prefix(String[] arr, String prefix){

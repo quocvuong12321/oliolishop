@@ -104,7 +104,6 @@ public class PolicyService {
         return file;
     }
 
-    @Cacheable(value = "pdfPolicyCache", key = "#item")
     public byte[] loadPdfBytes(String item,String baseDir) throws IOException {
         File file = loadPdf(item,baseDir);
         return Files.readAllBytes(file.toPath());

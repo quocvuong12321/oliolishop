@@ -46,6 +46,9 @@ class FashionStylistTool:
             
         Returns:
             Dict[str, Any]: Gợi ý phối đồ và lời khuyên stylist.
+
+        
+        - Lưu ý các câu trả lời dạng liệt kê như 1. ... 2. ... thì nên thêm thẻ </br> để xuống dòng nha
         """
 
         # 🔹 Chuẩn bị phần mô tả yêu cầu để AI hiểu ngữ cảnh
@@ -59,12 +62,12 @@ class FashionStylistTool:
         )
 
         advice = (
-            "Dựa trên thông tin bạn cung cấp, tôi gợi ý phong cách phù hợp như sau:\n"
-            "- Áo: sơ mi hoặc áo phông tông trung tính (trắng, be, hoặc xám) để dễ phối.\n"
+            "Dựa trên thông tin bạn cung cấp, tôi gợi ý phong cách phù hợp như sau:"
+            "- Áo: sơ mi hoặc áo phông tông trung tính (trắng, be, hoặc xám) để dễ phối."
             "- Quần: chọn quần có form vừa vặn, ưu tiên chất liệu thoáng, "
-            "có thể phối với quần jeans hoặc quần tây nhẹ.\n"
-            "- Giày: sneakers trắng hoặc loafer để tạo điểm nhấn tinh tế.\n"
-            "- Phụ kiện: đồng hồ hoặc túi chéo nhỏ để tạo phong cách hiện đại.\n\n"
+            "có thể phối với quần jeans hoặc quần tây nhẹ."
+            "- Giày: sneakers trắng hoặc loafer để tạo điểm nhấn tinh tế."
+            "- Phụ kiện: đồng hồ hoặc túi chéo nhỏ để tạo phong cách hiện đại."
             "Nếu bạn muốn tôi tra cứu xu hướng mới nhất hoặc outfit tham khảo theo style này, "
         )
 

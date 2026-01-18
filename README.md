@@ -1,93 +1,109 @@
-# oliolishop
+# Shop Thời Trang Online Tích Hợp AI
 
+Dự án này xây dựng một hệ thống thương mại điện tử thời trang trực tuyến, được tích hợp các công nghệ Trí tuệ Nhân tạo (AI) nhằm nâng cao trải nghiệm người dùng và hiệu quả tìm kiếm sản phẩm.
 
+Hệ thống kết hợp giữa kiến trúc backend truyền thống và các thành phần AI hiện đại như chatbot thông minh và tìm kiếm sản phẩm dựa trên hình ảnh.
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 📌 Tổng quan dự án
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Trong các nền tảng thương mại điện tử thời trang truyền thống, việc tìm kiếm sản phẩm chủ yếu dựa trên từ khóa văn bản. Tuy nhiên, người dùng thường gặp khó khăn khi không thể mô tả chính xác sản phẩm mong muốn bằng lời nói.
 
-## Add your files
+Dự án này giải quyết bài toán đó bằng cách:
+- Cho phép tìm kiếm sản phẩm thông qua hình ảnh
+- Hỗ trợ người dùng bằng chatbot AI có khả năng hội thoại tự nhiên
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+Hệ thống được chia thành **3 thành phần chính**:
+- Backend Core (Java Spring Boot)
+- AI Agent / Chatbot (Python + Google ADK)
+- Tìm kiếm hình ảnh (ViT + Redis Vector Search)
 
-```
-cd existing_repo
-git remote add origin https://gitlab.com/quocvuong12321-group/oliolishop.git
-git branch -M main
-git push -uf origin main
-```
+---
 
-## Integrate with your tools
+## 🖥️ Backend Core (Java Spring Boot)
 
-- [ ] [Set up project integrations](https://gitlab.com/quocvuong12321-group/oliolishop/-/settings/integrations)
+Backend Core chịu trách nhiệm xử lý toàn bộ nghiệp vụ và quản lý dữ liệu của hệ thống thương mại điện tử.
 
-## Collaborate with your team
+**Chức năng chính:**
+- Quản lý người dùng, phân quyền và xác thực
+- Quản lý sản phẩm, danh mục, đơn hàng
+- Giỏ hàng, voucher và các logic liên quan đến thanh toán
+- Cung cấp API cho frontend và các module AI
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+**Công nghệ sử dụng:**
+- Java
+- Spring Boot
+- RESTful API
+- Cơ sở dữ liệu quan hệ (MySQL)
+- Xác thực bằng JWT
 
-## Test and Deploy
+Backend đóng vai trò trung tâm, đảm bảo tính nhất quán dữ liệu, bảo mật và khả năng mở rộng hệ thống.
 
-Use the built-in continuous integration in GitLab.
+---
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## 🤖 AI Agent & Chatbot (Python + Google ADK)
 
-***
+AI Agent giúp hỗ trợ người dùng trong quá trình mua sắm thông qua hội thoại tự nhiên.
 
-# Editing this README
+**Chức năng chính:**
+- Tư vấn và gợi ý sản phẩm
+- Trả lời câu hỏi liên quan đến đơn hàng, chính sách
+- Duy trì ngữ cảnh hội thoại
+- Kết nối và truy xuất dữ liệu từ backend theo thời gian thực
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+**Công nghệ sử dụng:**
+- Python
+- Google Agent Development Kit (ADK)
+- Mô hình ngôn ngữ lớn (LLM)
+- Thiết kế prompt và workflow cho agent
 
-## Suggestions for a good README
+Module AI Agent giao tiếp với backend thông qua API để đảm bảo thông tin chính xác và cập nhật.
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+---
 
-## Name
-Choose a self-explaining name for your project.
+## 🖼️ Tìm kiếm sản phẩm bằng hình ảnh (ViT + Redis)
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Module tìm kiếm hình ảnh cho phép người dùng tìm sản phẩm dựa trên hình ảnh thay vì từ khóa.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+**Quy trình hoạt động:**
+1. Người dùng tải lên một hình ảnh sản phẩm
+2. Hình ảnh được mã hóa thành vector đặc trưng bằng mô hình Vision Transformer (ViT)
+3. Vector được so sánh với các vector sản phẩm đã lưu trữ
+4. Hệ thống trả về các sản phẩm có độ tương đồng cao nhất
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+**Công nghệ sử dụng:**
+- Vision Transformer (ViT)  
+  - Mô hình pretrained: `google/vit-base-patch16-224-in21k`
+  - Fine-tune nhẹ trên tập dữ liệu sản phẩm thời trang
+- Redis Vector Database
+- Chỉ mục HNSW với Cosine Similarity
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+**Ưu điểm:**
+- Tốc độ tìm kiếm nhanh (phản hồi dưới 1 giây)
+- Độ chính xác cao trong việc so khớp hình ảnh
+- Khả năng mở rộng tốt với số lượng sản phẩm lớn
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+---
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## 🚀 Điểm nổi bật của dự án
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- Kết hợp hệ thống thương mại điện tử truyền thống với AI hiện đại
+- Giải quyết bài toán “khoảng cách thị giác” trong tìm kiếm sản phẩm
+- Thiết kế module hóa, dễ bảo trì và mở rộng
+- Phù hợp cho triển khai thực tế và nghiên cứu học thuật
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+---
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## 📚 Bối cảnh học thuật
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Dự án được thực hiện trong khuôn khổ **khóa luận tốt nghiệp**, tập trung vào các hướng nghiên cứu:
+- Ứng dụng AI trong thương mại điện tử
+- Tìm kiếm thông tin dựa trên hình ảnh
+- Hệ thống hội thoại thông minh
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+---
 
-## License
-For open source projects, say how it is licensed.
+## 📄 Bản quyền
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Dự án phục vụ cho mục đích học tập và nghiên cứu.

@@ -14,7 +14,7 @@ public class MessageConstants {
 
     public static final String PAYMENT_INVALID = "Chữ ký không hợp lệ";
 
-    public static final String DEFAULT_PASSWORD = "abcd123456";
+    public static final String DEFAULT_PASSWORD = "Abcd123@";
 
 
     public static final String ORDER_CONFIRM_SUCCESSFULLY="Xác nhận đơn hàng thành công";

@@ -32,12 +32,10 @@ class ProductTool(BaseAPITool):
     - Nếu có lỗi, thông báo cho người dùng một cách chuyên nghiệp
 
     VÍ DỤ TRẢ LỜI:
-    "Olioli tìm thấy X sản phẩm cho bạn. Dưới đây là một số sản phẩm nổi bật: </br>
-    1. Tên sản phẩm - Giá: XX,XXX - XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a></br>
-    2. Tên sản phẩm - Giá: XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a></br>
+    "Olioli tìm thấy X sản phẩm cho bạn. Dưới đây là một số sản phẩm nổi bật:
+    1. Tên sản phẩm - Giá: XX,XXX - XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a>
+    2. Tên sản phẩm - Giá: XX,XXX VND - Id: <a href="http://localhost:4202/product/{product_id}">XXXX</a>
     "
-
-    Nhớ có thẻ br để xuống dòng cho đẹp nhé
     """
 
     def fetch_products(

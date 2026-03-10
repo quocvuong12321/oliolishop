@@ -16,7 +16,7 @@ env/
 .virtualenv/
 pip-log.txt
 pip-delete-this-directory.txt
-
+*.env
 
 # IDEs
 .idea/

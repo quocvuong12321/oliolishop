@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="27aac830-89d8-4436-8479-f22e9c29ebcf" name="Changes" comment="add skuStock for detail, update Cutomer, create rating, like % cancel like rating." />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+        <option value="Interface" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitLabMergeRequestFiltersHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPENED&quot;,
+    &quot;assignee&quot;: {
+      &quot;type&quot;: &quot;org.jetbrains.plugins.gitlab.mergerequest.ui.filters.GitLabMergeRequestsFiltersValue.MergeRequestsMemberFilterValue.MergeRequestsAssigneeFilterValue&quot;,
+      &quot;username&quot;: &quot;quocvuong12321&quot;,
+      &quot;fullname&quot;: &quot;quocvuong12321&quot;
+    }
+  }
+}</component>
+  <component name="GitLabMergeRequestsSettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;first&quot;: &quot;https://gitlab.com/quocvuong12321-group/oliolishop.git&quot;,
+    &quot;second&quot;: &quot;09aeb338-e998-4798-b809-9e37d93fe928&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="33Owu890s0NvbZaHhJvhJv7MEOf" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.OliolishopApplication.executor&quot;: &quot;Debug&quot;,
+    &quot;Application.com.oliolishop.oliolishop.OliolishopApplication.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;backend&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/HocTap/HK7/KhoaLuan/oliolishop/oliolishop/src/main/java/com/oliolishop/oliolishop/configuration&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.tools&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\HocTap\HK7\KhoaLuan\oliolishop\oliolishop\src\main\java\com\oliolishop\oliolishop\configuration" />
+      <recent name="D:\HocTap\HK7\KhoaLuan\oliolishop\oliolishop\src\main\java\com\oliolishop\oliolishop\dto\authenticate" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="OliolishopApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.oliolishop.oliolishop.OliolishopApplication" />
+      <module name="olioli" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.oliolishop.oliolishop.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.OliolishopApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="27aac830-89d8-4436-8479-f22e9c29ebcf" name="Changes" comment="" />
+      <created>1759201645703</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1759201645703</updated>
+    </task>
+    <task id="LOCAL-00001" summary="done authentication">
+      <option name="closed" value="true" />
+      <created>1759224594953</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1759224594953</updated>
+    </task>
+    <task id="LOCAL-00002" summary="update login logout employee, update abstract class for authentication (shared by employees and customer)">
+      <option name="closed" value="true" />
+      <created>1760072163927</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1760072163927</updated>
+    </task>
+    <task id="LOCAL-00003" summary="update docker file and .env">
+      <option name="closed" value="true" />
+      <created>1760074035482</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1760074035482</updated>
+    </task>
+    <task id="LOCAL-00004" summary="update security (save refresh token by cookie)">
+      <option name="closed" value="true" />
+      <created>1760600942745</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1760600942745</updated>
+    </task>
+    <task id="LOCAL-00005" summary="add skuStock for detail, update Cutomer, create rating, like % cancel like rating.">
+      <option name="closed" value="true" />
+      <created>1760781417726</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1760781417726</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="done authentication" />
+    <MESSAGE value="update login logout employee, update abstract class for authentication (shared by employees and customer)" />
+    <MESSAGE value="update docker file and .env" />
+    <MESSAGE value="update security (save refresh token by cookie)" />
+    <MESSAGE value="add skuStock for detail, update Cutomer, create rating, like % cancel like rating." />
+    <option name="LAST_COMMIT_MESSAGE" value="add skuStock for detail, update Cutomer, create rating, like % cancel like rating." />
+  </component>
+  <component name="XDebuggerManager">
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="java.lang.String" memberName="value" />
+      </pinned-members>
+    </pin-to-top-manager>
+    <watches-manager>
+      <configuration name="Application">
+        <watch expression="        // Ghép lại final list: ảnh còn giữ + ảnh mới&#10;" />
+      </configuration>
+    </watches-manager>
+  </component>
+</project>

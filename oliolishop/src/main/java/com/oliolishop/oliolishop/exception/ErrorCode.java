@@ -90,7 +90,4 @@ public enum ErrorCode {
     private int Code;
     private String message;
     private HttpStatusCode statusCode;
-
-
-
 }

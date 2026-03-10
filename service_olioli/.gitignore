@@ -19,6 +19,7 @@ uploads/
 temp/
 tmp/
 cache/
+.env
 
 # Nếu dùng SQLite để test local
 *.sqlite
